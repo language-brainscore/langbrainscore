@@ -1,0 +1,430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>langbrainscore.dataset.dataset API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>langbrainscore.dataset.dataset</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import typing
+import numpy as np
+import pandas as pd
+import xarray as xr
+
+class Dataset:
+    _stimuli_path = None
+    _stimuli = None
+    _stim_metadata = None
+
+    def __init__(self, xr_dataset: xr.Dataset) -&gt; None:
+        # TODO: the below is no longer true
+        &#34;&#34;&#34;initializer method that accepts an xarray with at least the following 
+            core coordinates: sampleid, neuroid, timeid
+
+            https://docs.google.com/document/d/10U9cPphFQdXcCDQtq-yTqbB_jLa-k4hy5pe9VoD08Sg/edit?usp=sharing
+
+        Args:
+            xr_dataset (xr.Dataset): Xarray dataset object with minimal core dimensions
+        &#34;&#34;&#34;        
+        # set the internal `_xr_dataset` reference to the one passed in to this method 
+        self._xr_dataset = xr_dataset
+
+
+    @property
+    def _dataset(self):
+        &#39;&#39;&#39;
+        returns the internal xarray dataset object. use with caution.
+        &#39;&#39;&#39;
+        return self._xr_dataset
+
+
+    @property
+    def stimuli(self) -&gt; typing.Union[np.ndarray, xr.DataArray]:
+        &#34;&#34;&#34;getter method that returns an ndarray-like object of stimuli
+
+        Returns:
+            typing.Union[np.ndarray, xr.DataArray]: array-like object containing the stimuli from the dataset
+        &#34;&#34;&#34;        
+        return self._xr_dataset.stimuli
+
+    @property
+    def dims(self) -&gt; tuple:
+        &#39;&#39;&#39;
+        &#39;&#39;&#39;
+        return self._xr_dataset.dims
+
+
+# TODO: we should implement the packaging into a xarray dataset all in here ^ and below, not expect a pre-packaged xarray.
+# we will minimally require only stimuli and (below:) recorded data, and then construct an xarray internally
+# NOTE: this is to protect users from the low-level details of our data packaging.
+
+class BrainDataset(Dataset):
+    &#39;&#39;&#39;
+    A subclass of `Dataset` to support storage and retrieval of brain data.
+    &#34;Brain data&#34; broadly refers to _real-world_ data collected from individuals with a brain,
+    and may be of the following forms:
+            - neuroimaging [fMRI, PET]
+            - physiological [ERP, MEG, ECOG]
+            - behavioral [RT, Eye-tracking]
+    In general, data must be supplied in the mapping
+            stimulus --&gt; neuroid
+        where `neuroid` is the basic unit of brain recording (it may be a voxel, an electrode, etc).
+
+    Inputs:
+        recorded_data: &lt;n_stimuli&gt; x &lt;n_neuroids&gt;
+        metadata: &lt;n_stimuli&gt; x -1
+    &#39;&#39;&#39;
+    _recorded_data = None
+    _recording_metadata = None
+
+    def __init__(self,
+                #  stimuli: typing.Union[list, pd.DataFrame, np.array],
+                #  recorded_data: typing.Union[np.ndarray, pd.DataFrame, str],
+                #  stimuli_metadata: typing.Union[pd.DataFrame, str] = None,
+                #  recording_metadata: typing.Union[pd.DataFrame, str] = None
+                ) -&gt; None:
+        pass
+
+        # TODOs for the (distant) future:
+        # scipy.io.loadmat stuf
+        # h5py 2 GB limit issue
+        
+        # super().__init__()
+        # self._recorded_data = recorded_data
+    
+        # if recording_metadata is not None: 
+        #   # ^-- may not be necessary; users should always provide subject_ids
+        #   # for cross-validation 
+        #     self._recording_metadata = recording_metadata
+        # else:
+        #     raise ValueError(f&#39;forgot to pass recording metadata?&#39;)
+
+        # # make sure the data dimensions make sense
+        # self.num_stimuli = len(self.stimuli)
+        # self.num_neuroids = self._recorded_data.shape[1]
+
+        # # recorded_data contains a row per stimulus
+        # assert self.num_stimuli == self._recorded_data.shape[0]
+        # # recording_metadata contains a row per neuroid
+        # assert self.num_neuroids == self._recording_metadata.shape[0]
+
+
+    @property
+    def recorded_data(self) -&gt; np.array:
+        if type(self._recorded_data) not in {np.array, np.ndarray, }:
+            # TODO: standardize output format for the recorded data 
+            raise NotImplementedError(f&#39;recorded_data of type {type(self._recorded_data)} cannot be returned&#39;)
+        return self._recorded_data
+
+    @property
+    def recording_metadata(self):
+        return self._recording_metadata</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="langbrainscore.dataset.dataset.BrainDataset"><code class="flex name class">
+<span>class <span class="ident">BrainDataset</span></span>
+</code></dt>
+<dd>
+<div class="desc"><p>A subclass of <code><a title="langbrainscore.dataset.dataset.Dataset" href="#langbrainscore.dataset.dataset.Dataset">Dataset</a></code> to support storage and retrieval of brain data.
+"Brain data" broadly refers to <em>real-world</em> data collected from individuals with a brain,
+and may be of the following forms:
+- neuroimaging [fMRI, PET]
+- physiological [ERP, MEG, ECOG]
+- behavioral [RT, Eye-tracking]
+In general, data must be supplied in the mapping
+stimulus &ndash;&gt; neuroid
+where <code>neuroid</code> is the basic unit of brain recording (it may be a voxel, an electrode, etc).</p>
+<h2 id="inputs">Inputs</h2>
+<p>recorded_data: <n_stimuli> x <n_neuroids>
+metadata: <n_stimuli> x -1</p>
+<p>initializer method that accepts an xarray with at least the following
+core coordinates: sampleid, neuroid, timeid</p>
+<pre><code>&lt;https://docs.google.com/document/d/10U9cPphFQdXcCDQtq-yTqbB_jLa-k4hy5pe9VoD08Sg/edit?usp=sharing&gt;
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>xr_dataset</code></strong> :&ensp;<code>xr.Dataset</code></dt>
+<dd>Xarray dataset object with minimal core dimensions</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BrainDataset(Dataset):
+    &#39;&#39;&#39;
+    A subclass of `Dataset` to support storage and retrieval of brain data.
+    &#34;Brain data&#34; broadly refers to _real-world_ data collected from individuals with a brain,
+    and may be of the following forms:
+            - neuroimaging [fMRI, PET]
+            - physiological [ERP, MEG, ECOG]
+            - behavioral [RT, Eye-tracking]
+    In general, data must be supplied in the mapping
+            stimulus --&gt; neuroid
+        where `neuroid` is the basic unit of brain recording (it may be a voxel, an electrode, etc).
+
+    Inputs:
+        recorded_data: &lt;n_stimuli&gt; x &lt;n_neuroids&gt;
+        metadata: &lt;n_stimuli&gt; x -1
+    &#39;&#39;&#39;
+    _recorded_data = None
+    _recording_metadata = None
+
+    def __init__(self,
+                #  stimuli: typing.Union[list, pd.DataFrame, np.array],
+                #  recorded_data: typing.Union[np.ndarray, pd.DataFrame, str],
+                #  stimuli_metadata: typing.Union[pd.DataFrame, str] = None,
+                #  recording_metadata: typing.Union[pd.DataFrame, str] = None
+                ) -&gt; None:
+        pass
+
+        # TODOs for the (distant) future:
+        # scipy.io.loadmat stuf
+        # h5py 2 GB limit issue
+        
+        # super().__init__()
+        # self._recorded_data = recorded_data
+    
+        # if recording_metadata is not None: 
+        #   # ^-- may not be necessary; users should always provide subject_ids
+        #   # for cross-validation 
+        #     self._recording_metadata = recording_metadata
+        # else:
+        #     raise ValueError(f&#39;forgot to pass recording metadata?&#39;)
+
+        # # make sure the data dimensions make sense
+        # self.num_stimuli = len(self.stimuli)
+        # self.num_neuroids = self._recorded_data.shape[1]
+
+        # # recorded_data contains a row per stimulus
+        # assert self.num_stimuli == self._recorded_data.shape[0]
+        # # recording_metadata contains a row per neuroid
+        # assert self.num_neuroids == self._recording_metadata.shape[0]
+
+
+    @property
+    def recorded_data(self) -&gt; np.array:
+        if type(self._recorded_data) not in {np.array, np.ndarray, }:
+            # TODO: standardize output format for the recorded data 
+            raise NotImplementedError(f&#39;recorded_data of type {type(self._recorded_data)} cannot be returned&#39;)
+        return self._recorded_data
+
+    @property
+    def recording_metadata(self):
+        return self._recording_metadata</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="langbrainscore.dataset.dataset.Dataset" href="#langbrainscore.dataset.dataset.Dataset">Dataset</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="langbrainscore.dataset.dataset.BrainDataset.recorded_data"><code class="name">var <span class="ident">recorded_data</span> : <built-in function array></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def recorded_data(self) -&gt; np.array:
+    if type(self._recorded_data) not in {np.array, np.ndarray, }:
+        # TODO: standardize output format for the recorded data 
+        raise NotImplementedError(f&#39;recorded_data of type {type(self._recorded_data)} cannot be returned&#39;)
+    return self._recorded_data</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.dataset.dataset.BrainDataset.recording_metadata"><code class="name">var <span class="ident">recording_metadata</span></code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def recording_metadata(self):
+    return self._recording_metadata</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="langbrainscore.dataset.dataset.Dataset" href="#langbrainscore.dataset.dataset.Dataset">Dataset</a></b></code>:
+<ul class="hlist">
+<li><code><a title="langbrainscore.dataset.dataset.Dataset.stimuli" href="#langbrainscore.dataset.dataset.Dataset.stimuli">stimuli</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="langbrainscore.dataset.dataset.Dataset"><code class="flex name class">
+<span>class <span class="ident">Dataset</span></span>
+<span>(</span><span>xr_dataset: xarray.core.dataset.Dataset)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>initializer method that accepts an xarray with at least the following
+core coordinates: sampleid, neuroid, timeid</p>
+<pre><code>&lt;https://docs.google.com/document/d/10U9cPphFQdXcCDQtq-yTqbB_jLa-k4hy5pe9VoD08Sg/edit?usp=sharing&gt;
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>xr_dataset</code></strong> :&ensp;<code>xr.Dataset</code></dt>
+<dd>Xarray dataset object with minimal core dimensions</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Dataset:
+    _stimuli_path = None
+    _stimuli = None
+    _stim_metadata = None
+
+    def __init__(self, xr_dataset: xr.Dataset) -&gt; None:
+        # TODO: the below is no longer true
+        &#34;&#34;&#34;initializer method that accepts an xarray with at least the following 
+            core coordinates: sampleid, neuroid, timeid
+
+            https://docs.google.com/document/d/10U9cPphFQdXcCDQtq-yTqbB_jLa-k4hy5pe9VoD08Sg/edit?usp=sharing
+
+        Args:
+            xr_dataset (xr.Dataset): Xarray dataset object with minimal core dimensions
+        &#34;&#34;&#34;        
+        # set the internal `_xr_dataset` reference to the one passed in to this method 
+        self._xr_dataset = xr_dataset
+
+
+    @property
+    def _dataset(self):
+        &#39;&#39;&#39;
+        returns the internal xarray dataset object. use with caution.
+        &#39;&#39;&#39;
+        return self._xr_dataset
+
+
+    @property
+    def stimuli(self) -&gt; typing.Union[np.ndarray, xr.DataArray]:
+        &#34;&#34;&#34;getter method that returns an ndarray-like object of stimuli
+
+        Returns:
+            typing.Union[np.ndarray, xr.DataArray]: array-like object containing the stimuli from the dataset
+        &#34;&#34;&#34;        
+        return self._xr_dataset.stimuli
+
+    @property
+    def dims(self) -&gt; tuple:
+        &#39;&#39;&#39;
+        &#39;&#39;&#39;
+        return self._xr_dataset.dims</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="langbrainscore.dataset.dataset.BrainDataset" href="#langbrainscore.dataset.dataset.BrainDataset">BrainDataset</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="langbrainscore.dataset.dataset.Dataset.dims"><code class="name">var <span class="ident">dims</span> : tuple</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def dims(self) -&gt; tuple:
+    &#39;&#39;&#39;
+    &#39;&#39;&#39;
+    return self._xr_dataset.dims</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.dataset.dataset.Dataset.stimuli"><code class="name">var <span class="ident">stimuli</span> : Union[numpy.ndarray, xarray.core.dataarray.DataArray]</code></dt>
+<dd>
+<div class="desc"><p>getter method that returns an ndarray-like object of stimuli</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>typing.Union[np.ndarray, xr.DataArray]</code></dt>
+<dd>array-like object containing the stimuli from the dataset</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def stimuli(self) -&gt; typing.Union[np.ndarray, xr.DataArray]:
+    &#34;&#34;&#34;getter method that returns an ndarray-like object of stimuli
+
+    Returns:
+        typing.Union[np.ndarray, xr.DataArray]: array-like object containing the stimuli from the dataset
+    &#34;&#34;&#34;        
+    return self._xr_dataset.stimuli</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="langbrainscore.dataset" href="index.html">langbrainscore.dataset</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="langbrainscore.dataset.dataset.BrainDataset" href="#langbrainscore.dataset.dataset.BrainDataset">BrainDataset</a></code></h4>
+<ul class="">
+<li><code><a title="langbrainscore.dataset.dataset.BrainDataset.recorded_data" href="#langbrainscore.dataset.dataset.BrainDataset.recorded_data">recorded_data</a></code></li>
+<li><code><a title="langbrainscore.dataset.dataset.BrainDataset.recording_metadata" href="#langbrainscore.dataset.dataset.BrainDataset.recording_metadata">recording_metadata</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="langbrainscore.dataset.dataset.Dataset" href="#langbrainscore.dataset.dataset.Dataset">Dataset</a></code></h4>
+<ul class="">
+<li><code><a title="langbrainscore.dataset.dataset.Dataset.dims" href="#langbrainscore.dataset.dataset.Dataset.dims">dims</a></code></li>
+<li><code><a title="langbrainscore.dataset.dataset.Dataset.stimuli" href="#langbrainscore.dataset.dataset.Dataset.stimuli">stimuli</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>
