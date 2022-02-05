@@ -6,17 +6,16 @@ import xarray as xr
 from sklearn.linear_model import Ridge, LinearRegression, LogisticRegression, RidgeCV
 from langbrainscore.mapping_tools.rsa import RSA, RDM
 from langbrainscore.utils import logging
+import cython
 
 from functools import partial
 
-# TODO: verify behavior of LeavePOut and alternatives LeavePGroupsOut, etc.
 from sklearn.model_selection import (
     KFold, # KFold without regard to any balancing coord (strat_coord) or grouping coord (split_coord)
     StratifiedKFold, # KFold balancing strat_coord across train/test splits 
     GroupKFold, # KFold keeping grouping coord (split_coord) entirely in one of train/test splits (no leakage)
     StratifiedGroupKFold, # KFold doing the group thing but also the strat thing on different coords 
 )
-#KFold, StratifiedShuffleSplit, LeavePOut
 
 
 
@@ -28,9 +27,9 @@ class Mapping:
                  X: xr.Dataset, Y: xr.Dataset,
 
                  mapping_class: typing.Union[str, typing.Any],
-                 random_seed: int = 42, 
+                 random_seed: cython.int = 42, 
 
-                 k_fold: int = 5,
+                 k_fold: cython.int = 5,
                  strat_coord: str = None,
 
                  num_split_groups_out: int = None, # (p, the # of groups in the test split)
@@ -52,8 +51,8 @@ class Mapping:
             num_split_groups_out (int, optional): [description]. Defaults to None.
             split_coord (str, optional): [description]. Defaults to None.
         """
-        self.random_seed = random_seed
-        mapping_classes = {
+        self.random_seed: cython.int = random_seed
+        mapping_classes: dict = {
             'ridge': (Ridge, {'alpha': 1.0}),
             'ridge_cv': (RidgeCV, {'alphas': np.logspace(-3, 3, 13), 'alpha_per_target': True}),
             'linear': (LinearRegression, {}),
@@ -65,7 +64,7 @@ class Mapping:
         self.strat_coord = strat_coord
 
         self.num_split_groups_out = num_split_groups_out
-        self.split_coord = split_coord
+        self.split_coord: str = split_coord
 
         self.mapping_class = mapping_class
 
@@ -76,13 +75,13 @@ class Mapping:
         self.X, self.Y = X, Y
 
         if type(mapping_class) == str:
-            mapping_class, _kwargs = mapping_classes[mapping_class]
+            self.mapping_class, _kwargs = mapping_classes[mapping_class]
             kwargs.update(_kwargs)
         
         # to save (this model uses the entire data rather than constructing splits)
-        self.full_model = mapping_class(**kwargs)
+        self.full_model = self.mapping_class(**kwargs)
         # placeholder model with the right params that we'll reuse across splits
-        self.model = mapping_class(**kwargs)
+        self.model = self.mapping_class(**kwargs)
         
         logging.log(f'initialized Mapping with {mapping_class}, {type(self.model)}!')
 
@@ -90,7 +89,7 @@ class Mapping:
     def construct_splits_(xr_dataset: xr.Dataset, # Y: xr.Dataset, 
                           strat_coord: str = None, k_folds: int = 5,
                           split_coord: str = None, num_split_groups_out: int = None,
-                          random_seed: int = 42
+                          random_seed: cython.int = 42
                          ):
 
         sampleid = xr_dataset.sampleid.values
