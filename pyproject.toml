@@ -7,6 +7,14 @@ authors = ["Greta Tuckute <gretatu@mit.edu>",
            "Ben Lipkin <lipkinb@mit.edu>"]
 license = "MIT"
 exclude = ["langbrainscore/data/"]
+# C extensions
+packages = [{ include = "langbrainscore" }]
+include = [{ path = "langbrainscore/**/*.so", format = "wheel" }]
+
+[tool.poetry.build]
+generate-setup-file = false
+# build C extensions
+script = "buildcython.py"
 
 
 [tool.poetry.dependencies]
@@ -26,8 +34,9 @@ xarray = "^0.20.0"
 [tool.poetry.dev-dependencies]
 pdoc3 = "^0.10.0"
 ipython = "^8.0.1"
+Cython = "^0.29.27"
 
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.0.0", "Cython~=0.29.27"]
 build-backend = "poetry.core.masonry.api"
