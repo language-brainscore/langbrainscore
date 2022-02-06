@@ -29,6 +29,8 @@ particularly models they develop or study. They may be also interested in creati
 cognitively plausible models of natural language understanding. Whereas language-brainscore is not a direct
 measure of cognitive plausibility of ANN models, it provides a possible direction to optimize towards.
 
+# Documentation
+Click on the badge to go to documentation: [![CircleCI](https://circleci.com/gh/language-brainscore/lang-brainscore-fuzzy-potato/tree/main.svg?style=svg)](https://language-brainscore.github.io/lang-brainscore-fuzzy-potato/)
 
 
 # Usage
@@ -65,6 +67,7 @@ python3 -m pip install langbrainscore
 ## Development
 ### Installation
 
+#### Option A (preferred method)
 This project uses [`poetry`](https://python-poetry.org/) for dependency management and packaging
 for development purposes (you don't need poetry to install it as a library/package from PyPI). 
 Why? `poetry` allows running the application in a virtual environment while abstracting away *which* 
@@ -85,15 +88,13 @@ within this project). -->
     ```bash
     poetry install
     ```
-### Running Scripts & Notebooks
+4. Before running a script using `langbrainscore`, make sure to activate your environment, or type `poetry shell` to create a venv.
 
-1. Run the project inside a `poetry shell`!
-    - This activates a virtual environment if one isn't already active. 
-    If you would like to use a conda environment, activate it first: `conda activate fuzzy-potato`
-    ```bash
-    poetry shell
-    ```
-    Then proceed to run scripts as normal
-    
-2. Alternatively (not recommended), use the `pyproject.toml` file to create your own environment
-   from scratch.
+#### Option B 
+
+Use a Docker image with all dependencies pre-installed! 
+-  `aloxatel/langbrainscore`
+-  Click the badge to open the image on Docker hub: [![CircleCI](https://circleci.com/gh/language-brainscore/lang-brainscore-fuzzy-potato/tree/circle-ci.svg?style=svg)](https://hub.docker.com/repository/docker/aloxatel/langbrainscore)
+
+
+Alternatively, use the `pyproject.toml` file to create your own environment from scratch.
