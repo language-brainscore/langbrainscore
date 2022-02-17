@@ -1,5 +1,6 @@
 ################################################################
-#### meta ####
+#### meta #### 
+# for help, contact asathe @ mit.edu
 ################################################################
 version: 2.1
 executors:
@@ -50,19 +51,49 @@ jobs:
             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             docker push $IMAGE_NAME:latest
 
+#### run pytest unittests ####
+  test:
+    docker:
+      - image: aloxatel/langbrainscore
+    steps:
+      - checkout
+      #- attach_workspace:
+      #    at: html
+      - run:
+          name: Install and configure dependencies
+          command: make install || poetry install
+      - run:
+          name: Run pytest (unit testing), code coverage, and mypy (static type-checking)
+          command: |
+            make test && mv test-results html/ || ./run_test_coverage.sh
+      - store_artifacts:
+          path: html/
+      - store_test_results:
+          path: html/test-results
+      - persist_to_workspace:
+          root: html/
+          paths: 
+            - '*'
+            - html/test-results
+            - html/test-results/codecov
+            - html/test-results/typing
+
   #### run pdoc3 to generate documentation ####
   docs-build:
     docker:
       - image: aloxatel/langbrainscore
     steps:
       - checkout
+      - attach_workspace:
+          at: html
       - run:
           name: Build docs
-          command: |
-            # poetry shell
-            pdoc3 --html langbrainscore --force 
+          command: make docs || pdoc3 --html langbrainscore --force 
+      - run:
+          name: Unpack docs into root folder of gh-pages
+          command: mv html/langbrainscore/* html/
       - persist_to_workspace:
-          root: html/langbrainscore
+          root: html/
           paths: '*'
 
   #### deploy documentation to GitHub pages ####
@@ -83,42 +114,13 @@ jobs:
             git config user.email "pdoc3@circleci.com"
             git config user.name "asathe"
       - run:
+          name: List directories
+          command: ls -lah html/ html/test-results
+      - run:
           name: Deploy docs to gh-pages branch
-          command: gh-pages --dotfiles --message "[skip ci] Docs updates" --dist html
+          command: gh-pages --dotfiles --message "[skip ci] Docs updates" --dist html -r git@github.com:language-brainscore/lang-brainscore-fuzzy-potato
 
-  #### run pytest unittests ####
-  test:
-    docker:
-      - image: aloxatel/langbrainscore
-    steps:
-      - checkout
-      - run:
-          name: Install and configure dependencies
-          command: |
-            # poetry shell
-            poetry install
-      - run:
-          name: Run pytest and generate code coverage
-          command: |
-            coverage -m pytest --junitxml=test-results/pytest.xml # junit.xml
-            coverage report
-            coverage html
-      - run:
-          name: Run static type checking
-          command: mypy -m langbrainscore --config-file pyproject.toml --junit-xml test-results/mypy.xml --html-report test-results/typecheck
-      - run:
-          name: Move coverage and test results to html/coverage directory
-          command:
-            mkdir -p html/
-            mv htmlcov html/coverage
-            mv test-results html/coverage/tests
-      - store_artifacts:
-          path: html/coverage
-      - store_test_results:
-          path: html/coverage/tests
-      - persist_to_workspace:
-          root: html/
-          paths: '*'
+  
 
 ################################################################
 #### definitions and constraints for workflows ####
@@ -143,24 +145,22 @@ workflows:
   tests_and_docs:
     jobs:
       - test:
-          requires:
-            - docs-build
           filters:
             branches:
               ignore:
-                - gh-pages
                 - circle-ci
   #### related to documentation ####
   # docs:
     # jobs:
       - docs-build:
+          requires:
+            - test
           filters:
             branches:
               only: main
       - docs-deploy:
           requires:
             - docs-build
-            - test # so that we can also upload the coverage report
           filters:
             branches:
               only: main 
