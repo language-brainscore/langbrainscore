@@ -1,1 +1,45 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="3.012" timestamp="2022-02-24T18:17:56.347722" hostname="ea8d2ff4f71a"><testcase classname="tests.test_dummy" name="test_dummy" time="0.001" /></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="23.786" timestamp="2022-02-24T18:29:42.537419" hostname="0b32eafed73f"><testcase classname="" name="tests.test_identical" time="0.000"><error message="collection failure">tests/test_identical.py:174: in &lt;module&gt;
+    brsc = lbs.BrainScore(identity_mapping, met, run=True)
+langbrainscore/brainscore/brainscore.py:25: in __init__
+    self.score()
+/usr/local/lib/python3.8/dist-packages/methodtools.py:72: in __call__
+    return self.__call__(*args, **kwargs)
+langbrainscore/brainscore/brainscore.py:72: in score
+    this_score = self._score(A_time, B_time, self.metric)
+langbrainscore/brainscore/brainscore.py:57: in _score
+    return metric(A, B)
+langbrainscore/metrics/metric.py:21: in __call__
+    return [self.metric(A[:, i], B[:, i], **kwds)
+langbrainscore/metrics/metric.py:21: in &lt;listcomp&gt;
+    return [self.metric(A[:, i], B[:, i], **kwds)
+langbrainscore/metrics/rsa.py:41: in run
+    globals()[self._comparison_metric](
+langbrainscore/metrics/rsa.py:42: in &lt;genexpr&gt;
+    *(self._rdm.transform(rep) for rep in (X, Y))
+langbrainscore/metrics/rsa.py:68: in transform
+    pairwise_distances(sample_reps, metric=self._distance_metric), k=1
+/usr/local/lib/python3.8/dist-packages/sklearn/metrics/pairwise.py:1889: in pairwise_distances
+    return _parallel_pairwise(X, Y, func, n_jobs, **kwds)
+/usr/local/lib/python3.8/dist-packages/sklearn/metrics/pairwise.py:1430: in _parallel_pairwise
+    return func(X, Y, **kwds)
+/usr/local/lib/python3.8/dist-packages/sklearn/metrics/pairwise.py:898: in cosine_distances
+    S = cosine_similarity(X, Y)
+/usr/local/lib/python3.8/dist-packages/sklearn/metrics/pairwise.py:1251: in cosine_similarity
+    X, Y = check_pairwise_arrays(X, Y)
+/usr/local/lib/python3.8/dist-packages/sklearn/metrics/pairwise.py:147: in check_pairwise_arrays
+    X = Y = check_array(
+/usr/local/lib/python3.8/dist-packages/sklearn/utils/validation.py:769: in check_array
+    raise ValueError(
+E   ValueError: Expected 2D array, got 1D array instead:
+E   array=[       nan        nan        nan        nan        nan        nan
+E           nan        nan        nan        nan        nan        nan
+E           nan        nan        nan        nan        nan        nan
+E           nan        nan        nan        nan        nan        nan
+E    0.28317533 0.0153515  0.28763026 0.19382583 0.73969281 0.3058315
+E    0.77723725 0.79942081 0.33792061 0.53716762 0.47194907 0.16093234
+E    0.58763157 0.92557244 0.73417108 0.69017431 0.64593885 0.16151618
+E    0.17288938 0.00634129 0.72682938 0.81176083 0.31684413 0.44969593
+E    0.9715423  0.45354597 0.09340175 0.85933141 0.69226674 0.10703918
+E    0.45824202 0.35233184 0.61978368 0.38880533 0.60849705 0.94180203
+E    0.44033564 0.51994625].
+E   Reshape your data either using array.reshape(-1, 1) if your data has a single feature or array.reshape(1, -1) if it contains a single sample.</error></testcase></testsuite></testsuites>

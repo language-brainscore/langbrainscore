@@ -267,7 +267,28 @@ class Mapping:
 
 
 class IdentityMap(Mapping):
-    ...</code></pre>
+    &#34;&#34;&#34;Identity mapping for running RSA-type analyses that don&#39;t need splits into cv folds and don&#39;t need affine maps&#34;&#34;&#34;
+    
+    def fit(self,
+            # X: xr.Dataset, Y: xr.Dataset
+            ) -&gt; None:
+        &#34;&#34;&#34;creates a mapping model using k-fold cross-validation
+            depending on the class initialization, uses strat_coord
+            and split_coord to stratify and split across group boundaries
+
+        Args:, groups=None, k_folds: int = 5
+            X ([type]): [description]
+            Y ([type]): [description]
+            k_folds (int, optional): [description]. Defaults to 5.
+
+        Returns:
+            [type]: [description]
+        &#34;&#34;&#34;
+        
+        return dict(test=[self.Y.data],
+                    pred=[[self.X.data.isel(timeid=i) for i in self.X.timeid.values]])
+    
+    </code></pre>
 </details>
 </section>
 <section>
@@ -284,7 +305,8 @@ class IdentityMap(Mapping):
 <span>(</span><span>X: xarray.core.dataset.Dataset, Y: xarray.core.dataset.Dataset, mapping_class: Union[str, Any], random_seed: int = 42, k_fold: int = 5, strat_coord: str = None, num_split_groups_out: int = None, split_coord: str = None, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Initializes a Mapping object that establishes a mapping between two encoder representations.
+<div class="desc"><p>Identity mapping for running RSA-type analyses that don't need splits into cv folds and don't need affine maps</p>
+<p>Initializes a Mapping object that establishes a mapping between two encoder representations.
 The mapping is initialized with certain parameters baked in, accepted as arguments to
 the init function, listed below.</p>
 <h2 id="args">Args</h2>
@@ -309,7 +331,26 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class IdentityMap(Mapping):
-    ...</code></pre>
+    &#34;&#34;&#34;Identity mapping for running RSA-type analyses that don&#39;t need splits into cv folds and don&#39;t need affine maps&#34;&#34;&#34;
+    
+    def fit(self,
+            # X: xr.Dataset, Y: xr.Dataset
+            ) -&gt; None:
+        &#34;&#34;&#34;creates a mapping model using k-fold cross-validation
+            depending on the class initialization, uses strat_coord
+            and split_coord to stratify and split across group boundaries
+
+        Args:, groups=None, k_folds: int = 5
+            X ([type]): [description]
+            Y ([type]): [description]
+            k_folds (int, optional): [description]. Defaults to 5.
+
+        Returns:
+            [type]: [description]
+        &#34;&#34;&#34;
+        
+        return dict(test=[self.Y.data],
+                    pred=[[self.X.data.isel(timeid=i) for i in self.X.timeid.values]])</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
