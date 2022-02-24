@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>langbrainscore.mapping_tools.mapping API documentation</title>
+<title>langbrainscore.mapping.mapping API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>langbrainscore.mapping_tools.mapping</code></h1>
+<h1 class="title">Module <code>langbrainscore.mapping.mapping</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -32,7 +32,6 @@ import typing
 import numpy as np
 import xarray as xr
 from sklearn.linear_model import Ridge, LinearRegression, LogisticRegression, RidgeCV
-from langbrainscore.mapping_tools.rsa import RSA, RDM
 from langbrainscore.utils import logging
 
 from functools import partial
@@ -64,6 +63,11 @@ class Mapping:
                  num_split_groups_out: int = None, # (p, the # of groups in the test split)
                  split_coord: str = None, # (grouping coord)
 
+                 #TODO
+                 # handle predict held-out subject # but then we have to do mean over ROIs
+                 # because individual neuroids do not correspond
+                 # we kind of already have this along the `sampleid` coordinate, but we
+                 # need to implement this in the neuroid coordinate
 
                  **kwargs) -&gt; None:
         &#34;&#34;&#34;Initializes a Mapping object that establishes a mapping between two encoder representations.
@@ -85,8 +89,8 @@ class Mapping:
             &#39;ridge&#39;: (Ridge, {&#39;alpha&#39;: 1.0}),
             &#39;ridge_cv&#39;: (RidgeCV, {&#39;alphas&#39;: np.logspace(-3, 3, 13), &#39;alpha_per_target&#39;: True}),
             &#39;linear&#39;: (LinearRegression, {}),
-            &#39;rsa&#39;: (RSA, {}),
-            &#39;rdm&#39;: (RDM, {}),
+            #&#39;rsa&#39;: (RSA, {}),
+            #&#39;rdm&#39;: (RDM, {}),
         }
 
         self.k_fold = k_fold or 1
@@ -98,10 +102,29 @@ class Mapping:
         self.mapping_class = mapping_class
 
         if strat_coord:
-            assert (X[strat_coord].values == Y[strat_coord].values).all()
+            try:
+                assert (X[strat_coord].values == Y[strat_coord].values).all()
+            except AssertionError as e:
+                raise ValueError(f&#39;{strat_coord} coordinate does not align across X and Y&#39;)
         if split_coord:
-            assert (X[split_coord].values == Y[split_coord].values).all() 
+            try:
+                assert (X[split_coord].values == Y[split_coord].values).all() 
+            except AssertionError as e:
+                raise ValueError(f&#39;{split_coord} coordinate does not align across X and Y&#39;)
+        
+        # TODO:
+        # make sure there are no stimuli that have NaNs in all places along the neuroid dimension
+
+
         self.X, self.Y = X, Y
+
+        self.X_nan_mask = X.isnull()
+        self.Y_nan_mask = Y.isnull()
+        self.X_nan_removed = X.dropna(&#39;neuroid&#39;)
+        self.Y_nan_removed = Y.dropna(&#39;neuroid&#39;)
+
+        logging.log(f&#39;X shape: {X.data.shape}, NaNs: {self.X_nan_mask.sum()}; after NaN removal: {self.X_nan_removed.data.shape}&#39;)
+        logging.log(f&#39;Y shape: {Y.data.shape}, NaNs: {self.Y_nan_mask.sum()}; after NaN removal: {self.Y_nan_removed.data.shape}&#39;)
 
         if type(mapping_class) == str:
             mapping_class, _kwargs = mapping_classes[mapping_class]
@@ -115,7 +138,7 @@ class Mapping:
         logging.log(f&#39;initialized Mapping with {mapping_class}, {type(self.model)}!&#39;)
 
     @staticmethod
-    def construct_splits_(xr_dataset: xr.Dataset, # Y: xr.Dataset, 
+    def _construct_splits(xr_dataset: xr.Dataset, # Y: xr.Dataset, 
                           strat_coord: str = None, k_folds: int = 5,
                           split_coord: str = None, num_split_groups_out: int = None,
                           random_seed: int = 42
@@ -141,7 +164,7 @@ class Mapping:
 
 
     def construct_splits(self):
-        return self.construct_splits_(self.X,
+        return self._construct_splits(self.X_nan_removed,
                                       self.strat_coord, self.k_fold, 
                                       self.split_coord, self.num_split_groups_out,
                                       random_seed=self.random_seed)
@@ -169,13 +192,14 @@ class Mapping:
         &#34;&#34;&#34;        
 
         # these collections store each split for our records later
-        alpha_across_splits = [] # only used in case of ridge_cv
+        alpha_across_splits = [] # only used in case of ridge_cv # TODO
+        # TODO we aren&#39;t saving this to the object instance yet
         train_indices = []
         test_indices = []
 
         splits = self.construct_splits()
 
-        X_test_collection = []
+        # X_test_collection = []
         Y_test_collection = []
         Y_pred_collection = []
 
@@ -184,25 +208,45 @@ class Mapping:
             train_indices.append(train_index)
             test_indices.append(test_index)
 
-            X_train, X_test = self.X.sel(sampleid=train_index).to_array(), self.X.sel(sampleid=test_index).to_array()
-            y_train, y_test = self.Y.sel(sampleid=train_index).to_array(), self.Y.sel(sampleid=test_index).to_array()
-            self.model.fit(X_train, y_train)
+            # !! NOTE the _nan_removed variants instead of X and Y
+            X_train, X_test = (
+                self.X_nan_removed.sel(sampleid=train_index).data,#.squeeze(),
+                self.X_nan_removed.sel(sampleid=test_index).data#.squeeze()
+            )
+            y_train, y_test = (
+                self.Y_nan_removed.sel(sampleid=train_index).data,#.squeeze(),
+                self.Y_nan_removed.sel(sampleid=test_index).data#.squeeze()
+            )
 
-            y_pred = self.model.predict(X_test)
-            y_pred = np.squeeze(y_pred)
+            y_pred_over_time = []
+            for timeid in self.Y_nan_removed.timeid.data:
 
+                # TODO: change this code for models that also have a non-singleton timeid
+                # i.e., output evolves in time (RNN?)
+                self.model.fit(X_train.isel(timeid=0), y_train.isel(timeid=timeid))
+
+                y_pred = self.model.predict(X_test.isel(timeid=0))
+                y_pred_over_time.append(y_pred)
+
+
+            Y_pred_collection.append(y_pred_over_time)
             Y_test_collection.append(y_test)
-            Y_pred_collection.append(y_pred)
 
-        return Y_pred_collection, Y_test_collection
+        # the return value is a dictionary of test/pred;
+        # each of test/pred is a list of lists with two levels of
+        # nesting as below:
+        #   first level: CV folds
+        #       second level: timeids
+        return dict(test=Y_test_collection, 
+                    pred=Y_pred_collection)
 
-
-    def map(self, source, target) -&gt; None:
-        &#39;&#39;&#39;
-        the works: constructs splits, fits models for each split, then evaluates the fit 
-                of each split and returns the result (also for each split)
-        &#39;&#39;&#39;
-        pass
+    
+    # def map(self, source, target) -&gt; None:
+    #     &#39;&#39;&#39;
+    #     the works: constructs splits, fits models for each split, then evaluates the fit 
+    #             of each split and returns the result (also for each split)
+    #     &#39;&#39;&#39;
+    #     pass
 
         
     def save_model(self) -&gt; None:
@@ -235,7 +279,7 @@ class IdentityMap(Mapping):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="langbrainscore.mapping_tools.mapping.IdentityMap"><code class="flex name class">
+<dt id="langbrainscore.mapping.mapping.IdentityMap"><code class="flex name class">
 <span>class <span class="ident">IdentityMap</span></span>
 <span>(</span><span>X: xarray.core.dataset.Dataset, Y: xarray.core.dataset.Dataset, mapping_class: Union[str, Any], random_seed: int = 42, k_fold: int = 5, strat_coord: str = None, num_split_groups_out: int = None, split_coord: str = None, **kwargs)</span>
 </code></dt>
@@ -269,20 +313,19 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="langbrainscore.mapping_tools.mapping.Mapping" href="#langbrainscore.mapping_tools.mapping.Mapping">Mapping</a></li>
+<li><a title="langbrainscore.mapping.mapping.Mapping" href="#langbrainscore.mapping.mapping.Mapping">Mapping</a></li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="langbrainscore.mapping_tools.mapping.Mapping" href="#langbrainscore.mapping_tools.mapping.Mapping">Mapping</a></b></code>:
+<li><code><b><a title="langbrainscore.mapping.mapping.Mapping" href="#langbrainscore.mapping.mapping.Mapping">Mapping</a></b></code>:
 <ul class="hlist">
-<li><code><a title="langbrainscore.mapping_tools.mapping.Mapping.fit" href="#langbrainscore.mapping_tools.mapping.Mapping.fit">fit</a></code></li>
-<li><code><a title="langbrainscore.mapping_tools.mapping.Mapping.map" href="#langbrainscore.mapping_tools.mapping.Mapping.map">map</a></code></li>
-<li><code><a title="langbrainscore.mapping_tools.mapping.Mapping.save_model" href="#langbrainscore.mapping_tools.mapping.Mapping.save_model">save_model</a></code></li>
+<li><code><a title="langbrainscore.mapping.mapping.Mapping.fit" href="#langbrainscore.mapping.mapping.Mapping.fit">fit</a></code></li>
+<li><code><a title="langbrainscore.mapping.mapping.Mapping.save_model" href="#langbrainscore.mapping.mapping.Mapping.save_model">save_model</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="langbrainscore.mapping_tools.mapping.Mapping"><code class="flex name class">
+<dt id="langbrainscore.mapping.mapping.Mapping"><code class="flex name class">
 <span>class <span class="ident">Mapping</span></span>
 <span>(</span><span>X: xarray.core.dataset.Dataset, Y: xarray.core.dataset.Dataset, mapping_class: Union[str, Any], random_seed: int = 42, k_fold: int = 5, strat_coord: str = None, num_split_groups_out: int = None, split_coord: str = None, **kwargs)</span>
 </code></dt>
@@ -326,6 +369,11 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
                  num_split_groups_out: int = None, # (p, the # of groups in the test split)
                  split_coord: str = None, # (grouping coord)
 
+                 #TODO
+                 # handle predict held-out subject # but then we have to do mean over ROIs
+                 # because individual neuroids do not correspond
+                 # we kind of already have this along the `sampleid` coordinate, but we
+                 # need to implement this in the neuroid coordinate
 
                  **kwargs) -&gt; None:
         &#34;&#34;&#34;Initializes a Mapping object that establishes a mapping between two encoder representations.
@@ -347,8 +395,8 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
             &#39;ridge&#39;: (Ridge, {&#39;alpha&#39;: 1.0}),
             &#39;ridge_cv&#39;: (RidgeCV, {&#39;alphas&#39;: np.logspace(-3, 3, 13), &#39;alpha_per_target&#39;: True}),
             &#39;linear&#39;: (LinearRegression, {}),
-            &#39;rsa&#39;: (RSA, {}),
-            &#39;rdm&#39;: (RDM, {}),
+            #&#39;rsa&#39;: (RSA, {}),
+            #&#39;rdm&#39;: (RDM, {}),
         }
 
         self.k_fold = k_fold or 1
@@ -360,10 +408,29 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
         self.mapping_class = mapping_class
 
         if strat_coord:
-            assert (X[strat_coord].values == Y[strat_coord].values).all()
+            try:
+                assert (X[strat_coord].values == Y[strat_coord].values).all()
+            except AssertionError as e:
+                raise ValueError(f&#39;{strat_coord} coordinate does not align across X and Y&#39;)
         if split_coord:
-            assert (X[split_coord].values == Y[split_coord].values).all() 
+            try:
+                assert (X[split_coord].values == Y[split_coord].values).all() 
+            except AssertionError as e:
+                raise ValueError(f&#39;{split_coord} coordinate does not align across X and Y&#39;)
+        
+        # TODO:
+        # make sure there are no stimuli that have NaNs in all places along the neuroid dimension
+
+
         self.X, self.Y = X, Y
+
+        self.X_nan_mask = X.isnull()
+        self.Y_nan_mask = Y.isnull()
+        self.X_nan_removed = X.dropna(&#39;neuroid&#39;)
+        self.Y_nan_removed = Y.dropna(&#39;neuroid&#39;)
+
+        logging.log(f&#39;X shape: {X.data.shape}, NaNs: {self.X_nan_mask.sum()}; after NaN removal: {self.X_nan_removed.data.shape}&#39;)
+        logging.log(f&#39;Y shape: {Y.data.shape}, NaNs: {self.Y_nan_mask.sum()}; after NaN removal: {self.Y_nan_removed.data.shape}&#39;)
 
         if type(mapping_class) == str:
             mapping_class, _kwargs = mapping_classes[mapping_class]
@@ -377,7 +444,7 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
         logging.log(f&#39;initialized Mapping with {mapping_class}, {type(self.model)}!&#39;)
 
     @staticmethod
-    def construct_splits_(xr_dataset: xr.Dataset, # Y: xr.Dataset, 
+    def _construct_splits(xr_dataset: xr.Dataset, # Y: xr.Dataset, 
                           strat_coord: str = None, k_folds: int = 5,
                           split_coord: str = None, num_split_groups_out: int = None,
                           random_seed: int = 42
@@ -403,7 +470,7 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
 
 
     def construct_splits(self):
-        return self.construct_splits_(self.X,
+        return self._construct_splits(self.X_nan_removed,
                                       self.strat_coord, self.k_fold, 
                                       self.split_coord, self.num_split_groups_out,
                                       random_seed=self.random_seed)
@@ -431,13 +498,14 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
         &#34;&#34;&#34;        
 
         # these collections store each split for our records later
-        alpha_across_splits = [] # only used in case of ridge_cv
+        alpha_across_splits = [] # only used in case of ridge_cv # TODO
+        # TODO we aren&#39;t saving this to the object instance yet
         train_indices = []
         test_indices = []
 
         splits = self.construct_splits()
 
-        X_test_collection = []
+        # X_test_collection = []
         Y_test_collection = []
         Y_pred_collection = []
 
@@ -446,25 +514,45 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
             train_indices.append(train_index)
             test_indices.append(test_index)
 
-            X_train, X_test = self.X.sel(sampleid=train_index).to_array(), self.X.sel(sampleid=test_index).to_array()
-            y_train, y_test = self.Y.sel(sampleid=train_index).to_array(), self.Y.sel(sampleid=test_index).to_array()
-            self.model.fit(X_train, y_train)
+            # !! NOTE the _nan_removed variants instead of X and Y
+            X_train, X_test = (
+                self.X_nan_removed.sel(sampleid=train_index).data,#.squeeze(),
+                self.X_nan_removed.sel(sampleid=test_index).data#.squeeze()
+            )
+            y_train, y_test = (
+                self.Y_nan_removed.sel(sampleid=train_index).data,#.squeeze(),
+                self.Y_nan_removed.sel(sampleid=test_index).data#.squeeze()
+            )
 
-            y_pred = self.model.predict(X_test)
-            y_pred = np.squeeze(y_pred)
+            y_pred_over_time = []
+            for timeid in self.Y_nan_removed.timeid.data:
 
+                # TODO: change this code for models that also have a non-singleton timeid
+                # i.e., output evolves in time (RNN?)
+                self.model.fit(X_train.isel(timeid=0), y_train.isel(timeid=timeid))
+
+                y_pred = self.model.predict(X_test.isel(timeid=0))
+                y_pred_over_time.append(y_pred)
+
+
+            Y_pred_collection.append(y_pred_over_time)
             Y_test_collection.append(y_test)
-            Y_pred_collection.append(y_pred)
 
-        return Y_pred_collection, Y_test_collection
+        # the return value is a dictionary of test/pred;
+        # each of test/pred is a list of lists with two levels of
+        # nesting as below:
+        #   first level: CV folds
+        #       second level: timeids
+        return dict(test=Y_test_collection, 
+                    pred=Y_pred_collection)
 
-
-    def map(self, source, target) -&gt; None:
-        &#39;&#39;&#39;
-        the works: constructs splits, fits models for each split, then evaluates the fit 
-                of each split and returns the result (also for each split)
-        &#39;&#39;&#39;
-        pass
+    
+    # def map(self, source, target) -&gt; None:
+    #     &#39;&#39;&#39;
+    #     the works: constructs splits, fits models for each split, then evaluates the fit 
+    #             of each split and returns the result (also for each split)
+    #     &#39;&#39;&#39;
+    #     pass
 
         
     def save_model(self) -&gt; None:
@@ -485,56 +573,18 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="langbrainscore.mapping_tools.mapping.IdentityMap" href="#langbrainscore.mapping_tools.mapping.IdentityMap">IdentityMap</a></li>
+<li><a title="langbrainscore.mapping.mapping.IdentityMap" href="#langbrainscore.mapping.mapping.IdentityMap">IdentityMap</a></li>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="langbrainscore.mapping_tools.mapping.Mapping.model"><code class="name">var <span class="ident">model</span></code></dt>
+<dt id="langbrainscore.mapping.mapping.Mapping.model"><code class="name">var <span class="ident">model</span></code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-</dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="langbrainscore.mapping_tools.mapping.Mapping.construct_splits_"><code class="name flex">
-<span>def <span class="ident">construct_splits_</span></span>(<span>xr_dataset: xarray.core.dataset.Dataset, strat_coord: str = None, k_folds: int = 5, split_coord: str = None, num_split_groups_out: int = None, random_seed: int = 42)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@staticmethod
-def construct_splits_(xr_dataset: xr.Dataset, # Y: xr.Dataset, 
-                      strat_coord: str = None, k_folds: int = 5,
-                      split_coord: str = None, num_split_groups_out: int = None,
-                      random_seed: int = 42
-                     ):
-
-    sampleid = xr_dataset.sampleid.values
-
-    if strat_coord and split_coord:
-        kf = StratifiedGroupKFold(n_splits=k_folds, shuffle=True, random_state=random_seed)
-        split = partial(kf.split, sampleid, y=xr_dataset[split_coord].values, groups=xr_dataset[strat_coord].values)
-    elif split_coord:
-        kf = GroupKFold(n_splits=k_folds)
-        split = partial(kf.split, sampleid, groups=xr_dataset[split_coord].values)
-    elif strat_coord:
-        kf = StratifiedKFold(n_splits=k_folds, shuffle=True, random_state=random_seed)
-        split = partial(kf.split, sampleid, y=xr_dataset[strat_coord].values)
-    else:
-        kf = KFold(n_splits=k_folds, shuffle=True, random_state=random_seed)
-        split = partial(kf.split, sampleid)
-
-    logging.log(f&#39;running {type(kf)}!&#39;)
-    return split()</code></pre>
-</details>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="langbrainscore.mapping_tools.mapping.Mapping.construct_splits"><code class="name flex">
+<dt id="langbrainscore.mapping.mapping.Mapping.construct_splits"><code class="name flex">
 <span>def <span class="ident">construct_splits</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -544,13 +594,13 @@ def construct_splits_(xr_dataset: xr.Dataset, # Y: xr.Dataset,
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def construct_splits(self):
-    return self.construct_splits_(self.X,
+    return self._construct_splits(self.X_nan_removed,
                                   self.strat_coord, self.k_fold, 
                                   self.split_coord, self.num_split_groups_out,
                                   random_seed=self.random_seed)</code></pre>
 </details>
 </dd>
-<dt id="langbrainscore.mapping_tools.mapping.Mapping.fit"><code class="name flex">
+<dt id="langbrainscore.mapping.mapping.Mapping.fit"><code class="name flex">
 <span>def <span class="ident">fit</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -587,13 +637,14 @@ k_folds (int, optional): [description]. Defaults to 5.</p>
     &#34;&#34;&#34;        
 
     # these collections store each split for our records later
-    alpha_across_splits = [] # only used in case of ridge_cv
+    alpha_across_splits = [] # only used in case of ridge_cv # TODO
+    # TODO we aren&#39;t saving this to the object instance yet
     train_indices = []
     test_indices = []
 
     splits = self.construct_splits()
 
-    X_test_collection = []
+    # X_test_collection = []
     Y_test_collection = []
     Y_pred_collection = []
 
@@ -602,20 +653,40 @@ k_folds (int, optional): [description]. Defaults to 5.</p>
         train_indices.append(train_index)
         test_indices.append(test_index)
 
-        X_train, X_test = self.X.sel(sampleid=train_index).to_array(), self.X.sel(sampleid=test_index).to_array()
-        y_train, y_test = self.Y.sel(sampleid=train_index).to_array(), self.Y.sel(sampleid=test_index).to_array()
-        self.model.fit(X_train, y_train)
+        # !! NOTE the _nan_removed variants instead of X and Y
+        X_train, X_test = (
+            self.X_nan_removed.sel(sampleid=train_index).data,#.squeeze(),
+            self.X_nan_removed.sel(sampleid=test_index).data#.squeeze()
+        )
+        y_train, y_test = (
+            self.Y_nan_removed.sel(sampleid=train_index).data,#.squeeze(),
+            self.Y_nan_removed.sel(sampleid=test_index).data#.squeeze()
+        )
 
-        y_pred = self.model.predict(X_test)
-        y_pred = np.squeeze(y_pred)
+        y_pred_over_time = []
+        for timeid in self.Y_nan_removed.timeid.data:
 
+            # TODO: change this code for models that also have a non-singleton timeid
+            # i.e., output evolves in time (RNN?)
+            self.model.fit(X_train.isel(timeid=0), y_train.isel(timeid=timeid))
+
+            y_pred = self.model.predict(X_test.isel(timeid=0))
+            y_pred_over_time.append(y_pred)
+
+
+        Y_pred_collection.append(y_pred_over_time)
         Y_test_collection.append(y_test)
-        Y_pred_collection.append(y_pred)
 
-    return Y_pred_collection, Y_test_collection</code></pre>
+    # the return value is a dictionary of test/pred;
+    # each of test/pred is a list of lists with two levels of
+    # nesting as below:
+    #   first level: CV folds
+    #       second level: timeids
+    return dict(test=Y_test_collection, 
+                pred=Y_pred_collection)</code></pre>
 </details>
 </dd>
-<dt id="langbrainscore.mapping_tools.mapping.Mapping.fit_full"><code class="name flex">
+<dt id="langbrainscore.mapping.mapping.Mapping.fit_full"><code class="name flex">
 <span>def <span class="ident">fit_full</span></span>(<span>self, X, Y)</span>
 </code></dt>
 <dd>
@@ -630,25 +701,7 @@ k_folds (int, optional): [description]. Defaults to 5.</p>
     raise NotImplemented</code></pre>
 </details>
 </dd>
-<dt id="langbrainscore.mapping_tools.mapping.Mapping.map"><code class="name flex">
-<span>def <span class="ident">map</span></span>(<span>self, source, target) ‑> None</span>
-</code></dt>
-<dd>
-<div class="desc"><p>the works: constructs splits, fits models for each split, then evaluates the fit
-of each split and returns the result (also for each split)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def map(self, source, target) -&gt; None:
-    &#39;&#39;&#39;
-    the works: constructs splits, fits models for each split, then evaluates the fit 
-            of each split and returns the result (also for each split)
-    &#39;&#39;&#39;
-    pass</code></pre>
-</details>
-</dd>
-<dt id="langbrainscore.mapping_tools.mapping.Mapping.predict"><code class="name flex">
+<dt id="langbrainscore.mapping.mapping.Mapping.predict"><code class="name flex">
 <span>def <span class="ident">predict</span></span>(<span>self, source) ‑> None</span>
 </code></dt>
 <dd>
@@ -661,7 +714,7 @@ of each split and returns the result (also for each split)</p></div>
     pass</code></pre>
 </details>
 </dd>
-<dt id="langbrainscore.mapping_tools.mapping.Mapping.save_model"><code class="name flex">
+<dt id="langbrainscore.mapping.mapping.Mapping.save_model"><code class="name flex">
 <span>def <span class="ident">save_model</span></span>(<span>self) ‑> None</span>
 </code></dt>
 <dd>
@@ -708,25 +761,23 @@ of each split and returns the result (also for each split)</p></div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="langbrainscore.mapping_tools" href="index.html">langbrainscore.mapping_tools</a></code></li>
+<li><code><a title="langbrainscore.mapping" href="index.html">langbrainscore.mapping</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="langbrainscore.mapping_tools.mapping.IdentityMap" href="#langbrainscore.mapping_tools.mapping.IdentityMap">IdentityMap</a></code></h4>
+<h4><code><a title="langbrainscore.mapping.mapping.IdentityMap" href="#langbrainscore.mapping.mapping.IdentityMap">IdentityMap</a></code></h4>
 </li>
 <li>
-<h4><code><a title="langbrainscore.mapping_tools.mapping.Mapping" href="#langbrainscore.mapping_tools.mapping.Mapping">Mapping</a></code></h4>
+<h4><code><a title="langbrainscore.mapping.mapping.Mapping" href="#langbrainscore.mapping.mapping.Mapping">Mapping</a></code></h4>
 <ul class="two-column">
-<li><code><a title="langbrainscore.mapping_tools.mapping.Mapping.construct_splits" href="#langbrainscore.mapping_tools.mapping.Mapping.construct_splits">construct_splits</a></code></li>
-<li><code><a title="langbrainscore.mapping_tools.mapping.Mapping.construct_splits_" href="#langbrainscore.mapping_tools.mapping.Mapping.construct_splits_">construct_splits_</a></code></li>
-<li><code><a title="langbrainscore.mapping_tools.mapping.Mapping.fit" href="#langbrainscore.mapping_tools.mapping.Mapping.fit">fit</a></code></li>
-<li><code><a title="langbrainscore.mapping_tools.mapping.Mapping.fit_full" href="#langbrainscore.mapping_tools.mapping.Mapping.fit_full">fit_full</a></code></li>
-<li><code><a title="langbrainscore.mapping_tools.mapping.Mapping.map" href="#langbrainscore.mapping_tools.mapping.Mapping.map">map</a></code></li>
-<li><code><a title="langbrainscore.mapping_tools.mapping.Mapping.model" href="#langbrainscore.mapping_tools.mapping.Mapping.model">model</a></code></li>
-<li><code><a title="langbrainscore.mapping_tools.mapping.Mapping.predict" href="#langbrainscore.mapping_tools.mapping.Mapping.predict">predict</a></code></li>
-<li><code><a title="langbrainscore.mapping_tools.mapping.Mapping.save_model" href="#langbrainscore.mapping_tools.mapping.Mapping.save_model">save_model</a></code></li>
+<li><code><a title="langbrainscore.mapping.mapping.Mapping.construct_splits" href="#langbrainscore.mapping.mapping.Mapping.construct_splits">construct_splits</a></code></li>
+<li><code><a title="langbrainscore.mapping.mapping.Mapping.fit" href="#langbrainscore.mapping.mapping.Mapping.fit">fit</a></code></li>
+<li><code><a title="langbrainscore.mapping.mapping.Mapping.fit_full" href="#langbrainscore.mapping.mapping.Mapping.fit_full">fit_full</a></code></li>
+<li><code><a title="langbrainscore.mapping.mapping.Mapping.model" href="#langbrainscore.mapping.mapping.Mapping.model">model</a></code></li>
+<li><code><a title="langbrainscore.mapping.mapping.Mapping.predict" href="#langbrainscore.mapping.mapping.Mapping.predict">predict</a></code></li>
+<li><code><a title="langbrainscore.mapping.mapping.Mapping.save_model" href="#langbrainscore.mapping.mapping.Mapping.save_model">save_model</a></code></li>
 </ul>
 </li>
 </ul>

@@ -29,17 +29,23 @@
 <pre><code class="python">import langbrainscore.dataset
 import langbrainscore.encoder
 import langbrainscore.interface
-import langbrainscore.mapping_tools
+import langbrainscore.mapping
 import langbrainscore.metrics
 import langbrainscore.utils
+import langbrainscore.brainscore
 
-from langbrainscore.encoder import * </code></pre>
+from langbrainscore.encoder import PTEncoder, HuggingFaceEncoder 
+from langbrainscore.brainscore import BrainScore</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
 <dt><code class="name"><a title="langbrainscore.benchmark_packaging" href="benchmark_packaging/index.html">langbrainscore.benchmark_packaging</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="langbrainscore.brainscore" href="brainscore/index.html">langbrainscore.brainscore</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -55,14 +61,14 @@ from langbrainscore.encoder import * </code></pre>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt><code class="name"><a title="langbrainscore.mapping_tools" href="mapping_tools/index.html">langbrainscore.mapping_tools</a></code></dt>
+<dt><code class="name"><a title="langbrainscore.mapping" href="mapping/index.html">langbrainscore.mapping</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 <dt><code class="name"><a title="langbrainscore.metrics" href="metrics/index.html">langbrainscore.metrics</a></code></dt>
 <dd>
 <div class="desc"><p>Collection of functions with the general signature
-(matrix, matrix) -&gt; scalar</p></div>
+(<code>np.ndarray</code>, <code>np.ndarray</code>) -&gt; <code>np.ndarray</code></p></div>
 </dd>
 <dt><code class="name"><a title="langbrainscore.utils" href="utils/index.html">langbrainscore.utils</a></code></dt>
 <dd>
@@ -86,10 +92,11 @@ from langbrainscore.encoder import * </code></pre>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="langbrainscore.benchmark_packaging" href="benchmark_packaging/index.html">langbrainscore.benchmark_packaging</a></code></li>
+<li><code><a title="langbrainscore.brainscore" href="brainscore/index.html">langbrainscore.brainscore</a></code></li>
 <li><code><a title="langbrainscore.dataset" href="dataset/index.html">langbrainscore.dataset</a></code></li>
 <li><code><a title="langbrainscore.encoder" href="encoder/index.html">langbrainscore.encoder</a></code></li>
 <li><code><a title="langbrainscore.interface" href="interface/index.html">langbrainscore.interface</a></code></li>
-<li><code><a title="langbrainscore.mapping_tools" href="mapping_tools/index.html">langbrainscore.mapping_tools</a></code></li>
+<li><code><a title="langbrainscore.mapping" href="mapping/index.html">langbrainscore.mapping</a></code></li>
 <li><code><a title="langbrainscore.metrics" href="metrics/index.html">langbrainscore.metrics</a></code></li>
 <li><code><a title="langbrainscore.utils" href="utils/index.html">langbrainscore.utils</a></code></li>
 </ul>

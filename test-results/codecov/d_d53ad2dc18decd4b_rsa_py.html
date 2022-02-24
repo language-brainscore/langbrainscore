@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=emulateIE7" />
-    <title>Coverage for langbrainscore/mapping_tools/rsa.py: 62%</title>
+    <title>Coverage for langbrainscore/metrics/rsa.py: 62%</title>
     <link rel="icon" sizes="32x32" href="favicon_32.png">
     <link rel="stylesheet" href="style.css" type="text/css">
     <script type="text/javascript" src="coverage_html.js" defer></script>
@@ -12,7 +12,7 @@
 <header>
     <div class="content">
         <h1>
-            <span class="text">Coverage for </span><b>langbrainscore/mapping_tools/rsa.py</b>:
+            <span class="text">Coverage for </span><b>langbrainscore/metrics/rsa.py</b>:
             <span class="pc_cov">62%</span>
         </h1>
         <div id="help_panel_wrapper">
@@ -75,7 +75,7 @@
     <p class="pln"><span class="n"><a id="t16" href="#t16">16</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t17" href="#t17">17</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t18" href="#t18">18</a></span><span class="t">    <span class="key">def</span> <span class="nam">__init__</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span> <span class="nam">similarity_metric</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">"cosine"</span><span class="op">,</span> <span class="nam">comparison_metric</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">"spearmanr"</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t19" href="#t19">19</a></span><span class="t">        <span class="nam">self</span><span class="op">,</span> <span class="nam">distance_metric</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">"cosine"</span><span class="op">,</span> <span class="nam">comparison_metric</span><span class="op">:</span> <span class="nam">str</span> <span class="op">=</span> <span class="str">"spearmanr"</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t20" href="#t20">20</a></span><span class="t">    <span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t21" href="#t21">21</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t22" href="#t22">22</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -88,7 +88,7 @@
     <p class="pln"><span class="n"><a id="t29" href="#t29">29</a></span><span class="t"><span class="str">        valid comparison metrics: ['pearsonr', 'spearmanr', 'kendalltau']</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t30" href="#t30">30</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t31" href="#t31">31</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_rdm</span> <span class="op">=</span> <span class="nam">RDM</span><span class="op">(</span><span class="nam">similarity_metric</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t32" href="#t32">32</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_rdm</span> <span class="op">=</span> <span class="nam">RDM</span><span class="op">(</span><span class="nam">distance_metric</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t33" href="#t33">33</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_comparison_metric</span> <span class="op">=</span> <span class="nam">comparison_metric</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t34" href="#t34">34</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t35" href="#t35">35</a></span><span class="t">    <span class="key">def</span> <span class="nam">run</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">X</span><span class="op">:</span> <span class="nam">np</span><span class="op">.</span><span class="nam">ndarray</span><span class="op">,</span> <span class="nam">Y</span><span class="op">:</span> <span class="nam">np</span><span class="op">.</span><span class="nam">ndarray</span><span class="op">)</span> <span class="op">-></span> <span class="nam">typing</span><span class="op">.</span><span class="nam">Tuple</span><span class="op">[</span><span class="nam">float</span><span class="op">,</span> <span class="nam">float</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -113,18 +113,18 @@
     <p class="pln"><span class="n"><a id="t54" href="#t54">54</a></span><span class="t"><span class="str">    to produce an RDM.</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t55" href="#t55">55</a></span><span class="t"><span class="str">    """</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t56" href="#t56">56</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t">    <span class="key">def</span> <span class="nam">__init__</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">similarity_metric</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="mis show_mis"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_similarity_metric</span> <span class="op">=</span> <span class="nam">similarity_metric</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t57" href="#t57">57</a></span><span class="t">    <span class="key">def</span> <span class="nam">__init__</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">distance_metric</span><span class="op">:</span> <span class="nam">str</span><span class="op">)</span> <span class="op">-></span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="mis show_mis"><span class="n"><a id="t58" href="#t58">58</a></span><span class="t">        <span class="nam">self</span><span class="op">.</span><span class="nam">_distance_metric</span> <span class="op">=</span> <span class="nam">distance_metric</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t59" href="#t59">59</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t60" href="#t60">60</a></span><span class="t">    <span class="key">def</span> <span class="nam">transform</span><span class="op">(</span><span class="nam">self</span><span class="op">,</span> <span class="nam">sample_reps</span><span class="op">:</span> <span class="nam">np</span><span class="op">.</span><span class="nam">ndarray</span><span class="op">)</span> <span class="op">-></span> <span class="nam">np</span><span class="op">.</span><span class="nam">array</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t61" href="#t61">61</a></span><span class="t">        <span class="str">"""</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t62" href="#t62">62</a></span><span class="t"><span class="str">        accepts an N samples x D dimensions embedding</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t63" href="#t63">63</a></span><span class="t"><span class="str">        returns the flattened N(N-1)/2 vector</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t64" href="#t64">64</a></span><span class="t"><span class="str">        of the upper triangle of an N x N distance matrix</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t"><span class="str">        of sample distances under similarity metric</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t65" href="#t65">65</a></span><span class="t"><span class="str">        of sample distances under distance metric</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t66" href="#t66">66</a></span><span class="t"><span class="str">        """</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t67" href="#t67">67</a></span><span class="t">        <span class="nam">params</span> <span class="op">=</span> <span class="nam">np</span><span class="op">.</span><span class="nam">triu</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="pln"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">            <span class="nam">pairwise_distances</span><span class="op">(</span><span class="nam">sample_reps</span><span class="op">,</span> <span class="nam">metric</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">_similarity_metric</span><span class="op">)</span><span class="op">,</span> <span class="nam">k</span><span class="op">=</span><span class="num">1</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t68" href="#t68">68</a></span><span class="t">            <span class="nam">pairwise_distances</span><span class="op">(</span><span class="nam">sample_reps</span><span class="op">,</span> <span class="nam">metric</span><span class="op">=</span><span class="nam">self</span><span class="op">.</span><span class="nam">_distance_metric</span><span class="op">)</span><span class="op">,</span> <span class="nam">k</span><span class="op">=</span><span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t69" href="#t69">69</a></span><span class="t">        <span class="op">)</span><span class="op">.</span><span class="nam">flatten</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="mis show_mis"><span class="n"><a id="t70" href="#t70">70</a></span><span class="t">        <span class="key">return</span> <span class="nam">params</span><span class="op">[</span><span class="nam">params</span> <span class="op">!=</span> <span class="num">0</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
 </main>
@@ -132,7 +132,7 @@
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v6.3.1</a>,
-            created at 2022-02-07 03:37 +0000
+            created at 2022-02-24 18:17 +0000
         </p>
     </div>
 </footer>

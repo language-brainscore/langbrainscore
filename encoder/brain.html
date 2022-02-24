@@ -29,6 +29,8 @@
 <pre><code class="python">from langbrainscore.interface.encoder import _BrainEncoder
 import numpy as np
 
+from langbrainscore.utils import logging
+
 
 class BrainEncoder(_BrainEncoder):
     &#39;&#39;&#39;
@@ -54,7 +56,8 @@ class BrainEncoder(_BrainEncoder):
 
     # @typing.overload
     # def encode(self, stimuli: typing.Union[np.array, list]): ...
-    def encode(self, dataset: &#39;langbrainscore.dataset.BrainDataSet&#39; = None):
+    def encode(self, dataset: &#39;langbrainscore.dataset.BrainDataSet&#39; = None,
+               average_time = True):
         &#34;&#34;&#34;returns an &#34;encoding&#34; of stimuli (passed in as a BrainDataset)
 
         Args:
@@ -67,10 +70,13 @@ class BrainEncoder(_BrainEncoder):
         
         dataset = dataset or self.dataset
 
-        if (timeid_dims := dataset._dataset.dims[&#39;timeid&#39;]) &gt; 1:
-            return dataset._dataset.mean(&#39;timeid&#39;)
-        elif timeid_dims == 1:
-            return dataset._dataset.squeeze(&#39;timeid&#39;)
+        if (timeid_dims := dataset._dataset.dims[&#39;timeid&#39;]) &gt;= 1:
+            # TODO: revisit this
+            if average_time:
+                return dataset._dataset.mean(&#39;timeid&#39;)
+            return dataset._dataset
+        # elif timeid_dims == 1:
+        #     return dataset._dataset.squeeze(&#39;timeid&#39;)
         else:
             raise ValueError(f&#39;timeid has invalid shape {timeid_dims}&#39;)</code></pre>
 </details>
@@ -124,7 +130,8 @@ a collection of stimuli (typically <code>np.array</code> or <code>list</code>)</
 
     # @typing.overload
     # def encode(self, stimuli: typing.Union[np.array, list]): ...
-    def encode(self, dataset: &#39;langbrainscore.dataset.BrainDataSet&#39; = None):
+    def encode(self, dataset: &#39;langbrainscore.dataset.BrainDataSet&#39; = None,
+               average_time = True):
         &#34;&#34;&#34;returns an &#34;encoding&#34; of stimuli (passed in as a BrainDataset)
 
         Args:
@@ -137,10 +144,13 @@ a collection of stimuli (typically <code>np.array</code> or <code>list</code>)</
         
         dataset = dataset or self.dataset
 
-        if (timeid_dims := dataset._dataset.dims[&#39;timeid&#39;]) &gt; 1:
-            return dataset._dataset.mean(&#39;timeid&#39;)
-        elif timeid_dims == 1:
-            return dataset._dataset.squeeze(&#39;timeid&#39;)
+        if (timeid_dims := dataset._dataset.dims[&#39;timeid&#39;]) &gt;= 1:
+            # TODO: revisit this
+            if average_time:
+                return dataset._dataset.mean(&#39;timeid&#39;)
+            return dataset._dataset
+        # elif timeid_dims == 1:
+        #     return dataset._dataset.squeeze(&#39;timeid&#39;)
         else:
             raise ValueError(f&#39;timeid has invalid shape {timeid_dims}&#39;)</code></pre>
 </details>
@@ -168,7 +178,7 @@ def dataset(self) -&gt; &#39;langbrainscore.dataset.Dataset&#39;:
 <h3>Methods</h3>
 <dl>
 <dt id="langbrainscore.encoder.brain.BrainEncoder.encode"><code class="name flex">
-<span>def <span class="ident">encode</span></span>(<span>self, dataset: langbrainscore.dataset.BrainDataSet = None)</span>
+<span>def <span class="ident">encode</span></span>(<span>self, dataset: langbrainscore.dataset.BrainDataSet = None, average_time=True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>returns an "encoding" of stimuli (passed in as a BrainDataset)</p>
@@ -184,7 +194,8 @@ by layer (trivially just 1 layer)</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def encode(self, dataset: &#39;langbrainscore.dataset.BrainDataSet&#39; = None):
+<pre><code class="python">def encode(self, dataset: &#39;langbrainscore.dataset.BrainDataSet&#39; = None,
+           average_time = True):
     &#34;&#34;&#34;returns an &#34;encoding&#34; of stimuli (passed in as a BrainDataset)
 
     Args:
@@ -197,10 +208,13 @@ by layer (trivially just 1 layer)</dd>
     
     dataset = dataset or self.dataset
 
-    if (timeid_dims := dataset._dataset.dims[&#39;timeid&#39;]) &gt; 1:
-        return dataset._dataset.mean(&#39;timeid&#39;)
-    elif timeid_dims == 1:
-        return dataset._dataset.squeeze(&#39;timeid&#39;)
+    if (timeid_dims := dataset._dataset.dims[&#39;timeid&#39;]) &gt;= 1:
+        # TODO: revisit this
+        if average_time:
+            return dataset._dataset.mean(&#39;timeid&#39;)
+        return dataset._dataset
+    # elif timeid_dims == 1:
+    #     return dataset._dataset.squeeze(&#39;timeid&#39;)
     else:
         raise ValueError(f&#39;timeid has invalid shape {timeid_dims}&#39;)</code></pre>
 </details>
