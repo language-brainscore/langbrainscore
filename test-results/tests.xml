@@ -1,11 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="19.953" timestamp="2022-02-24T19:26:24.628877" hostname="6f08e3df4800"><testcase classname="" name="tests.test_identical" time="0.000"><error message="collection failure">tests/test_identical.py:144: in &lt;module&gt;
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="28.437" timestamp="2022-02-24T19:29:45.401922" hostname="b017d7f077ba"><testcase classname="" name="tests.test_identical" time="0.000"><error message="collection failure">tests/test_identical.py:144: in &lt;module&gt;
     ann_encoded_data = distilgpt_encoder.encode(mock_neuro_dataset, context_dimension='passage_experiment')
 langbrainscore/encoder/ann.py:256: in encode
-    for k in dataset._dataset.drop(dim='neuroid').drop(dim='timeid').coords: #&lt;- keeps only sampleid, and has no data
-/usr/local/lib/python3.8/dist-packages/xarray/core/dataset.py:4425: in drop
-    return self.drop_sel({dim: labels}, errors=errors, **labels_kwargs)
-/usr/local/lib/python3.8/dist-packages/xarray/core/dataset.py:4499: in drop_sel
-    new_index = index.drop(labels_for_dim, errors=errors)
-/usr/local/lib/python3.8/dist-packages/pandas/core/indexes/base.py:6644: in drop
-    raise KeyError(f"{list(labels[mask])} not found in axis")
-E   KeyError: '[None] not found in axis'</error></testcase></testsuite></testsuites>
+    for k in dataset._dataset.to_dataset(name='data').drop_dims(['neuroid', 'timeid']).coords: #&lt;- keeps only sampleid, and has no data
+/usr/local/lib/python3.8/dist-packages/xarray/core/common.py:246: in __getattr__
+    raise AttributeError(
+E   AttributeError: 'Dataset' object has no attribute 'to_dataset'</error></testcase></testsuite></testsuites>
