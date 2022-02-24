@@ -281,7 +281,7 @@ class HuggingFaceEncoder(_ANNEncoder):
         # d.drop_dims([&#39;neuroid&#39;, &#39;timeid&#39;]) &lt;-- keeps only sampleid, and has no data
 
         # TODO: explain what this does extensively
-        for k in dataset._dataset.drop_dims([&#39;neuroid&#39;, &#39;timeid&#39;]).coords: #&lt;- keeps only sampleid, and has no data
+        for k in dataset._dataset.drop(dim=[&#39;neuroid&#39;, &#39;timeid&#39;]).coords: #&lt;- keeps only sampleid, and has no data
             xr_encode = xr_encode.assign_coords({k: (&#39;sampleid&#39;, dataset._dataset[k].data)})
 
 
@@ -632,7 +632,7 @@ inheritance.</p></div>
         # d.drop_dims([&#39;neuroid&#39;, &#39;timeid&#39;]) &lt;-- keeps only sampleid, and has no data
 
         # TODO: explain what this does extensively
-        for k in dataset._dataset.drop_dims([&#39;neuroid&#39;, &#39;timeid&#39;]).coords: #&lt;- keeps only sampleid, and has no data
+        for k in dataset._dataset.drop(dim=[&#39;neuroid&#39;, &#39;timeid&#39;]).coords: #&lt;- keeps only sampleid, and has no data
             xr_encode = xr_encode.assign_coords({k: (&#39;sampleid&#39;, dataset._dataset[k].data)})
 
 
@@ -834,7 +834,7 @@ gives you a more biologically plausibly analysis downstream (: [default: False]<
     # d.drop_dims([&#39;neuroid&#39;, &#39;timeid&#39;]) &lt;-- keeps only sampleid, and has no data
 
     # TODO: explain what this does extensively
-    for k in dataset._dataset.drop_dims([&#39;neuroid&#39;, &#39;timeid&#39;]).coords: #&lt;- keeps only sampleid, and has no data
+    for k in dataset._dataset.drop(dim=[&#39;neuroid&#39;, &#39;timeid&#39;]).coords: #&lt;- keeps only sampleid, and has no data
         xr_encode = xr_encode.assign_coords({k: (&#39;sampleid&#39;, dataset._dataset[k].data)})
 
 

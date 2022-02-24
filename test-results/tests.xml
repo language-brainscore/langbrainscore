@@ -1,45 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="20.200" timestamp="2022-02-24T19:02:52.717014" hostname="09ddb47e3dcb"><testcase classname="" name="tests.test_identical" time="0.000"><error message="collection failure">tests/test_identical.py:174: in &lt;module&gt;
-    brsc = lbs.BrainScore(identity_mapping, met, run=True)
-langbrainscore/brainscore/brainscore.py:25: in __init__
-    self.score()
-/usr/local/lib/python3.8/dist-packages/methodtools.py:72: in __call__
-    return self.__call__(*args, **kwargs)
-langbrainscore/brainscore/brainscore.py:72: in score
-    this_score = self._score(A_time, B_time, self.metric)
-langbrainscore/brainscore/brainscore.py:57: in _score
-    return metric(A, B)
-langbrainscore/metrics/metric.py:21: in __call__
-    return [self.metric(A[:, i], B[:, i], **kwds)
-langbrainscore/metrics/metric.py:21: in &lt;listcomp&gt;
-    return [self.metric(A[:, i], B[:, i], **kwds)
-langbrainscore/metrics/rsa.py:41: in run
-    globals()[self._comparison_metric](
-langbrainscore/metrics/rsa.py:42: in &lt;genexpr&gt;
-    *(self._rdm.transform(rep) for rep in (X, Y))
-langbrainscore/metrics/rsa.py:68: in transform
-    pairwise_distances(sample_reps, metric=self._distance_metric), k=1
-/usr/local/lib/python3.8/dist-packages/sklearn/metrics/pairwise.py:1889: in pairwise_distances
-    return _parallel_pairwise(X, Y, func, n_jobs, **kwds)
-/usr/local/lib/python3.8/dist-packages/sklearn/metrics/pairwise.py:1430: in _parallel_pairwise
-    return func(X, Y, **kwds)
-/usr/local/lib/python3.8/dist-packages/sklearn/metrics/pairwise.py:898: in cosine_distances
-    S = cosine_similarity(X, Y)
-/usr/local/lib/python3.8/dist-packages/sklearn/metrics/pairwise.py:1251: in cosine_similarity
-    X, Y = check_pairwise_arrays(X, Y)
-/usr/local/lib/python3.8/dist-packages/sklearn/metrics/pairwise.py:147: in check_pairwise_arrays
-    X = Y = check_array(
-/usr/local/lib/python3.8/dist-packages/sklearn/utils/validation.py:769: in check_array
-    raise ValueError(
-E   ValueError: Expected 2D array, got 1D array instead:
-E   array=[       nan        nan        nan        nan        nan        nan
-E           nan        nan        nan        nan        nan        nan
-E           nan        nan        nan        nan        nan        nan
-E           nan        nan        nan        nan        nan        nan
-E    0.50539435 0.13556958 0.61639434 0.1993475  0.22224163 0.43222046
-E    0.62108972 0.88441464 0.97509533 0.97900588 0.1867991  0.39673293
-E    0.89370988 0.49538823 0.88365733 0.17037086 0.51033122 0.86886477
-E    0.93521305 0.12364301 0.49307135 0.43771962 0.44181156 0.54806537
-E    0.04208122 0.63207817 0.1726464  0.44764613 0.83522578 0.77764811
-E    0.54413825 0.25333017 0.79343602 0.31477034 0.276225   0.47965826
-E    0.58729385 0.40803607].
-E   Reshape your data either using array.reshape(-1, 1) if your data has a single feature or array.reshape(1, -1) if it contains a single sample.</error></testcase></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="18.201" timestamp="2022-02-24T19:22:17.489438" hostname="d079a61e5891"><testcase classname="" name="tests.test_identical" time="0.000"><error message="collection failure">tests/test_identical.py:144: in &lt;module&gt;
+    ann_encoded_data = distilgpt_encoder.encode(mock_neuro_dataset, context_dimension='passage_experiment')
+langbrainscore/encoder/ann.py:256: in encode
+    for k in dataset._dataset.drop(dim=['neuroid', 'timeid']).coords: #&lt;- keeps only sampleid, and has no data
+/usr/local/lib/python3.8/dist-packages/xarray/core/dataset.py:4425: in drop
+    return self.drop_sel({dim: labels}, errors=errors, **labels_kwargs)
+E   TypeError: unhashable type: 'list'</error></testcase></testsuite></testsuites>
