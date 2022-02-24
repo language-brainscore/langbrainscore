@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="27.639" timestamp="2022-02-24T19:39:31.313792" hostname="ad5bb2b6953e"><testcase classname="" name="tests.test_identical" time="0.000"><error message="collection failure">tests/test_identical.py:144: in &lt;module&gt;
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="131.945" timestamp="2022-02-24T19:51:01.621174" hostname="732e1a6cc6c2"><testcase classname="" name="tests.test_identical" time="0.000"><error message="collection failure">tests/test_identical.py:144: in &lt;module&gt;
     ann_encoded_data = distilgpt_encoder.encode(mock_neuro_dataset, context_dimension='passage_experiment')
 langbrainscore/encoder/ann.py:256: in encode
     for k in dataset._dataset.to_dataset(name='data').drop_dims(['neuroid', 'timeid']).coords: #&lt;- keeps only sampleid, and has no data
