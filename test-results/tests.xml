@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="23.786" timestamp="2022-02-24T18:29:42.537419" hostname="0b32eafed73f"><testcase classname="" name="tests.test_identical" time="0.000"><error message="collection failure">tests/test_identical.py:174: in &lt;module&gt;
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="20.200" timestamp="2022-02-24T19:02:52.717014" hostname="09ddb47e3dcb"><testcase classname="" name="tests.test_identical" time="0.000"><error message="collection failure">tests/test_identical.py:174: in &lt;module&gt;
     brsc = lbs.BrainScore(identity_mapping, met, run=True)
 langbrainscore/brainscore/brainscore.py:25: in __init__
     self.score()
@@ -35,11 +35,11 @@ E   array=[       nan        nan        nan        nan        nan        nan
 E           nan        nan        nan        nan        nan        nan
 E           nan        nan        nan        nan        nan        nan
 E           nan        nan        nan        nan        nan        nan
-E    0.28317533 0.0153515  0.28763026 0.19382583 0.73969281 0.3058315
-E    0.77723725 0.79942081 0.33792061 0.53716762 0.47194907 0.16093234
-E    0.58763157 0.92557244 0.73417108 0.69017431 0.64593885 0.16151618
-E    0.17288938 0.00634129 0.72682938 0.81176083 0.31684413 0.44969593
-E    0.9715423  0.45354597 0.09340175 0.85933141 0.69226674 0.10703918
-E    0.45824202 0.35233184 0.61978368 0.38880533 0.60849705 0.94180203
-E    0.44033564 0.51994625].
+E    0.50539435 0.13556958 0.61639434 0.1993475  0.22224163 0.43222046
+E    0.62108972 0.88441464 0.97509533 0.97900588 0.1867991  0.39673293
+E    0.89370988 0.49538823 0.88365733 0.17037086 0.51033122 0.86886477
+E    0.93521305 0.12364301 0.49307135 0.43771962 0.44181156 0.54806537
+E    0.04208122 0.63207817 0.1726464  0.44764613 0.83522578 0.77764811
+E    0.54413825 0.25333017 0.79343602 0.31477034 0.276225   0.47965826
+E    0.58729385 0.40803607].
 E   Reshape your data either using array.reshape(-1, 1) if your data has a single feature or array.reshape(1, -1) if it contains a single sample.</error></testcase></testsuite></testsuites>

@@ -70,10 +70,10 @@ class BrainEncoder(_BrainEncoder):
         
         dataset = dataset or self.dataset
 
-        if (timeid_dims := dataset._dataset.dims[&#39;timeid&#39;]) &gt;= 1:
+        if (timeid_dims := dataset._dataset[&#39;timeid&#39;].size) &gt;= 1:
             # TODO: revisit this
             if average_time:
-                return dataset._dataset.mean(&#39;timeid&#39;)
+                return dataset._dataset.mean(&#39;timeid&#39;).expand_dims(&#39;timeid&#39;, 2)
             return dataset._dataset
         # elif timeid_dims == 1:
         #     return dataset._dataset.squeeze(&#39;timeid&#39;)
@@ -144,10 +144,10 @@ a collection of stimuli (typically <code>np.array</code> or <code>list</code>)</
         
         dataset = dataset or self.dataset
 
-        if (timeid_dims := dataset._dataset.dims[&#39;timeid&#39;]) &gt;= 1:
+        if (timeid_dims := dataset._dataset[&#39;timeid&#39;].size) &gt;= 1:
             # TODO: revisit this
             if average_time:
-                return dataset._dataset.mean(&#39;timeid&#39;)
+                return dataset._dataset.mean(&#39;timeid&#39;).expand_dims(&#39;timeid&#39;, 2)
             return dataset._dataset
         # elif timeid_dims == 1:
         #     return dataset._dataset.squeeze(&#39;timeid&#39;)
@@ -208,10 +208,10 @@ by layer (trivially just 1 layer)</dd>
     
     dataset = dataset or self.dataset
 
-    if (timeid_dims := dataset._dataset.dims[&#39;timeid&#39;]) &gt;= 1:
+    if (timeid_dims := dataset._dataset[&#39;timeid&#39;].size) &gt;= 1:
         # TODO: revisit this
         if average_time:
-            return dataset._dataset.mean(&#39;timeid&#39;)
+            return dataset._dataset.mean(&#39;timeid&#39;).expand_dims(&#39;timeid&#39;, 2)
         return dataset._dataset
     # elif timeid_dims == 1:
     #     return dataset._dataset.squeeze(&#39;timeid&#39;)
