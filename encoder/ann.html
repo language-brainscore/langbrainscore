@@ -201,7 +201,7 @@ class HuggingFaceEncoder(_ANNEncoder):
             # CONTEXT LOOP
             ###############################################################################                  
             for i, stimulus in enumerate(stimuli_in_context):
-                print(f&#39;encoding stimulus {i} of {len(stimuli_in_context)}&#39;)
+                # print(f&#39;encoding stimulus {i} of {len(stimuli_in_context)}&#39;)
                 # mask based on the uni/bi-directional nature of models :)
                 if not bidirectional:
                     stimuli_directional = stimuli_in_context[:i + 1]
@@ -272,7 +272,7 @@ class HuggingFaceEncoder(_ANNEncoder):
                 &#34;timeid&#34;: np.arange(1),
                 &#34;layer&#34;: (&#39;neuroid&#39;, np.array(layer_ids[0], dtype=&#39;int64&#39;)),
             }
-        ).to_dataset(name=&#34;data&#34;)
+        ) #.to_dataset(name=&#34;data&#34;)
 
         #1 xr.Dataset({‘neuro’:xr1.data,’ann’:xr2.data}) 
         #2 bounds = xr.concat([xr_encode, xr_dataset], dim=&#39;sampleid&#39;) 
@@ -552,7 +552,7 @@ inheritance.</p></div>
             # CONTEXT LOOP
             ###############################################################################                  
             for i, stimulus in enumerate(stimuli_in_context):
-                print(f&#39;encoding stimulus {i} of {len(stimuli_in_context)}&#39;)
+                # print(f&#39;encoding stimulus {i} of {len(stimuli_in_context)}&#39;)
                 # mask based on the uni/bi-directional nature of models :)
                 if not bidirectional:
                     stimuli_directional = stimuli_in_context[:i + 1]
@@ -623,7 +623,7 @@ inheritance.</p></div>
                 &#34;timeid&#34;: np.arange(1),
                 &#34;layer&#34;: (&#39;neuroid&#39;, np.array(layer_ids[0], dtype=&#39;int64&#39;)),
             }
-        ).to_dataset(name=&#34;data&#34;)
+        ) #.to_dataset(name=&#34;data&#34;)
 
         #1 xr.Dataset({‘neuro’:xr1.data,’ann’:xr2.data}) 
         #2 bounds = xr.concat([xr_encode, xr_dataset], dim=&#39;sampleid&#39;) 
@@ -754,7 +754,7 @@ gives you a more biologically plausibly analysis downstream (: [default: False]<
         # CONTEXT LOOP
         ###############################################################################                  
         for i, stimulus in enumerate(stimuli_in_context):
-            print(f&#39;encoding stimulus {i} of {len(stimuli_in_context)}&#39;)
+            # print(f&#39;encoding stimulus {i} of {len(stimuli_in_context)}&#39;)
             # mask based on the uni/bi-directional nature of models :)
             if not bidirectional:
                 stimuli_directional = stimuli_in_context[:i + 1]
@@ -825,7 +825,7 @@ gives you a more biologically plausibly analysis downstream (: [default: False]<
             &#34;timeid&#34;: np.arange(1),
             &#34;layer&#34;: (&#39;neuroid&#39;, np.array(layer_ids[0], dtype=&#39;int64&#39;)),
         }
-    ).to_dataset(name=&#34;data&#34;)
+    ) #.to_dataset(name=&#34;data&#34;)
 
     #1 xr.Dataset({‘neuro’:xr1.data,’ann’:xr2.data}) 
     #2 bounds = xr.concat([xr_encode, xr_dataset], dim=&#39;sampleid&#39;) 

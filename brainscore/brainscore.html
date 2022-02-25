@@ -74,10 +74,10 @@ class BrainScore(_BrainScore):
         self.scores = fn()
 
     def _no_aggregate(self):
-        return self.scores_across_folds
+        return self.scores_unfolded
 
     def _aggregate_mean(self):
-        return self.scores_across_folds.mean(dim=&#39;cvfoldid&#39;)
+        return self.scores_unfolded.mean(dim=&#39;cvfoldid&#39;)
 
     @staticmethod
     def _score(A, B, metric: Metric) -&gt; np.ndarray:
@@ -85,40 +85,39 @@ class BrainScore(_BrainScore):
 
     @lru_cache(maxsize=None)
     def score(self):
-        result = self.mapping.fit()
-        tests, preds = result[&#39;test&#39;], result[&#39;pred&#39;]
 
-        sample_scores = []
-        # A, B are lists of xr DataArrays over timeids
-        for A, B in zip(tests, preds):
-            fold_scores = []
-            for timeid_ix, timeid in enumerate(A.timeid.values):
-                # A_time, B_time are xr DataArrays at a specific timeid
-                A_time = A.isel(timeid=timeid)
-                B_time = B[timeid_ix]
-                this_score = self._score(A_time, B_time, self.metric)
-                this_score = xr.DataArray(this_score, dims=(&#39;neuroid&#39;,), coords={}).to_dataset(name=&#39;data&#39;)
-        
-                # TODO
-                # we want to package the score with the original metadata. we&#39;re trying below.
-                for k in A.to_dataset(name=&#39;data&#39;).drop_dims([&#39;sampleid&#39;, &#39;timeid&#39;]).coords: 
-                    # ^- keeps only neuroid, and has no .data
-                    this_score = this_score.assign_coords({k: (&#39;neuroid&#39;, A[k].data)})
-                
-                fold_scores.append(this_score)
+        scores_per_neuroid = []
+        # returns generator over neuroid
+        for result in self.mapping.fit(): # TODO: wrong, change to for loop
 
-            sample_scores.append(xr.concat(fold_scores, dim=&#39;timeid&#39;))
- 
+            tests, preds = result[&#39;test&#39;], result[&#39;pred&#39;]
+            scores_per_fold = []
+            # A, B are lists of xr DataArrays over timeids
+            for cvid,(A, B) in enumerate(zip(tests, preds)):
+                scores_per_timeid = [] # this is a list of n_folds xarrays
+                for timeid in A.timeid.values:
+                    # A_time, B_time are xr DataArrays at a specific timeid
+                    A_time = A.sel(timeid=0) # TODO RNNs ;_;
+                    B_time = B.sel(timeid=timeid) # B[timeid_ix]
+                    timeid_score_scalar = self._score(A_time, B_time, self.metric)
+                    timeid_score = xr.DataArray(timeid_score_scalar,
+                                                dims=(&#39;neuroid&#39;,&#39;timeid&#39;), 
+                                                coords={&#39;neuroid&#39;:(&#39;neuroid&#39;, B_time.neuroid.values.reshape(-1)),
+                                                                              # ^ we want to extract [int] from 0-d array (scalar array)
+                                                        &#39;timeid&#39;: (&#39;timeid&#39;, [timeid]),
+                                                        })
+                    scores_per_timeid.append(timeid_score)
+            
+                fold_score =  xr.concat(scores_per_timeid, dim=&#39;timeid&#39;).expand_dims(&#39;cvfoldid&#39;,0).assign_coords(cvfoldid=(&#39;cvfoldid&#39;, [cvid]))
+                scores_per_fold.append(fold_score)
 
-        scores = xr.concat(sample_scores, dim=&#39;cvfoldid&#39;).data
-        scores = scores.assign_coords({&#39;cvfoldid&#39;: (&#39;cvfoldid&#39;, scores.cvfoldid.data)})
+            neuroid_score = xr.concat(scores_per_fold,dim=&#34;cvfoldid&#34;)
 
-        for k in A.to_dataset(name=&#39;data&#39;).drop_dims([&#39;sampleid&#39;, &#39;neuroid&#39;]).coords: 
-            # ^- keeps only timeid, and has no .data
-            scores = scores.assign_coords({k: (&#39;timeid&#39;, A[k].data)})
+            scores_per_neuroid.append(neuroid_score)
 
-        self.scores_across_folds = scores.fillna(0)
+        self.scores_unfolded = xr.concat(scores_per_neuroid, dim=&#39;neuroid&#39;)
 
+        return self.scores_unfolded
     </code></pre>
 </details>
 </section>
@@ -181,10 +180,10 @@ inheritance.</p></div>
         self.scores = fn()
 
     def _no_aggregate(self):
-        return self.scores_across_folds
+        return self.scores_unfolded
 
     def _aggregate_mean(self):
-        return self.scores_across_folds.mean(dim=&#39;cvfoldid&#39;)
+        return self.scores_unfolded.mean(dim=&#39;cvfoldid&#39;)
 
     @staticmethod
     def _score(A, B, metric: Metric) -&gt; np.ndarray:
@@ -192,39 +191,39 @@ inheritance.</p></div>
 
     @lru_cache(maxsize=None)
     def score(self):
-        result = self.mapping.fit()
-        tests, preds = result[&#39;test&#39;], result[&#39;pred&#39;]
 
-        sample_scores = []
-        # A, B are lists of xr DataArrays over timeids
-        for A, B in zip(tests, preds):
-            fold_scores = []
-            for timeid_ix, timeid in enumerate(A.timeid.values):
-                # A_time, B_time are xr DataArrays at a specific timeid
-                A_time = A.isel(timeid=timeid)
-                B_time = B[timeid_ix]
-                this_score = self._score(A_time, B_time, self.metric)
-                this_score = xr.DataArray(this_score, dims=(&#39;neuroid&#39;,), coords={}).to_dataset(name=&#39;data&#39;)
-        
-                # TODO
-                # we want to package the score with the original metadata. we&#39;re trying below.
-                for k in A.to_dataset(name=&#39;data&#39;).drop_dims([&#39;sampleid&#39;, &#39;timeid&#39;]).coords: 
-                    # ^- keeps only neuroid, and has no .data
-                    this_score = this_score.assign_coords({k: (&#39;neuroid&#39;, A[k].data)})
-                
-                fold_scores.append(this_score)
+        scores_per_neuroid = []
+        # returns generator over neuroid
+        for result in self.mapping.fit(): # TODO: wrong, change to for loop
 
-            sample_scores.append(xr.concat(fold_scores, dim=&#39;timeid&#39;))
- 
+            tests, preds = result[&#39;test&#39;], result[&#39;pred&#39;]
+            scores_per_fold = []
+            # A, B are lists of xr DataArrays over timeids
+            for cvid,(A, B) in enumerate(zip(tests, preds)):
+                scores_per_timeid = [] # this is a list of n_folds xarrays
+                for timeid in A.timeid.values:
+                    # A_time, B_time are xr DataArrays at a specific timeid
+                    A_time = A.sel(timeid=0) # TODO RNNs ;_;
+                    B_time = B.sel(timeid=timeid) # B[timeid_ix]
+                    timeid_score_scalar = self._score(A_time, B_time, self.metric)
+                    timeid_score = xr.DataArray(timeid_score_scalar,
+                                                dims=(&#39;neuroid&#39;,&#39;timeid&#39;), 
+                                                coords={&#39;neuroid&#39;:(&#39;neuroid&#39;, B_time.neuroid.values.reshape(-1)),
+                                                                              # ^ we want to extract [int] from 0-d array (scalar array)
+                                                        &#39;timeid&#39;: (&#39;timeid&#39;, [timeid]),
+                                                        })
+                    scores_per_timeid.append(timeid_score)
+            
+                fold_score =  xr.concat(scores_per_timeid, dim=&#39;timeid&#39;).expand_dims(&#39;cvfoldid&#39;,0).assign_coords(cvfoldid=(&#39;cvfoldid&#39;, [cvid]))
+                scores_per_fold.append(fold_score)
 
-        scores = xr.concat(sample_scores, dim=&#39;cvfoldid&#39;).data
-        scores = scores.assign_coords({&#39;cvfoldid&#39;: (&#39;cvfoldid&#39;, scores.cvfoldid.data)})
+            neuroid_score = xr.concat(scores_per_fold,dim=&#34;cvfoldid&#34;)
 
-        for k in A.to_dataset(name=&#39;data&#39;).drop_dims([&#39;sampleid&#39;, &#39;neuroid&#39;]).coords: 
-            # ^- keeps only timeid, and has no .data
-            scores = scores.assign_coords({k: (&#39;timeid&#39;, A[k].data)})
+            scores_per_neuroid.append(neuroid_score)
 
-        self.scores_across_folds = scores.fillna(0)</code></pre>
+        self.scores_unfolded = xr.concat(scores_per_neuroid, dim=&#39;neuroid&#39;)
+
+        return self.scores_unfolded</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -275,39 +274,39 @@ inheritance.</p></div>
 </summary>
 <pre><code class="python">@lru_cache(maxsize=None)
 def score(self):
-    result = self.mapping.fit()
-    tests, preds = result[&#39;test&#39;], result[&#39;pred&#39;]
 
-    sample_scores = []
-    # A, B are lists of xr DataArrays over timeids
-    for A, B in zip(tests, preds):
-        fold_scores = []
-        for timeid_ix, timeid in enumerate(A.timeid.values):
-            # A_time, B_time are xr DataArrays at a specific timeid
-            A_time = A.isel(timeid=timeid)
-            B_time = B[timeid_ix]
-            this_score = self._score(A_time, B_time, self.metric)
-            this_score = xr.DataArray(this_score, dims=(&#39;neuroid&#39;,), coords={}).to_dataset(name=&#39;data&#39;)
-    
-            # TODO
-            # we want to package the score with the original metadata. we&#39;re trying below.
-            for k in A.to_dataset(name=&#39;data&#39;).drop_dims([&#39;sampleid&#39;, &#39;timeid&#39;]).coords: 
-                # ^- keeps only neuroid, and has no .data
-                this_score = this_score.assign_coords({k: (&#39;neuroid&#39;, A[k].data)})
-            
-            fold_scores.append(this_score)
+    scores_per_neuroid = []
+    # returns generator over neuroid
+    for result in self.mapping.fit(): # TODO: wrong, change to for loop
 
-        sample_scores.append(xr.concat(fold_scores, dim=&#39;timeid&#39;))
+        tests, preds = result[&#39;test&#39;], result[&#39;pred&#39;]
+        scores_per_fold = []
+        # A, B are lists of xr DataArrays over timeids
+        for cvid,(A, B) in enumerate(zip(tests, preds)):
+            scores_per_timeid = [] # this is a list of n_folds xarrays
+            for timeid in A.timeid.values:
+                # A_time, B_time are xr DataArrays at a specific timeid
+                A_time = A.sel(timeid=0) # TODO RNNs ;_;
+                B_time = B.sel(timeid=timeid) # B[timeid_ix]
+                timeid_score_scalar = self._score(A_time, B_time, self.metric)
+                timeid_score = xr.DataArray(timeid_score_scalar,
+                                            dims=(&#39;neuroid&#39;,&#39;timeid&#39;), 
+                                            coords={&#39;neuroid&#39;:(&#39;neuroid&#39;, B_time.neuroid.values.reshape(-1)),
+                                                                          # ^ we want to extract [int] from 0-d array (scalar array)
+                                                    &#39;timeid&#39;: (&#39;timeid&#39;, [timeid]),
+                                                    })
+                scores_per_timeid.append(timeid_score)
+        
+            fold_score =  xr.concat(scores_per_timeid, dim=&#39;timeid&#39;).expand_dims(&#39;cvfoldid&#39;,0).assign_coords(cvfoldid=(&#39;cvfoldid&#39;, [cvid]))
+            scores_per_fold.append(fold_score)
 
+        neuroid_score = xr.concat(scores_per_fold,dim=&#34;cvfoldid&#34;)
 
-    scores = xr.concat(sample_scores, dim=&#39;cvfoldid&#39;).data
-    scores = scores.assign_coords({&#39;cvfoldid&#39;: (&#39;cvfoldid&#39;, scores.cvfoldid.data)})
+        scores_per_neuroid.append(neuroid_score)
 
-    for k in A.to_dataset(name=&#39;data&#39;).drop_dims([&#39;sampleid&#39;, &#39;neuroid&#39;]).coords: 
-        # ^- keeps only timeid, and has no .data
-        scores = scores.assign_coords({k: (&#39;timeid&#39;, A[k].data)})
+    self.scores_unfolded = xr.concat(scores_per_neuroid, dim=&#39;neuroid&#39;)
 
-    self.scores_across_folds = scores.fillna(0)</code></pre>
+    return self.scores_unfolded</code></pre>
 </details>
 </dd>
 <dt id="langbrainscore.brainscore.brainscore.BrainScore.to_dataarray"><code class="name flex">
