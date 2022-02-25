@@ -43,11 +43,10 @@ class Metric(_Metric):
     def __call__(self, A: xr.DataArray, B: xr.DataArray, **kwds: dict) -&gt; np.ndarray:
         if A.shape != B.shape:
             raise ValueError(f&#39;mismatched shapes of A, B:  {A.shape}, {B.shape}&#39;)
-        if len(A.shape) &lt; 2:
+        if len(A.shape) &gt; 1:
             raise ValueError
         # return np.apply_along_axis(self.metric, 1, )
-        return [self.metric(A[:, i], B[:, i], **kwds) 
-                for i in tqdm(range(A.shape[1]), desc=&#39;computing metric per neuroid in a cvfold&#39;)]
+        return self.metric(A, B, **kwds)
 # hack self.metric(A.dropna(dim=&#39;neuroid&#39;).values, B.dropna(dim=&#39;neuroid&#39;).values)
 
 
@@ -185,11 +184,10 @@ inheritance.</p></div>
     def __call__(self, A: xr.DataArray, B: xr.DataArray, **kwds: dict) -&gt; np.ndarray:
         if A.shape != B.shape:
             raise ValueError(f&#39;mismatched shapes of A, B:  {A.shape}, {B.shape}&#39;)
-        if len(A.shape) &lt; 2:
+        if len(A.shape) &gt; 1:
             raise ValueError
         # return np.apply_along_axis(self.metric, 1, )
-        return [self.metric(A[:, i], B[:, i], **kwds) 
-                for i in tqdm(range(A.shape[1]), desc=&#39;computing metric per neuroid in a cvfold&#39;)]</code></pre>
+        return self.metric(A, B, **kwds)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
