@@ -429,7 +429,7 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
 }
 </script>
     <h1>tests.html</h1>
-    <p>Report generated on 25-Feb-2022 at 00:11:18 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v3.1.1</p>
+    <p>Report generated on 28-Feb-2022 at 22:04:16 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v3.1.1</p>
     <h2>Environment</h2>
     <table id="environment">
       <tr>
@@ -440,10 +440,10 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
         <td>main</td></tr>
       <tr>
         <td>CIRCLE_BUILD_NUM</td>
-        <td>157</td></tr>
+        <td>164</td></tr>
       <tr>
         <td>CIRCLE_BUILD_URL</td>
-        <td><a href="https://circleci.com/gh/language-brainscore/langbrainscore/157" target="_blank">https://circleci.com/gh/language-brainscore/langbrainscore/157</a></td></tr>
+        <td><a href="https://circleci.com/gh/language-brainscore/langbrainscore/164" target="_blank">https://circleci.com/gh/language-brainscore/langbrainscore/164</a></td></tr>
       <tr>
         <td>CIRCLE_NODE_INDEX</td>
         <td>0</td></tr>
@@ -452,7 +452,7 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
         <td>1</td></tr>
       <tr>
         <td>CIRCLE_PREVIOUS_BUILD_NUM</td>
-        <td>156</td></tr>
+        <td>161</td></tr>
       <tr>
         <td>CIRCLE_PROJECT_REPONAME</td>
         <td>langbrainscore</td></tr>
@@ -464,10 +464,7 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
         <td>git@github.com:language-brainscore/langbrainscore.git</td></tr>
       <tr>
         <td>CIRCLE_SHA1</td>
-        <td>a2ad6bd81ac08350aaf2e21488290522ede57dd4</td></tr>
-      <tr>
-        <td>CIRCLE_USERNAME</td>
-        <td>aalok-sathe</td></tr>
+        <td>b0c934a71ad8a618038ae5fd9a7aa47934cdac29</td></tr>
       <tr>
         <td>Packages</td>
         <td>{"pluggy": "1.0.0", "py": "1.11.0", "pytest": "7.0.0"}</td></tr>
@@ -481,7 +478,7 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
         <td>Python</td>
         <td>3.8.10</td></tr></table>
     <h2>Summary</h2>
-    <p>0 tests ran in 17.94 seconds. </p>
+    <p>0 tests ran in 46.94 seconds. </p>
     <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="passed">0 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="failed">0 failed</span>, <input checked="true" class="filter" data-test-result="error" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="error">1 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
     <h2>Results</h2>
     <table id="results-table">
@@ -501,38 +498,38 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
           <td class="col-links"></td></tr>
         <tr>
           <td class="extra" colspan="4">
-            <div class="log">tests/test_identical.py:144: in &lt;module&gt;<br/>    ann_encoded_data = distilgpt_encoder.encode(mock_neuro_dataset, context_dimension=&#x27;passage_experiment&#x27;)<br/>langbrainscore/encoder/ann.py:256: in encode<br/>    for k in dataset._dataset.to_dataset(name=&#x27;data&#x27;).drop_dims([&#x27;neuroid&#x27;, &#x27;timeid&#x27;]).coords: #&lt;- keeps only sampleid, and has no data<br/>/usr/local/lib/python3.8/dist-packages/xarray/core/common.py:246: in __getattr__<br/>    raise AttributeError(<br/><span class="error">E   AttributeError: &#x27;Dataset&#x27; object has no attribute &#x27;to_dataset&#x27;</span><br/> --------------------------------Captured stderr--------------------------------- <br/>%%%% [WARN @ 0.84s] ...............................................................................
-%%%% [INFO @ 0.84s] creating mock data with 62 stimuli and 10000 neuroids
-%%%% [INFO @ 0.85s] recorded_data[:5,:5] == [[0.05938697 0.07102553 0.69973099 0.22042226 0.26808695]  [0.53065874
-.  .  .  .  .  .  .  0.60017969 0.28900465 0.44885427 0.19735016]  [0.16833704 0.51806924 0.26159869 0.23350083
-.  .  .  .  .  .  .  0.32122656]  [0.70265972 0.88243551 0.48202829 0.6978944  0.07866813]  [0.21716344 0.3547348
-.  .  .  .  .  .  .  0.98195284 0.01235526 0.01812921]], of shape (62, 10000)
-%%%% [INFO @ 0.86s] num. of stimuli generated: 62, example: [&#x27;ssocezocfe&#x27; &#x27;cucrbou x &#x27; &#x27;sjl vfpaj &#x27; &#x27;z ohqjsiop&#x27;]
+            <div class="log">tests/test_identical.py:144: in &lt;module&gt;<br/>    ann_encoded_data = distilgpt_encoder.encode(mock_neuro_dataset, context_dimension=&#x27;passage_experiment&#x27;)<br/>langbrainscore/encoder/ann.py:256: in encode<br/>    for k in dataset._dataset.to_dataset(name=&#x27;data&#x27;).drop_dims([&#x27;neuroid&#x27;, &#x27;timeid&#x27;]).coords: #&lt;- keeps only sampleid, and has no data<br/>/usr/local/lib/python3.8/dist-packages/xarray/core/common.py:246: in __getattr__<br/>    raise AttributeError(<br/><span class="error">E   AttributeError: &#x27;Dataset&#x27; object has no attribute &#x27;to_dataset&#x27;</span><br/> --------------------------------Captured stderr--------------------------------- <br/>%%%% [WARN @ 1.00s] ...............................................................................
+%%%% [INFO @ 1.00s] creating mock data with 62 stimuli and 10000 neuroids
+%%%% [INFO @ 1.01s] recorded_data[:5,:5] == [[0.76983904 0.40311932 0.52103995 0.81531485 0.4845175 ]  [0.83017061
+.  .  .  .  .  .  .  0.11176693 0.09521607 0.89130932 0.46691584]  [0.05717011 0.93652123 0.49449421 0.05901986
+.  .  .  .  .  .  .  0.72035366]  [0.52561801 0.78611438 0.79017105 0.6369543  0.93646058]  [0.24397593 0.5717319
+.  .  .  .  .  .  .  0.5473983  0.00835441 0.69301207]], of shape (62, 10000)
+%%%% [INFO @ 1.02s] num. of stimuli generated: 62, example: [&#x27;xusnai nnm&#x27; &#x27;aavoebdrbs&#x27; &#x27;addindenm &#x27; &#x27;oeni megau&#x27;]
 .  .  .  .  .  .  .  ...
-%%%% [INFO @ 0.86s] stimuli: [&#x27;ssocezocfe&#x27; &#x27;cucrbou x &#x27; &#x27;sjl vfpaj &#x27; &#x27;z ohqjsiop&#x27; &#x27;i kelpk np&#x27;  &#x27;kaouxbzlhs&#x27;
-.  .  .  .  .  .  .  &#x27;igeaeiiuui&#x27; &#x27;okmsooazih&#x27; &#x27;bxanuoo aj&#x27; &#x27;ldmaq aaie&#x27;  &#x27;izfahnca h&#x27; &#x27;fzmruaiaiu&#x27; &#x27;jczuojn wm&#x27; &#x27;r
-.  .  .  .  .  .  .  ritebeo&#x27; &#x27;h daupepis&#x27;  &#x27;rbodxnund &#x27; &#x27;obnhudpaqr&#x27; &#x27;hnsoodqfiv&#x27; &#x27;aothuqk gu&#x27; &#x27;wahvomxhfe&#x27;
-.  .  .  .  .  .  .  &#x27;duogcqluei&#x27; &#x27;elqeoaaeio&#x27; &#x27;a iaecoosd&#x27; &#x27;afeajabnue&#x27; &#x27; wfrlkoiol&#x27;  &#x27;ittiuobizu&#x27; &#x27;oamvccunuk&#x27;
-.  .  .  .  .  .  .  &#x27;lasaaadpzn&#x27; &#x27;rergoteaeh&#x27; &#x27;zzvsedleea&#x27;  &#x27;exiovomowd&#x27; &#x27;wbbaluquu &#x27; &#x27;lbobmmoiai&#x27; &#x27;ibp ucosi &#x27;
-.  .  .  .  .  .  .  &#x27;wveczcqggt&#x27;  &#x27;elzz wxuk &#x27; &#x27;aojwaswuvj&#x27; &#x27;poznkjtiem&#x27; &#x27;nkozehaaii&#x27; &#x27;gdvqfvupzh&#x27;  &#x27;of fcuuicx&#x27;
-.  .  .  .  .  .  .  &#x27;ecnjueowkl&#x27; &#x27;iudococjvi&#x27; &#x27;kobnrjqoii&#x27; &#x27;ekjubidlja&#x27;  &#x27;uftvihouza&#x27; &#x27;uipet siat&#x27; &#x27;ejuvauexio&#x27;
-.  .  .  .  .  .  .  &#x27;azesgueuig&#x27; &#x27;ikcmecjxlq&#x27;  &#x27;oi tazjuoa&#x27; &#x27;stczekijhq&#x27; &#x27;itkiukirut&#x27; &#x27;jphenixsno&#x27; &#x27; adafiooih&#x27;  &#x27;j
-.  .  .  .  .  .  .  idhevoov&#x27; &#x27;lli ueezie&#x27; &#x27;k jrupqtus&#x27; &#x27;efbrio uea&#x27; &#x27;iovomnaunc&#x27;  &#x27;iiiq auaaa&#x27; &#x27;hcqaeauuaa&#x27;]
-%%%% [WARN @ 0.86s] ...............................................................................
-%%%% [INFO @ 0.86s] creating mock brain encoder
-%%%% [WARN @ 0.86s] ...............................................................................
-%%%% [INFO @ 0.86s] created brain-encoded data of shape: Frozen({&#x27;sampleid&#x27;: 62, &#x27;neuroid&#x27;: 10000, &#x27;timeid&#x27;:
+%%%% [INFO @ 1.03s] stimuli: [&#x27;xusnai nnm&#x27; &#x27;aavoebdrbs&#x27; &#x27;addindenm &#x27; &#x27;oeni megau&#x27; &#x27;jauewjgfiu&#x27;  &#x27;wuqloimesu&#x27;
+.  .  .  .  .  .  .  &#x27;uikaluppcl&#x27; &#x27;iuezjcdatg&#x27; &#x27;viaeixucwn&#x27; &#x27;uwtri soui&#x27;  &#x27; o uzoriqi&#x27; &#x27; mdjk faam&#x27; &#x27;aozmbjriwe&#x27;
+.  .  .  .  .  .  .  &#x27;cqukllhenb&#x27; &#x27;eveaoohhfa&#x27;  &#x27;deueehsdkf&#x27; &#x27;ieom xxoiv&#x27; &#x27;mhjuqvdint&#x27; &#x27;xjdvzaqhqe&#x27; &#x27;eeknolihej&#x27;
+.  .  .  .  .  .  .  &#x27;iokiewucg &#x27; &#x27;lnmxa  wem&#x27; &#x27;iuetuiqe a&#x27; &#x27;hwviecxtqu&#x27; &#x27;aicqrs ohx&#x27;  &#x27;aukuipjgel&#x27; &#x27;vzfocznjmo&#x27;
+.  .  .  .  .  .  .  &#x27;obitiputaa&#x27; &#x27;amiuvvu km&#x27; &#x27;iixatcaedu&#x27;  &#x27;i ehzrpiin&#x27; &#x27; heii b pd&#x27; &#x27;xnmewjvaua&#x27; &#x27;l ivceez i&#x27;
+.  .  .  .  .  .  .  &#x27;lluaniiweu&#x27;  &#x27;staacq lxi&#x27; &#x27;ievsomzper&#x27; &#x27;xexngaoeeo&#x27; &#x27;hm ribhnvm&#x27; &#x27;iuiqcphocx&#x27;  &#x27;up ekgeajg&#x27; &#x27;vao
+.  .  .  .  .  .  .  auuiwo&#x27; &#x27;eimbptorti&#x27; &#x27;ucvo qelpu&#x27; &#x27;ivwqleahds&#x27;  &#x27;wckreraoqw&#x27; &#x27;iejkuuoved&#x27; &#x27;xkasduiira&#x27; &#x27;nmqkuiocas&#x27;
+.  .  .  .  .  .  .  &#x27;ox hciocag&#x27;  &#x27;aisldogwri&#x27; &#x27;oovgaaguau&#x27; &#x27;dousueqjag&#x27; &#x27;xgzwn vomu&#x27; &#x27;icaiiargeb&#x27;  &#x27;rsbrngkzeh&#x27; &#x27;jurio
+.  .  .  .  .  .  .  oeqv&#x27; &#x27;ateinlptau&#x27; &#x27;muaukveeuk&#x27; &#x27;jeinaaotax&#x27;  &#x27;iorqakaeru&#x27; &#x27;ioiqunmobi&#x27;]
+%%%% [WARN @ 1.03s] ...............................................................................
+%%%% [INFO @ 1.03s] creating mock brain encoder
+%%%% [WARN @ 1.03s] ...............................................................................
+%%%% [INFO @ 1.03s] created brain-encoded data of shape: Frozen({&#x27;sampleid&#x27;: 62, &#x27;neuroid&#x27;: 10000, &#x27;timeid&#x27;:
 .  .  .  .  .  .  .  1})
-%%%% [WARN @ 0.86s] ...............................................................................
-%%%% [INFO @ 0.86s] creating an ANN encoder using distilgpt2
-Downloading:   0%|          | 0.00/762 [00:00&lt;?, ?B/s]Downloading: 100%|██████████| 762/762 [00:00&lt;00:00, 971kB/s]
-Downloading:   0%|          | 0.00/1.04M [00:00&lt;?, ?B/s]Downloading: 100%|██████████| 1.04M/1.04M [00:00&lt;00:00, 57.0MB/s]
-Downloading:   0%|          | 0.00/456k [00:00&lt;?, ?B/s]Downloading: 100%|██████████| 456k/456k [00:00&lt;00:00, 53.1MB/s]
-Downloading:   0%|          | 0.00/1.36M [00:00&lt;?, ?B/s]Downloading: 100%|██████████| 1.36M/1.36M [00:00&lt;00:00, 56.6MB/s]
-Downloading:   0%|          | 0.00/353M [00:00&lt;?, ?B/s]Downloading:   2%|▏         | 5.92M/353M [00:00&lt;00:05, 59.2MB/s]Downloading:   3%|▎         | 11.8M/353M [00:00&lt;00:05, 59.2MB/s]Downloading:   5%|▌         | 17.9M/353M [00:00&lt;00:05, 59.8MB/s]Downloading:   7%|▋         | 24.0M/353M [00:00&lt;00:05, 60.2MB/s]Downloading:   9%|▊         | 30.1M/353M [00:00&lt;00:05, 60.5MB/s]Downloading:  10%|█         | 36.2M/353M [00:00&lt;00:05, 60.9MB/s]Downloading:  12%|█▏        | 42.3M/353M [00:00&lt;00:05, 60.9MB/s]Downloading:  14%|█▎        | 48.4M/353M [00:00&lt;00:05, 60.8MB/s]Downloading:  15%|█▌        | 54.5M/353M [00:00&lt;00:04, 60.5MB/s]Downloading:  17%|█▋        | 60.6M/353M [00:01&lt;00:04, 60.4MB/s]Downloading:  19%|█▉        | 66.6M/353M [00:01&lt;00:04, 60.5MB/s]Downloading:  21%|██        | 72.7M/353M [00:01&lt;00:04, 60.6MB/s]Downloading:  22%|██▏       | 78.8M/353M [00:01&lt;00:04, 60.2MB/s]Downloading:  24%|██▍       | 84.8M/353M [00:01&lt;00:04, 59.8MB/s]Downloading:  26%|██▌       | 90.9M/353M [00:01&lt;00:04, 60.0MB/s]Downloading:  27%|██▋       | 96.9M/353M [00:01&lt;00:04, 60.1MB/s]Downloading:  29%|██▉       | 103M/353M [00:01&lt;00:04, 60.3MB/s] Downloading:  31%|███       | 109M/353M [00:01&lt;00:04, 60.5MB/s]Downloading:  33%|███▎      | 115M/353M [00:01&lt;00:03, 60.5MB/s]Downloading:  34%|███▍      | 121M/353M [00:02&lt;00:03, 60.6MB/s]Downloading:  36%|███▌      | 127M/353M [00:02&lt;00:03, 60.7MB/s]Downloading:  38%|███▊      | 133M/353M [00:02&lt;00:03, 60.7MB/s]Downloading:  40%|███▉      | 139M/353M [00:02&lt;00:03, 60.8MB/s]Downloading:  41%|████▏     | 146M/353M [00:02&lt;00:03, 60.8MB/s]Downloading:  43%|████▎     | 152M/353M [00:02&lt;00:03, 60.8MB/s]Downloading:  45%|████▍     | 158M/353M [00:02&lt;00:03, 60.7MB/s]Downloading:  46%|████▋     | 164M/353M [00:02&lt;00:03, 60.8MB/s]Downloading:  48%|████▊     | 170M/353M [00:02&lt;00:03, 60.7MB/s]Downloading:  50%|████▉     | 176M/353M [00:02&lt;00:02, 60.7MB/s]Downloading:  52%|█████▏    | 182M/353M [00:03&lt;00:02, 60.5MB/s]Downloading:  53%|█████▎    | 188M/353M [00:03&lt;00:02, 60.5MB/s]Downloading:  55%|█████▌    | 194M/353M [00:03&lt;00:02, 60.6MB/s]Downloading:  57%|█████▋    | 200M/353M [00:03&lt;00:02, 60.7MB/s]Downloading:  58%|█████▊    | 206M/353M [00:03&lt;00:02, 60.6MB/s]Downloading:  60%|██████    | 212M/353M [00:03&lt;00:02, 60.5MB/s]Downloading:  62%|██████▏   | 218M/353M [00:03&lt;00:02, 60.5MB/s]Downloading:  64%|██████▎   | 225M/353M [00:03&lt;00:02, 60.7MB/s]Downloading:  65%|██████▌   | 231M/353M [00:03&lt;00:02, 60.6MB/s]Downloading:  67%|██████▋   | 237M/353M [00:03&lt;00:01, 60.6MB/s]Downloading:  69%|██████▉   | 243M/353M [00:04&lt;00:01, 60.6MB/s]Downloading:  71%|███████   | 249M/353M [00:04&lt;00:01, 58.9MB/s]Downloading:  72%|███████▏  | 255M/353M [00:04&lt;00:01, 54.9MB/s]Downloading:  74%|███████▍  | 261M/353M [00:04&lt;00:01, 56.6MB/s]Downloading:  76%|███████▌  | 267M/353M [00:04&lt;00:01, 57.5MB/s]Downloading:  77%|███████▋  | 273M/353M [00:04&lt;00:01, 58.4MB/s]Downloading:  79%|███████▉  | 279M/353M [00:04&lt;00:01, 59.2MB/s]Downloading:  81%|████████  | 285M/353M [00:04&lt;00:01, 59.6MB/s]Downloading:  82%|████████▏ | 291M/353M [00:04&lt;00:01, 59.8MB/s]Downloading:  84%|████████▍ | 297M/353M [00:04&lt;00:00, 59.9MB/s]Downloading:  86%|████████▌ | 303M/353M [00:05&lt;00:00, 60.0MB/s]Downloading:  88%|████████▊ | 309M/353M [00:05&lt;00:00, 59.0MB/s]Downloading:  89%|████████▉ | 315M/353M [00:05&lt;00:00, 59.5MB/s]Downloading:  91%|█████████ | 321M/353M [00:05&lt;00:00, 59.8MB/s]Downloading:  93%|█████████▎| 327M/353M [00:05&lt;00:00, 60.1MB/s]Downloading:  94%|█████████▍| 333M/353M [00:05&lt;00:00, 60.4MB/s]Downloading:  96%|█████████▌| 340M/353M [00:05&lt;00:00, 60.6MB/s]Downloading:  98%|█████████▊| 346M/353M [00:05&lt;00:00, 60.4MB/s]Downloading: 100%|█████████▉| 352M/353M [00:05&lt;00:00, 60.1MB/s]Downloading: 100%|██████████| 353M/353M [00:05&lt;00:00, 60.0MB/s]
+%%%% [WARN @ 1.03s] ...............................................................................
+%%%% [INFO @ 1.03s] creating an ANN encoder using distilgpt2
+Downloading:   0%|          | 0.00/762 [00:00&lt;?, ?B/s]Downloading: 100%|██████████| 762/762 [00:00&lt;00:00, 527kB/s]
+Downloading:   0%|          | 0.00/1.04M [00:00&lt;?, ?B/s]Downloading: 100%|██████████| 1.04M/1.04M [00:00&lt;00:00, 52.5MB/s]
+Downloading:   0%|          | 0.00/456k [00:00&lt;?, ?B/s]Downloading: 100%|██████████| 456k/456k [00:00&lt;00:00, 46.4MB/s]
+Downloading:   0%|          | 0.00/1.36M [00:00&lt;?, ?B/s]Downloading: 100%|██████████| 1.36M/1.36M [00:00&lt;00:00, 36.5MB/s]
+Downloading:   0%|          | 0.00/353M [00:00&lt;?, ?B/s]Downloading:   1%|▏         | 4.85M/353M [00:00&lt;00:07, 48.5MB/s]Downloading:   3%|▎         | 10.0M/353M [00:00&lt;00:06, 50.3MB/s]Downloading:   4%|▍         | 15.0M/353M [00:00&lt;00:06, 49.1MB/s]Downloading:   6%|▌         | 20.1M/353M [00:00&lt;00:06, 49.6MB/s]Downloading:   7%|▋         | 25.3M/353M [00:00&lt;00:06, 50.3MB/s]Downloading:   9%|▊         | 30.3M/353M [00:00&lt;00:06, 49.1MB/s]Downloading:  10%|▉         | 35.2M/353M [00:00&lt;00:06, 48.7MB/s]Downloading:  11%|█▏        | 40.1M/353M [00:00&lt;00:06, 48.8MB/s]Downloading:  13%|█▎        | 45.0M/353M [00:00&lt;00:06, 48.8MB/s]Downloading:  14%|█▍        | 49.9M/353M [00:01&lt;00:06, 48.1MB/s]Downloading:  16%|█▌        | 54.9M/353M [00:01&lt;00:06, 48.8MB/s]Downloading:  17%|█▋        | 59.9M/353M [00:01&lt;00:05, 49.2MB/s]Downloading:  18%|█▊        | 64.8M/353M [00:01&lt;00:05, 49.1MB/s]Downloading:  20%|█▉        | 69.8M/353M [00:01&lt;00:05, 49.1MB/s]Downloading:  21%|██        | 74.7M/353M [00:01&lt;00:05, 48.9MB/s]Downloading:  23%|██▎       | 79.6M/353M [00:01&lt;00:05, 48.5MB/s]Downloading:  24%|██▍       | 84.5M/353M [00:01&lt;00:05, 48.8MB/s]Downloading:  25%|██▌       | 89.7M/353M [00:01&lt;00:05, 49.7MB/s]Downloading:  27%|██▋       | 94.7M/353M [00:01&lt;00:05, 49.8MB/s]Downloading:  28%|██▊       | 99.7M/353M [00:02&lt;00:05, 49.0MB/s]Downloading:  30%|██▉       | 105M/353M [00:02&lt;00:05, 49.0MB/s] Downloading:  31%|███       | 110M/353M [00:02&lt;00:04, 49.2MB/s]Downloading:  32%|███▏      | 115M/353M [00:02&lt;00:04, 49.5MB/s]Downloading:  34%|███▍      | 120M/353M [00:02&lt;00:04, 49.8MB/s]Downloading:  35%|███▌      | 125M/353M [00:02&lt;00:04, 47.3MB/s]Downloading:  37%|███▋      | 129M/353M [00:02&lt;00:04, 45.6MB/s]Downloading:  38%|███▊      | 134M/353M [00:02&lt;00:05, 43.6MB/s]Downloading:  39%|███▉      | 138M/353M [00:02&lt;00:05, 42.6MB/s]Downloading:  40%|████      | 143M/353M [00:02&lt;00:04, 43.3MB/s]Downloading:  42%|████▏     | 148M/353M [00:03&lt;00:04, 45.9MB/s]Downloading:  43%|████▎     | 153M/353M [00:03&lt;00:04, 47.2MB/s]Downloading:  45%|████▍     | 159M/353M [00:03&lt;00:03, 49.2MB/s]Downloading:  47%|████▋     | 164M/353M [00:03&lt;00:03, 51.0MB/s]Downloading:  48%|████▊     | 170M/353M [00:03&lt;00:03, 52.1MB/s]Downloading:  50%|████▉     | 175M/353M [00:03&lt;00:03, 50.8MB/s]Downloading:  51%|█████     | 180M/353M [00:03&lt;00:03, 48.6MB/s]Downloading:  52%|█████▏    | 185M/353M [00:03&lt;00:03, 43.4MB/s]Downloading:  54%|█████▍    | 190M/353M [00:03&lt;00:03, 45.7MB/s]Downloading:  55%|█████▌    | 196M/353M [00:04&lt;00:03, 48.4MB/s]Downloading:  57%|█████▋    | 201M/353M [00:04&lt;00:03, 50.2MB/s]Downloading:  59%|█████▊    | 207M/353M [00:04&lt;00:02, 52.0MB/s]Downloading:  60%|██████    | 213M/353M [00:04&lt;00:02, 54.0MB/s]Downloading:  62%|██████▏   | 218M/353M [00:04&lt;00:02, 55.2MB/s]Downloading:  64%|██████▎   | 224M/353M [00:04&lt;00:02, 56.1MB/s]Downloading:  65%|██████▌   | 230M/353M [00:04&lt;00:02, 56.8MB/s]Downloading:  67%|██████▋   | 236M/353M [00:04&lt;00:02, 56.7MB/s]Downloading:  68%|██████▊   | 241M/353M [00:04&lt;00:02, 54.1MB/s]Downloading:  70%|██████▉   | 247M/353M [00:04&lt;00:02, 51.7MB/s]Downloading:  71%|███████▏  | 252M/353M [00:05&lt;00:01, 51.3MB/s]Downloading:  73%|███████▎  | 257M/353M [00:05&lt;00:01, 51.0MB/s]Downloading:  74%|███████▍  | 262M/353M [00:05&lt;00:01, 50.5MB/s]Downloading:  76%|███████▌  | 267M/353M [00:05&lt;00:01, 50.3MB/s]Downloading:  77%|███████▋  | 272M/353M [00:05&lt;00:01, 50.1MB/s]Downloading:  79%|███████▊  | 278M/353M [00:05&lt;00:01, 50.3MB/s]Downloading:  80%|████████  | 283M/353M [00:05&lt;00:01, 48.3MB/s]Downloading:  81%|████████▏ | 287M/353M [00:05&lt;00:01, 48.4MB/s]Downloading:  83%|████████▎ | 292M/353M [00:05&lt;00:01, 48.2MB/s]Downloading:  84%|████████▍ | 297M/353M [00:06&lt;00:01, 46.2MB/s]Downloading:  86%|████████▌ | 303M/353M [00:06&lt;00:01, 49.7MB/s]Downloading:  87%|████████▋ | 309M/353M [00:06&lt;00:00, 52.0MB/s]Downloading:  89%|████████▉ | 314M/353M [00:06&lt;00:00, 53.7MB/s]Downloading:  91%|█████████ | 320M/353M [00:06&lt;00:00, 53.4MB/s]Downloading:  92%|█████████▏| 325M/353M [00:06&lt;00:00, 53.5MB/s]Downloading:  94%|█████████▍| 331M/353M [00:06&lt;00:00, 54.2MB/s]Downloading:  95%|█████████▌| 337M/353M [00:06&lt;00:00, 55.2MB/s]Downloading:  97%|█████████▋| 342M/353M [00:06&lt;00:00, 55.6MB/s]Downloading:  99%|█████████▊| 348M/353M [00:06&lt;00:00, 55.5MB/s]Downloading: 100%|██████████| 353M/353M [00:07&lt;00:00, 50.2MB/s]
 Some weights of the model checkpoint at distilgpt2 were not used when initializing GPT2Model: [&#x27;lm_head.weight&#x27;]
 - This IS expected if you are initializing GPT2Model from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
 - This IS NOT expected if you are initializing GPT2Model from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-%%%% [WARN @ 8.60s] ...............................................................................
-  0%|          | 0/18 [00:00&lt;?, ?it/s]  6%|▌         | 1/18 [00:00&lt;00:05,  3.39it/s] 11%|█         | 2/18 [00:00&lt;00:06,  2.42it/s] 17%|█▋        | 3/18 [00:01&lt;00:05,  2.74it/s] 22%|██▏       | 4/18 [00:01&lt;00:05,  2.40it/s] 28%|██▊       | 5/18 [00:01&lt;00:04,  2.94it/s] 33%|███▎      | 6/18 [00:02&lt;00:04,  2.56it/s] 39%|███▉      | 7/18 [00:02&lt;00:03,  2.78it/s] 44%|████▍     | 8/18 [00:03&lt;00:03,  2.65it/s] 50%|█████     | 9/18 [00:03&lt;00:03,  2.87it/s] 56%|█████▌    | 10/18 [00:03&lt;00:02,  2.72it/s] 61%|██████    | 11/18 [00:03&lt;00:02,  3.14it/s] 67%|██████▋   | 12/18 [00:04&lt;00:02,  2.46it/s] 72%|███████▏  | 13/18 [00:04&lt;00:01,  2.69it/s] 78%|███████▊  | 14/18 [00:05&lt;00:01,  2.46it/s] 83%|████████▎ | 15/18 [00:05&lt;00:01,  2.67it/s] 89%|████████▉ | 16/18 [00:05&lt;00:00,  2.60it/s] 94%|█████████▍| 17/18 [00:06&lt;00:00,  2.40it/s]100%|██████████| 18/18 [00:06&lt;00:00,  3.10it/s]100%|██████████| 18/18 [00:06&lt;00:00,  2.73it/s]
+%%%% [WARN @ 10.41s] ...............................................................................
+  0%|          | 0/18 [00:00&lt;?, ?it/s]  6%|▌         | 1/18 [00:02&lt;00:34,  2.01s/it] 11%|█         | 2/18 [00:03&lt;00:26,  1.65s/it] 17%|█▋        | 3/18 [00:03&lt;00:16,  1.12s/it] 22%|██▏       | 4/18 [00:05&lt;00:18,  1.32s/it] 28%|██▊       | 5/18 [00:05&lt;00:12,  1.02it/s] 33%|███▎      | 6/18 [00:07&lt;00:12,  1.02s/it] 39%|███▉      | 7/18 [00:07&lt;00:09,  1.17it/s] 44%|████▍     | 8/18 [00:09&lt;00:11,  1.12s/it] 50%|█████     | 9/18 [00:09&lt;00:08,  1.04it/s] 56%|█████▌    | 10/18 [00:10&lt;00:07,  1.00it/s] 61%|██████    | 11/18 [00:11&lt;00:06,  1.10it/s] 67%|██████▋   | 12/18 [00:13&lt;00:07,  1.27s/it] 72%|███████▏  | 13/18 [00:16&lt;00:08,  1.65s/it] 78%|███████▊  | 14/18 [00:23&lt;00:13,  3.41s/it] 83%|████████▎ | 15/18 [00:26&lt;00:09,  3.14s/it] 89%|████████▉ | 16/18 [00:30&lt;00:07,  3.57s/it] 94%|█████████▍| 17/18 [00:32&lt;00:03,  3.10s/it]100%|██████████| 18/18 [00:33&lt;00:00,  2.26s/it]100%|██████████| 18/18 [00:33&lt;00:00,  1.84s/it]
 <br/></div></td></tr></tbody></table></body></html>

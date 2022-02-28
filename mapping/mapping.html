@@ -54,7 +54,7 @@ class Mapping:
     def __init__(self,
                  X: xr.DataArray, Y: xr.DataArray,
 
-                 mapping_class: typing.Union[str, typing.Any],
+                 mapping_class: typing.Union[str, typing.Any] = None,
                  random_seed: int = 42, 
 
                  k_fold: int = 5,
@@ -89,8 +89,7 @@ class Mapping:
             &#39;ridge&#39;: (Ridge, {&#39;alpha&#39;: 1.0}),
             &#39;ridge_cv&#39;: (RidgeCV, {&#39;alphas&#39;: np.logspace(-3, 3, 13), &#39;alpha_per_target&#39;: True}),
             &#39;linear&#39;: (LinearRegression, {}),
-            #&#39;rsa&#39;: (RSA, {}),
-            #&#39;rdm&#39;: (RDM, {}),
+            None: None,
         }
 
         self.k_fold = k_fold or 1
@@ -115,9 +114,10 @@ class Mapping:
         # TODO:
         # make sure there are no stimuli that have NaNs in all places along the neuroid dimension
 
-
         self.X, self.Y = X, Y
-
+        
+        
+        
         self.X_nan_mask = X.isnull()
         self.Y_nan_mask = Y.isnull()
         self.X_nan_removed = X.dropna(&#39;neuroid&#39;)
@@ -330,7 +330,7 @@ class IdentityMap(Mapping):
 <dl>
 <dt id="langbrainscore.mapping.mapping.IdentityMap"><code class="flex name class">
 <span>class <span class="ident">IdentityMap</span></span>
-<span>(</span><span>X: xarray.core.dataarray.DataArray, Y: xarray.core.dataarray.DataArray, mapping_class: Union[str, Any], random_seed: int = 42, k_fold: int = 5, strat_coord: str = None, num_split_groups_out: int = None, split_coord: str = None, **kwargs)</span>
+<span>(</span><span>X: xarray.core.dataarray.DataArray, Y: xarray.core.dataarray.DataArray, mapping_class: Union[str, Any] = None, random_seed: int = 42, k_fold: int = 5, strat_coord: str = None, num_split_groups_out: int = None, split_coord: str = None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Identity mapping for running RSA-type analyses that don't need splits into cv folds and don't need affine maps</p>
@@ -438,7 +438,7 @@ k_folds (int, optional): [description]. Defaults to 5.</p>
 </dd>
 <dt id="langbrainscore.mapping.mapping.Mapping"><code class="flex name class">
 <span>class <span class="ident">Mapping</span></span>
-<span>(</span><span>X: xarray.core.dataarray.DataArray, Y: xarray.core.dataarray.DataArray, mapping_class: Union[str, Any], random_seed: int = 42, k_fold: int = 5, strat_coord: str = None, num_split_groups_out: int = None, split_coord: str = None, **kwargs)</span>
+<span>(</span><span>X: xarray.core.dataarray.DataArray, Y: xarray.core.dataarray.DataArray, mapping_class: Union[str, Any] = None, random_seed: int = 42, k_fold: int = 5, strat_coord: str = None, num_split_groups_out: int = None, split_coord: str = None, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Initializes a Mapping object that establishes a mapping between two encoder representations.
@@ -471,7 +471,7 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
     def __init__(self,
                  X: xr.DataArray, Y: xr.DataArray,
 
-                 mapping_class: typing.Union[str, typing.Any],
+                 mapping_class: typing.Union[str, typing.Any] = None,
                  random_seed: int = 42, 
 
                  k_fold: int = 5,
@@ -506,8 +506,7 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
             &#39;ridge&#39;: (Ridge, {&#39;alpha&#39;: 1.0}),
             &#39;ridge_cv&#39;: (RidgeCV, {&#39;alphas&#39;: np.logspace(-3, 3, 13), &#39;alpha_per_target&#39;: True}),
             &#39;linear&#39;: (LinearRegression, {}),
-            #&#39;rsa&#39;: (RSA, {}),
-            #&#39;rdm&#39;: (RDM, {}),
+            None: None,
         }
 
         self.k_fold = k_fold or 1
@@ -532,9 +531,10 @@ from the sklearn family. Must implement &lt;?classifier&gt; interface</dd>
         # TODO:
         # make sure there are no stimuli that have NaNs in all places along the neuroid dimension
 
-
         self.X, self.Y = X, Y
-
+        
+        
+        
         self.X_nan_mask = X.isnull()
         self.Y_nan_mask = Y.isnull()
         self.X_nan_removed = X.dropna(&#39;neuroid&#39;)
