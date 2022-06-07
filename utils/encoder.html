@@ -1,0 +1,1502 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.10.0" />
+<title>langbrainscore.utils.encoder API documentation</title>
+<meta name="description" content="" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>langbrainscore.utils.encoder</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import typing
+
+import numpy as np
+import torch
+import xarray as xr
+from tqdm.auto import tqdm
+import random
+
+from langbrainscore.utils.preprocessing import preprocessor_classes
+from langbrainscore.utils.logging import log
+
+
+def count_zero_threshold_values(
+    A: np.ndarray,
+    zero_threshold: float = 0.001,
+):
+    &#34;&#34;&#34;Given matrix A, count how many values are below the zero_threshold&#34;&#34;&#34;
+    return np.sum(A &lt; zero_threshold)
+
+
+def flatten_activations_per_sample(activations: dict):
+    &#34;&#34;&#34;
+    Convert activations into dataframe format
+
+    Args:
+        Input (dict): key = layer, value = array of emb_dim
+
+    Returns:
+        arr_flat (np.ndarray): 1D ndarray of flattened activations across all layers
+        layers_arr (np.ndarray): 1D ndarray of layer indices, corresponding to arr_flat
+    &#34;&#34;&#34;
+    layers_arr = []
+    arr_flat = []
+    for layer, arr in activations.items():  # Iterate over layers
+        arr = np.array(arr)
+        arr_flat.append(arr)
+        for i in range(arr.shape[0]):  # Iterate across units
+            layers_arr.append(layer)
+    arr_flat = np.concatenate(
+        arr_flat, axis=0
+    )  # concatenated activations across layers
+
+    return arr_flat, np.array(layers_arr)
+
+
+def aggregate_layers(
+    hidden_states: dict, mode: typing.Union[str, typing.Callable]
+) -&gt; np.ndarray:
+    &#34;&#34;&#34;Input a hidden states dictionary (key = layer, value = 2D array of n_tokens x emb_dim)
+
+    Args:
+        hidden_states (dict): key = layer (int), value = 2D PyTorch tensor of shape (n_tokens, emb_dim)
+
+    Raises:
+        NotImplementedError
+
+    Returns:
+        dict: key = layer, value = array of emb_dim
+    &#34;&#34;&#34;
+    states_layers = dict()
+
+    emb_aggregation = mode
+    # iterate over layers
+    for i in hidden_states.keys():
+        if emb_aggregation == &#34;last&#34;:
+            state = hidden_states[i][-1, :]  # get last token
+        elif emb_aggregation == &#34;first&#34;:
+            state = hidden_states[i][0, :]  # get first token
+        elif emb_aggregation == &#34;mean&#34;:
+            state = torch.mean(hidden_states[i], dim=0)  # mean over tokens
+        elif emb_aggregation == &#34;median&#34;:
+            state = torch.median(hidden_states[i], dim=0)  # median over tokens
+        elif emb_aggregation == &#34;sum&#34;:
+            state = torch.sum(hidden_states[i], dim=0)  # sum over tokens
+        elif emb_aggregation == &#34;all&#34; or emb_aggregation == None:
+            state = hidden_states
+        elif callable(emb_aggregation):
+            state = emb_aggregation(hidden_states[i])
+        else:
+            raise NotImplementedError(
+                f&#34;Sentence embedding method [{emb_aggregation}] not implemented&#34;
+            )
+
+        states_layers[i] = state.detach().cpu().numpy()
+
+    return states_layers
+
+
+def get_torch_device():
+    &#34;&#34;&#34;
+    get torch device based on whether cuda is available or not
+    &#34;&#34;&#34;
+    import torch
+
+    # Set device to GPU if cuda is available.
+    if torch.cuda.is_available():
+        device = torch.device(&#34;cuda&#34;)
+        torch.set_default_tensor_type(torch.cuda.FloatTensor)
+    else:
+        device = torch.device(&#34;cpu&#34;)
+    return device
+
+
+def set_case(sample: str, emb_case: typing.Union[str, None] = None):
+    if emb_case == &#34;lower&#34;:
+        return sample.lower()
+    elif emb_case == &#34;upper&#34;:
+        return sample.upper()
+    return sample
+
+
+def get_context_groups(dataset, context_dimension):
+    if context_dimension is None:
+        context_groups = np.arange(0, dataset.stimuli.size, 1)
+    else:
+        context_groups = dataset.stimuli.coords[context_dimension].values
+    return context_groups
+
+
+def preprocess_activations(*args, **kwargs):
+    return postprocess_activations(*args, **kwargs)
+
+
+def postprocess_activations(
+    activations_2d: np.ndarray = None,
+    layer_ids_1d: np.ndarray = None,
+    emb_preproc_mode: str = None,  # &#34;demean&#34;,
+):
+
+    activations_processed = []
+    layer_ids_processed = []
+
+    # log(f&#34;Preprocessing activations with {p_id}&#34;)
+    for l_id in np.sort(np.unique(layer_ids_1d)):  # For each layer
+        preprocessor = preprocessor_classes[emb_preproc_mode]
+
+        # Get the activations for this layer and retain 2d shape: [n_samples, emb_dim]
+        activations_2d_layer = activations_2d[:, layer_ids_1d == l_id]
+
+        preprocessor.fit(
+            activations_2d_layer
+        )  # obtain a scaling per unit (in emb space)
+
+        # Apply the scaling to the activations and reassamble the activations (might have different shape than original)
+        activations_2d_layer_processed = preprocessor.transform(activations_2d_layer)
+        activations_processed += [activations_2d_layer_processed]
+        layer_ids_processed += [np.full(activations_2d_layer_processed.shape[1], l_id)]
+
+    # Concatenate to obtain [n_samples, emb_dim across layers], i.e., flattened activations
+    activations_2d_layer_processed = np.hstack(activations_processed)
+    layer_ids_1d_processed = np.hstack(layer_ids_processed)
+
+    return activations_2d_layer_processed, layer_ids_1d_processed
+
+
+def repackage_flattened_activations(
+    activations_2d: np.ndarray = None,
+    layer_ids_1d: np.ndarray = None,
+    dataset: xr.Dataset = None,
+):
+    return xr.DataArray(
+        np.expand_dims(activations_2d, axis=2),  # add in time dimension
+        dims=(&#34;sampleid&#34;, &#34;neuroid&#34;, &#34;timeid&#34;),
+        coords={
+            &#34;sampleid&#34;: dataset.contents.sampleid.values,
+            &#34;neuroid&#34;: np.arange(len(layer_ids_1d)),
+            &#34;timeid&#34;: np.arange(1),
+            &#34;layer&#34;: (&#34;neuroid&#34;, np.array(layer_ids_1d, dtype=&#34;int64&#34;)),
+        },
+    )
+
+
+def cos_sim_matrix(A, B):
+    &#34;&#34;&#34;Compute the cosine similarity matrix between two matrices A and B.
+    1 means the two vectors are identical. 0 means they are orthogonal.
+    -1 means they are opposite.&#34;&#34;&#34;
+    return (A * B).sum(axis=1) / (A * A).sum(axis=1) ** 0.5 / (B * B).sum(axis=1) ** 0.5
+
+
+def pick_matching_token_ixs(
+    batchencoding: &#34;transformers.tokenization_utils_base.BatchEncoding&#34;,
+    char_span_of_interest: slice,
+) -&gt; slice:
+    &#34;&#34;&#34;Picks token indices in a tokenized encoded sequence that best correspond to
+        a substring of interest in the original sequence, given by a char span (slice)
+
+    Args:
+        batchencoding (transformers.tokenization_utils_base.BatchEncoding): the output of a
+            `tokenizer(text)` call on a single text instance (not a batch, i.e. `tokenizer([text])`).
+        char_span_of_interest (slice): a `slice` object denoting the character indices in the
+            original `text` string we want to extract the corresponding tokens for
+
+    Returns:
+        slice: the start and stop indices within an encoded sequence that
+            best match the `char_span_of_interest`
+    &#34;&#34;&#34;
+    from transformers import tokenization_utils_base
+
+    start_token = 0
+    end_token = batchencoding.input_ids.shape[-1]
+    for i, _ in enumerate(batchencoding.input_ids.reshape(-1)):
+        span = batchencoding[0].token_to_chars(
+            i
+        )  # batchencoding 0 gives access to the encoded string
+
+        if span is None:  # for [CLS], no span is returned
+            log(
+                f&#39;No span returned for token at {i}: &#34;{batchencoding.tokens()[i]}&#34;&#39;,
+                type=&#34;WARN&#34;,
+                cmap=&#34;WARN&#34;,
+                verbosity_check=True,
+            )
+            continue
+        else:
+            span = tokenization_utils_base.CharSpan(*span)
+
+        if span.start &lt;= char_span_of_interest.start:
+            start_token = i
+        if span.end &gt;= char_span_of_interest.stop:
+            end_token = i + 1
+            break
+
+    assert (
+        end_token - start_token &lt;= batchencoding.input_ids.shape[-1]
+    ), f&#34;Extracted span is larger than original span&#34;
+
+    return slice(start_token, end_token)
+
+
+def encode_stimuli_in_context(
+    stimuli_in_context,
+    tokenizer: &#34;transformers.AutoTokenizer&#34;,
+    model: &#34;transformers.AutoModel&#34;,
+    bidirectional: bool,
+    include_special_tokens: bool,
+    emb_aggregation,
+    device=get_torch_device(),
+):
+    &#34;&#34;&#34; &#34;&#34;&#34;
+    # CONTEXT LOOP
+    for i, stimulus in enumerate(stimuli_in_context):
+
+        # extract stim to encode based on the uni/bi-directional nature of models
+        if not bidirectional:
+            stimuli_directional = stimuli_in_context[: i + 1]
+        else:
+            stimuli_directional = stimuli_in_context
+
+        # join the stimuli together within a context group using just a single space
+        stimuli_directional = &#34; &#34;.join(stimuli_directional)
+
+        tokenized_directional_context = tokenizer(
+            stimuli_directional,
+            padding=False,
+            return_tensors=&#34;pt&#34;,
+            add_special_tokens=True,
+        ).to(device)
+
+        # Get the hidden states
+        result_model = model(
+            tokenized_directional_context.input_ids,
+            output_hidden_states=True,
+            return_dict=True,
+        )
+
+        # dict with key=layer, value=3D tensor of dims: [batch, tokens, emb size]
+        hidden_states = result_model[&#34;hidden_states&#34;]
+
+        layer_wise_activations = dict()
+
+        # Find which indices match the current stimulus in the given context group
+        start_of_interest = stimuli_directional.find(stimulus)
+        char_span_of_interest = slice(
+            start_of_interest, start_of_interest + len(stimulus)
+        )
+        token_span_of_interest = pick_matching_token_ixs(
+            tokenized_directional_context, char_span_of_interest
+        )
+
+        log(
+            f&#34;Interested in the following stimulus:\n{stimuli_directional[char_span_of_interest]}\n&#34;
+            f&#34;Recovered:\n{tokenized_directional_context.tokens()[token_span_of_interest]}&#34;,
+            cmap=&#34;INFO&#34;,
+            type=&#34;INFO&#34;,
+            verbosity_check=True,
+        )
+
+        all_special_ids = set(tokenizer.all_special_ids)
+
+        # Look for special tokens in the beginning and end of the sequence
+        insert_first_upto = 0
+        insert_last_from = tokenized_directional_context.input_ids.shape[-1]
+        # loop through input ids
+        for i, tid in enumerate(tokenized_directional_context.input_ids[0, :]):
+            if tid.item() in all_special_ids:
+                insert_first_upto = i + 1
+            else:
+                break
+        for i in range(1, tokenized_directional_context.input_ids.shape[-1] + 1):
+            tid = tokenized_directional_context.input_ids[0, -i]
+            if tid.item() in all_special_ids:
+                insert_last_from -= 1
+            else:
+                break
+
+        for idx_layer, layer in enumerate(hidden_states):  # Iterate over layers
+            # b (1), n (tokens), h (768, ...)
+            # collapse batch dim to obtain shape (n_tokens, emb_dim)
+            this_extracted = layer[
+                :,
+                token_span_of_interest,
+                :,
+            ].squeeze(0)
+
+            if include_special_tokens:
+                # get the embeddings for the first special tokens
+                this_extracted = torch.cat(
+                    [
+                        layer[:, :insert_first_upto, :].squeeze(0),
+                        this_extracted,
+                    ],
+                    axis=0,
+                )
+                # get the embeddings for the last special tokens
+                this_extracted = torch.cat(
+                    [
+                        this_extracted,
+                        layer[:, insert_last_from:, :].squeeze(0),
+                    ],
+                    axis=0,
+                )
+
+            layer_wise_activations[idx_layer] = this_extracted.detach()
+
+        # Aggregate hidden states within a sample
+        # aggregated_layerwise_sentence_encodings is a dict with key = layer, value = array of emb dimension
+        aggregated_layerwise_sentence_encodings = aggregate_layers(
+            layer_wise_activations, mode=emb_aggregation
+        )
+        yield aggregated_layerwise_sentence_encodings
+    # END CONTEXT LOOP
+
+
+def dataset_from_stimuli(stimuli: &#34;pd.DataFrame&#34;):
+    pass
+
+
+###############################################################################
+# ANALYSIS UTILS: these act upon encoded data, rather than encoders
+###############################################################################
+
+
+def get_decomposition_method(method: str = &#34;pca&#34;, n_comp: int = 10, **kwargs):
+    &#34;&#34;&#34;
+    Return the sklearn method to use for decomposition.
+
+    Args:
+            method (str): Method to use for decomposition (default: &#34;pca&#34;, other options: &#34;mds&#34;, &#34;tsne&#34;)
+            n_comp (int): Number of components to keep (default: 10)
+
+    Returns:
+            sklearn method
+    &#34;&#34;&#34;
+
+    if method == &#34;pca&#34;:
+        from sklearn.decomposition import PCA
+
+        decomp_method = PCA(n_components=n_comp)
+
+    elif method == &#34;mds&#34;:
+        from sklearn.manifold import MDS
+
+        decomp_method = MDS(n_components=n_comp)
+
+    elif method == &#34;tsne&#34;:
+        from sklearn.manifold import TSNE
+
+        decomp_method = TSNE(n_components=n_comp)
+
+    else:
+        raise ValueError(f&#34;Unknown method: {method}&#34;)
+
+    return decomp_method
+
+
+def get_explainable_variance(
+    ann_encoded_dataset,
+    method: str = &#34;pca&#34;,
+    variance_threshold: float = 0.80,
+    **kwargs,
+) -&gt; xr.Dataset:
+    &#34;&#34;&#34;
+    Returns how many components are needed to explain the variance threshold (default 80%) per layer.
+
+    Args:
+            ann_encoded_dataset (xr.Dataset): ANN encoded dataset
+            method (str): Method to use for decomposition (default: &#34;pca&#34;, other options: &#34;mds&#34;, &#34;tsne&#34;)
+            variance_threshold (float): Variance threshold to use for determining how many components are needed to
+                    explain explained a certain threshold of variance (default: 0.80)
+            **kwargs: Additional keyword arguments to pass to the underlying method
+
+    Returns:
+            variance_across_layers (dict): Nested dict with value of interest as key (e.g., explained variance) and
+                    layer id as key (e.g., 0, 1, 2, ...) with corresponding values.
+
+    &#34;&#34;&#34;
+
+    ks = [
+        f&#34;n_comp-{method}_needed-{variance_threshold}&#34;,
+        f&#34;first_comp-{method}_explained_variance&#34;,
+    ]
+    variance_across_layers = {k: {} for k in ks}
+
+    # Get the PCA explained variance per layer
+    layer_ids = ann_encoded_dataset.layer.values
+    _, unique_ixs = np.unique(layer_ids, return_index=True)
+
+    # Make sure that layer order is preserved
+    for layer_id in tqdm(layer_ids[np.sort(unique_ixs)]):
+        layer_dataset = (
+            ann_encoded_dataset.isel(neuroid=(ann_encoded_dataset.layer == layer_id))
+            .drop(&#34;timeid&#34;)
+            .squeeze()
+        )
+
+        # Figure out how many PCs we attempt to fit
+        n_comp = np.min([layer_dataset.shape[1], layer_dataset.shape[0]])
+
+        # Get explained variance
+        decomp_method = get_decomposition_method(method=method, n_comp=n_comp, **kwargs)
+
+        decomp_method.fit(layer_dataset.values)
+        explained_variance = decomp_method.explained_variance_ratio_
+
+        # Get the number of PCs needed to explain the variance threshold
+        explained_variance_cum = np.cumsum(explained_variance)
+        n_pc_needed = np.argmax(explained_variance_cum &gt;= variance_threshold) + 1
+
+        # Store per layer
+        layer_id = str(layer_id)
+        print(
+            f&#34;Layer {layer_id}: {n_pc_needed} PCs needed to explain {variance_threshold} variance &#34;
+            f&#34;with the 1st PC explaining {explained_variance[0]:.2f}% of the total variance&#34;
+        )
+
+        variance_across_layers[f&#34;n_comp-{method}_needed-{variance_threshold}&#34;][
+            layer_id
+        ] = n_pc_needed
+        variance_across_layers[f&#34;first_comp-{method}_explained_variance&#34;][
+            layer_id
+        ] = explained_variance[0]
+
+    return variance_across_layers
+
+
+def get_layer_sparsity(
+    ann_encoded_dataset, zero_threshold: float = 0.0001, **kwargs
+) -&gt; xr.Dataset:
+    &#34;&#34;&#34;
+    Check how sparse activations within a given layer are.
+
+    Sparsity is defined as 1 - values below the zero_threshold / total number of values.
+
+    Args:
+            ann_encoded_dataset (xr.Dataset): ANN encoded dataset
+            zero_threshold (float): Threshold to use for determining sparsity (default: 0.0001)
+            **kwargs: Additional keyword arguments to pass to the underlying method
+
+    Returns:
+            sparsity_across_layers (dict): Nested dict with value of interest as key (e.g., sparsity) and
+                    layer id as key (e.g., 0, 1, 2, ...) with corresponding values.
+
+    &#34;&#34;&#34;
+    # Obtain embedding dimension (for sanity checks)
+    # if self.model_specs[&#34;hidden_emb_dim&#34;]:
+    #     hidden_emb_dim = self.model_specs[&#34;hidden_emb_dim&#34;]
+    # else:
+    #     hidden_emb_dim = None
+    #     log(
+    #         f&#34;Hidden embedding dimension not specified yet&#34;,
+    #         cmap=&#34;WARN&#34;,
+    #         type=&#34;WARN&#34;,
+    #     )
+
+    ks = [f&#34;sparsity-{zero_threshold}&#34;]
+    sparsity_across_layers = {k: {} for k in ks}
+
+    # Get the PCA explained variance per layer
+    layer_ids = ann_encoded_dataset.layer.values
+    _, unique_ixs = np.unique(layer_ids, return_index=True)
+
+    # Make sure that layer order is preserved
+    for layer_id in tqdm(layer_ids[np.sort(unique_ixs)]):
+        layer_dataset = (
+            ann_encoded_dataset.isel(neuroid=(ann_encoded_dataset.layer == layer_id))
+            .drop(&#34;timeid&#34;)
+            .squeeze()
+        )
+
+        # if hidden_emb_dim is not None:
+        #     assert layer_dataset.shape[1] == hidden_emb_dim
+        #
+        # Get sparsity
+        zero_values = count_zero_threshold_values(layer_dataset.values, zero_threshold)
+        sparsity = 1 - (zero_values / layer_dataset.size)
+
+        # Store per layer
+        layer_id = str(layer_id)
+        print(f&#34;Layer {layer_id}: {sparsity:.3f} sparsity&#34;)
+
+        sparsity_across_layers[f&#34;sparsity-{zero_threshold}&#34;][layer_id] = sparsity
+
+    return sparsity_across_layers
+
+
+def cos_contrib(
+    emb1: np.ndarray,
+    emb2: np.ndarray,
+):
+    &#34;&#34;&#34;
+    Cosine contribution function defined in eq. 3 by Timkey &amp; van Schijndel (2021): https://arxiv.org/abs/2109.04404
+
+    Args:
+        emb1 (np.ndarray): Embedding vector 1
+        emb2 (np.ndarray): Embedding vector 2
+
+    Returns:
+        cos_contrib (float): Cosine contribution
+
+    &#34;&#34;&#34;
+
+    numerator_terms = emb1 * emb2
+    denom = np.linalg.norm(emb1) * np.linalg.norm(emb2)
+    return numerator_terms / denom
+
+
+def get_anisotropy(
+    ann_encoded_dataset: &#34;EncoderRepresentations&#34;, num_random_samples: int = 1000
+):
+    &#34;&#34;&#34;
+    Calculate the anisotropy of the embedding vectors as Timkey &amp; van Schijndel (2021): https://arxiv.org/abs/2109.04404
+    (base function from their GitHub repo: https://github.com/wtimkey/rogue-dimensions/blob/main/replication.ipynb,
+    but modified to work within the Language Brain-Score project)
+
+
+    &#34;&#34;&#34;
+    rogue_dist = []
+    num_toks = len(ann_encoded_dataset.sampleid)  # Number of stimuli
+
+    # randomly sample embedding pairs to compute avg. cosine similiarity contribution
+    random_pairs = [
+        random.sample(range(num_toks), 2) for i in range(num_random_samples)
+    ]
+
+    cos_contribs_by_layer = []
+
+    layer_ids = ann_encoded_dataset.layer.values
+    _, unique_ixs = np.unique(layer_ids, return_index=True)
+
+    for layer_id in tqdm(layer_ids[np.sort(unique_ixs)]):
+        layer_dataset = (
+            ann_encoded_dataset.isel(neuroid=(ann_encoded_dataset.layer == layer_id))
+            .drop(&#34;timeid&#34;)
+            .squeeze()
+        )
+
+        layer_cosine_contribs = []
+        layer_rogue_cos_contribs = []
+        for pair in random_pairs:
+            emb1 = sample_data[layer, pair[0], :]  # fix
+            emb2 = sample_data[layer, pair[1], :]
+            layer_cosine_contribs.append(cos_contrib(emb1, emb2))
+
+        layer_cosine_contribs = np.array(layer_cosine_contribs)
+        layer_cosine_sims = layer_cosine_contribs.sum(axis=1)
+        layer_cosine_contribs_mean = layer_cosine_contribs.mean(axis=0)
+        cos_contribs_by_layer.append(layer_cosine_contribs_mean)
+    cos_contribs_by_layer = np.array(cos_contribs_by_layer)
+
+    aniso = cos_contribs_by_layer.sum(
+        axis=1
+    )  # total anisotropy, measured as avg. cosine sim between random emb. pairs
+
+    for layer in range(num_layers[model_name]):
+        top_3_dims = np.argsort(cos_contribs_by_layer[layer])[-3:]
+        top = cos_contribs_by_layer[layer, top_3_dims[2]] / aniso[layer]
+        second = cos_contribs_by_layer[layer, top_3_dims[1]] / aniso[layer]
+        third = cos_contribs_by_layer[layer, top_3_dims[0]] / aniso[layer]
+        print(
+            &#34;&amp; {} &amp; {:.3f} &amp; {:.3f} &amp; {:.3f} &amp; {:.3f} \\\\&#34;.format(
+                layer, top, second, third, aniso[layer]
+            )
+        )</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="langbrainscore.utils.encoder.aggregate_layers"><code class="name flex">
+<span>def <span class="ident">aggregate_layers</span></span>(<span>hidden_states: dict, mode: Union[str, Callable]) ‑> numpy.ndarray</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Input a hidden states dictionary (key = layer, value = 2D array of n_tokens x emb_dim)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>hidden_states</code></strong> :&ensp;<code>dict</code></dt>
+<dd>key = layer (int), value = 2D PyTorch tensor of shape (n_tokens, emb_dim)</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<p>NotImplementedError</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>dict</code></dt>
+<dd>key = layer, value = array of emb_dim</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def aggregate_layers(
+    hidden_states: dict, mode: typing.Union[str, typing.Callable]
+) -&gt; np.ndarray:
+    &#34;&#34;&#34;Input a hidden states dictionary (key = layer, value = 2D array of n_tokens x emb_dim)
+
+    Args:
+        hidden_states (dict): key = layer (int), value = 2D PyTorch tensor of shape (n_tokens, emb_dim)
+
+    Raises:
+        NotImplementedError
+
+    Returns:
+        dict: key = layer, value = array of emb_dim
+    &#34;&#34;&#34;
+    states_layers = dict()
+
+    emb_aggregation = mode
+    # iterate over layers
+    for i in hidden_states.keys():
+        if emb_aggregation == &#34;last&#34;:
+            state = hidden_states[i][-1, :]  # get last token
+        elif emb_aggregation == &#34;first&#34;:
+            state = hidden_states[i][0, :]  # get first token
+        elif emb_aggregation == &#34;mean&#34;:
+            state = torch.mean(hidden_states[i], dim=0)  # mean over tokens
+        elif emb_aggregation == &#34;median&#34;:
+            state = torch.median(hidden_states[i], dim=0)  # median over tokens
+        elif emb_aggregation == &#34;sum&#34;:
+            state = torch.sum(hidden_states[i], dim=0)  # sum over tokens
+        elif emb_aggregation == &#34;all&#34; or emb_aggregation == None:
+            state = hidden_states
+        elif callable(emb_aggregation):
+            state = emb_aggregation(hidden_states[i])
+        else:
+            raise NotImplementedError(
+                f&#34;Sentence embedding method [{emb_aggregation}] not implemented&#34;
+            )
+
+        states_layers[i] = state.detach().cpu().numpy()
+
+    return states_layers</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.cos_contrib"><code class="name flex">
+<span>def <span class="ident">cos_contrib</span></span>(<span>emb1: numpy.ndarray, emb2: numpy.ndarray)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Cosine contribution function defined in eq. 3 by Timkey &amp; van Schijndel (2021): <a href="https://arxiv.org/abs/2109.04404">https://arxiv.org/abs/2109.04404</a></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>emb1</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Embedding vector 1</dd>
+<dt><strong><code>emb2</code></strong> :&ensp;<code>np.ndarray</code></dt>
+<dd>Embedding vector 2</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>cos_contrib (float): Cosine contribution</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cos_contrib(
+    emb1: np.ndarray,
+    emb2: np.ndarray,
+):
+    &#34;&#34;&#34;
+    Cosine contribution function defined in eq. 3 by Timkey &amp; van Schijndel (2021): https://arxiv.org/abs/2109.04404
+
+    Args:
+        emb1 (np.ndarray): Embedding vector 1
+        emb2 (np.ndarray): Embedding vector 2
+
+    Returns:
+        cos_contrib (float): Cosine contribution
+
+    &#34;&#34;&#34;
+
+    numerator_terms = emb1 * emb2
+    denom = np.linalg.norm(emb1) * np.linalg.norm(emb2)
+    return numerator_terms / denom</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.cos_sim_matrix"><code class="name flex">
+<span>def <span class="ident">cos_sim_matrix</span></span>(<span>A, B)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Compute the cosine similarity matrix between two matrices A and B.
+1 means the two vectors are identical. 0 means they are orthogonal.
+-1 means they are opposite.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cos_sim_matrix(A, B):
+    &#34;&#34;&#34;Compute the cosine similarity matrix between two matrices A and B.
+    1 means the two vectors are identical. 0 means they are orthogonal.
+    -1 means they are opposite.&#34;&#34;&#34;
+    return (A * B).sum(axis=1) / (A * A).sum(axis=1) ** 0.5 / (B * B).sum(axis=1) ** 0.5</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.count_zero_threshold_values"><code class="name flex">
+<span>def <span class="ident">count_zero_threshold_values</span></span>(<span>A: numpy.ndarray, zero_threshold: float = 0.001)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Given matrix A, count how many values are below the zero_threshold</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def count_zero_threshold_values(
+    A: np.ndarray,
+    zero_threshold: float = 0.001,
+):
+    &#34;&#34;&#34;Given matrix A, count how many values are below the zero_threshold&#34;&#34;&#34;
+    return np.sum(A &lt; zero_threshold)</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.dataset_from_stimuli"><code class="name flex">
+<span>def <span class="ident">dataset_from_stimuli</span></span>(<span>stimuli: pd.DataFrame)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def dataset_from_stimuli(stimuli: &#34;pd.DataFrame&#34;):
+    pass</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.encode_stimuli_in_context"><code class="name flex">
+<span>def <span class="ident">encode_stimuli_in_context</span></span>(<span>stimuli_in_context, tokenizer: transformers.AutoTokenizer, model: transformers.AutoModel, bidirectional: bool, include_special_tokens: bool, emb_aggregation, device=device(type='cpu'))</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def encode_stimuli_in_context(
+    stimuli_in_context,
+    tokenizer: &#34;transformers.AutoTokenizer&#34;,
+    model: &#34;transformers.AutoModel&#34;,
+    bidirectional: bool,
+    include_special_tokens: bool,
+    emb_aggregation,
+    device=get_torch_device(),
+):
+    &#34;&#34;&#34; &#34;&#34;&#34;
+    # CONTEXT LOOP
+    for i, stimulus in enumerate(stimuli_in_context):
+
+        # extract stim to encode based on the uni/bi-directional nature of models
+        if not bidirectional:
+            stimuli_directional = stimuli_in_context[: i + 1]
+        else:
+            stimuli_directional = stimuli_in_context
+
+        # join the stimuli together within a context group using just a single space
+        stimuli_directional = &#34; &#34;.join(stimuli_directional)
+
+        tokenized_directional_context = tokenizer(
+            stimuli_directional,
+            padding=False,
+            return_tensors=&#34;pt&#34;,
+            add_special_tokens=True,
+        ).to(device)
+
+        # Get the hidden states
+        result_model = model(
+            tokenized_directional_context.input_ids,
+            output_hidden_states=True,
+            return_dict=True,
+        )
+
+        # dict with key=layer, value=3D tensor of dims: [batch, tokens, emb size]
+        hidden_states = result_model[&#34;hidden_states&#34;]
+
+        layer_wise_activations = dict()
+
+        # Find which indices match the current stimulus in the given context group
+        start_of_interest = stimuli_directional.find(stimulus)
+        char_span_of_interest = slice(
+            start_of_interest, start_of_interest + len(stimulus)
+        )
+        token_span_of_interest = pick_matching_token_ixs(
+            tokenized_directional_context, char_span_of_interest
+        )
+
+        log(
+            f&#34;Interested in the following stimulus:\n{stimuli_directional[char_span_of_interest]}\n&#34;
+            f&#34;Recovered:\n{tokenized_directional_context.tokens()[token_span_of_interest]}&#34;,
+            cmap=&#34;INFO&#34;,
+            type=&#34;INFO&#34;,
+            verbosity_check=True,
+        )
+
+        all_special_ids = set(tokenizer.all_special_ids)
+
+        # Look for special tokens in the beginning and end of the sequence
+        insert_first_upto = 0
+        insert_last_from = tokenized_directional_context.input_ids.shape[-1]
+        # loop through input ids
+        for i, tid in enumerate(tokenized_directional_context.input_ids[0, :]):
+            if tid.item() in all_special_ids:
+                insert_first_upto = i + 1
+            else:
+                break
+        for i in range(1, tokenized_directional_context.input_ids.shape[-1] + 1):
+            tid = tokenized_directional_context.input_ids[0, -i]
+            if tid.item() in all_special_ids:
+                insert_last_from -= 1
+            else:
+                break
+
+        for idx_layer, layer in enumerate(hidden_states):  # Iterate over layers
+            # b (1), n (tokens), h (768, ...)
+            # collapse batch dim to obtain shape (n_tokens, emb_dim)
+            this_extracted = layer[
+                :,
+                token_span_of_interest,
+                :,
+            ].squeeze(0)
+
+            if include_special_tokens:
+                # get the embeddings for the first special tokens
+                this_extracted = torch.cat(
+                    [
+                        layer[:, :insert_first_upto, :].squeeze(0),
+                        this_extracted,
+                    ],
+                    axis=0,
+                )
+                # get the embeddings for the last special tokens
+                this_extracted = torch.cat(
+                    [
+                        this_extracted,
+                        layer[:, insert_last_from:, :].squeeze(0),
+                    ],
+                    axis=0,
+                )
+
+            layer_wise_activations[idx_layer] = this_extracted.detach()
+
+        # Aggregate hidden states within a sample
+        # aggregated_layerwise_sentence_encodings is a dict with key = layer, value = array of emb dimension
+        aggregated_layerwise_sentence_encodings = aggregate_layers(
+            layer_wise_activations, mode=emb_aggregation
+        )
+        yield aggregated_layerwise_sentence_encodings
+    # END CONTEXT LOOP</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.flatten_activations_per_sample"><code class="name flex">
+<span>def <span class="ident">flatten_activations_per_sample</span></span>(<span>activations: dict)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Convert activations into dataframe format</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>Input</code></strong> :&ensp;<code>dict</code></dt>
+<dd>key = layer, value = array of emb_dim</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>arr_flat (np.ndarray): 1D ndarray of flattened activations across all layers
+layers_arr (np.ndarray): 1D ndarray of layer indices, corresponding to arr_flat</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def flatten_activations_per_sample(activations: dict):
+    &#34;&#34;&#34;
+    Convert activations into dataframe format
+
+    Args:
+        Input (dict): key = layer, value = array of emb_dim
+
+    Returns:
+        arr_flat (np.ndarray): 1D ndarray of flattened activations across all layers
+        layers_arr (np.ndarray): 1D ndarray of layer indices, corresponding to arr_flat
+    &#34;&#34;&#34;
+    layers_arr = []
+    arr_flat = []
+    for layer, arr in activations.items():  # Iterate over layers
+        arr = np.array(arr)
+        arr_flat.append(arr)
+        for i in range(arr.shape[0]):  # Iterate across units
+            layers_arr.append(layer)
+    arr_flat = np.concatenate(
+        arr_flat, axis=0
+    )  # concatenated activations across layers
+
+    return arr_flat, np.array(layers_arr)</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.get_anisotropy"><code class="name flex">
+<span>def <span class="ident">get_anisotropy</span></span>(<span>ann_encoded_dataset: EncoderRepresentations, num_random_samples: int = 1000)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Calculate the anisotropy of the embedding vectors as Timkey &amp; van Schijndel (2021): <a href="https://arxiv.org/abs/2109.04404">https://arxiv.org/abs/2109.04404</a>
+(base function from their GitHub repo: <a href="https://github.com/wtimkey/rogue-dimensions/blob/main/replication.ipynb,">https://github.com/wtimkey/rogue-dimensions/blob/main/replication.ipynb,</a>
+but modified to work within the Language Brain-Score project)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_anisotropy(
+    ann_encoded_dataset: &#34;EncoderRepresentations&#34;, num_random_samples: int = 1000
+):
+    &#34;&#34;&#34;
+    Calculate the anisotropy of the embedding vectors as Timkey &amp; van Schijndel (2021): https://arxiv.org/abs/2109.04404
+    (base function from their GitHub repo: https://github.com/wtimkey/rogue-dimensions/blob/main/replication.ipynb,
+    but modified to work within the Language Brain-Score project)
+
+
+    &#34;&#34;&#34;
+    rogue_dist = []
+    num_toks = len(ann_encoded_dataset.sampleid)  # Number of stimuli
+
+    # randomly sample embedding pairs to compute avg. cosine similiarity contribution
+    random_pairs = [
+        random.sample(range(num_toks), 2) for i in range(num_random_samples)
+    ]
+
+    cos_contribs_by_layer = []
+
+    layer_ids = ann_encoded_dataset.layer.values
+    _, unique_ixs = np.unique(layer_ids, return_index=True)
+
+    for layer_id in tqdm(layer_ids[np.sort(unique_ixs)]):
+        layer_dataset = (
+            ann_encoded_dataset.isel(neuroid=(ann_encoded_dataset.layer == layer_id))
+            .drop(&#34;timeid&#34;)
+            .squeeze()
+        )
+
+        layer_cosine_contribs = []
+        layer_rogue_cos_contribs = []
+        for pair in random_pairs:
+            emb1 = sample_data[layer, pair[0], :]  # fix
+            emb2 = sample_data[layer, pair[1], :]
+            layer_cosine_contribs.append(cos_contrib(emb1, emb2))
+
+        layer_cosine_contribs = np.array(layer_cosine_contribs)
+        layer_cosine_sims = layer_cosine_contribs.sum(axis=1)
+        layer_cosine_contribs_mean = layer_cosine_contribs.mean(axis=0)
+        cos_contribs_by_layer.append(layer_cosine_contribs_mean)
+    cos_contribs_by_layer = np.array(cos_contribs_by_layer)
+
+    aniso = cos_contribs_by_layer.sum(
+        axis=1
+    )  # total anisotropy, measured as avg. cosine sim between random emb. pairs
+
+    for layer in range(num_layers[model_name]):
+        top_3_dims = np.argsort(cos_contribs_by_layer[layer])[-3:]
+        top = cos_contribs_by_layer[layer, top_3_dims[2]] / aniso[layer]
+        second = cos_contribs_by_layer[layer, top_3_dims[1]] / aniso[layer]
+        third = cos_contribs_by_layer[layer, top_3_dims[0]] / aniso[layer]
+        print(
+            &#34;&amp; {} &amp; {:.3f} &amp; {:.3f} &amp; {:.3f} &amp; {:.3f} \\\\&#34;.format(
+                layer, top, second, third, aniso[layer]
+            )
+        )</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.get_context_groups"><code class="name flex">
+<span>def <span class="ident">get_context_groups</span></span>(<span>dataset, context_dimension)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_context_groups(dataset, context_dimension):
+    if context_dimension is None:
+        context_groups = np.arange(0, dataset.stimuli.size, 1)
+    else:
+        context_groups = dataset.stimuli.coords[context_dimension].values
+    return context_groups</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.get_decomposition_method"><code class="name flex">
+<span>def <span class="ident">get_decomposition_method</span></span>(<span>method: str = 'pca', n_comp: int = 10, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Return the sklearn method to use for decomposition.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>method</code></strong> :&ensp;<code>str</code></dt>
+<dd>Method to use for decomposition (default: "pca", other options: "mds", "tsne")</dd>
+<dt><strong><code>n_comp</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of components to keep (default: 10)</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>sklearn method</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_decomposition_method(method: str = &#34;pca&#34;, n_comp: int = 10, **kwargs):
+    &#34;&#34;&#34;
+    Return the sklearn method to use for decomposition.
+
+    Args:
+            method (str): Method to use for decomposition (default: &#34;pca&#34;, other options: &#34;mds&#34;, &#34;tsne&#34;)
+            n_comp (int): Number of components to keep (default: 10)
+
+    Returns:
+            sklearn method
+    &#34;&#34;&#34;
+
+    if method == &#34;pca&#34;:
+        from sklearn.decomposition import PCA
+
+        decomp_method = PCA(n_components=n_comp)
+
+    elif method == &#34;mds&#34;:
+        from sklearn.manifold import MDS
+
+        decomp_method = MDS(n_components=n_comp)
+
+    elif method == &#34;tsne&#34;:
+        from sklearn.manifold import TSNE
+
+        decomp_method = TSNE(n_components=n_comp)
+
+    else:
+        raise ValueError(f&#34;Unknown method: {method}&#34;)
+
+    return decomp_method</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.get_explainable_variance"><code class="name flex">
+<span>def <span class="ident">get_explainable_variance</span></span>(<span>ann_encoded_dataset, method: str = 'pca', variance_threshold: float = 0.8, **kwargs) ‑> xarray.core.dataset.Dataset</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns how many components are needed to explain the variance threshold (default 80%) per layer.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ann_encoded_dataset</code></strong> :&ensp;<code>xr.Dataset</code></dt>
+<dd>ANN encoded dataset</dd>
+<dt><strong><code>method</code></strong> :&ensp;<code>str</code></dt>
+<dd>Method to use for decomposition (default: "pca", other options: "mds", "tsne")</dd>
+<dt><strong><code>variance_threshold</code></strong> :&ensp;<code>float</code></dt>
+<dd>Variance threshold to use for determining how many components are needed to
+explain explained a certain threshold of variance (default: 0.80)</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Additional keyword arguments to pass to the underlying method</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>variance_across_layers (dict): Nested dict with value of interest as key (e.g., explained variance) and
+layer id as key (e.g., 0, 1, 2, &hellip;) with corresponding values.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_explainable_variance(
+    ann_encoded_dataset,
+    method: str = &#34;pca&#34;,
+    variance_threshold: float = 0.80,
+    **kwargs,
+) -&gt; xr.Dataset:
+    &#34;&#34;&#34;
+    Returns how many components are needed to explain the variance threshold (default 80%) per layer.
+
+    Args:
+            ann_encoded_dataset (xr.Dataset): ANN encoded dataset
+            method (str): Method to use for decomposition (default: &#34;pca&#34;, other options: &#34;mds&#34;, &#34;tsne&#34;)
+            variance_threshold (float): Variance threshold to use for determining how many components are needed to
+                    explain explained a certain threshold of variance (default: 0.80)
+            **kwargs: Additional keyword arguments to pass to the underlying method
+
+    Returns:
+            variance_across_layers (dict): Nested dict with value of interest as key (e.g., explained variance) and
+                    layer id as key (e.g., 0, 1, 2, ...) with corresponding values.
+
+    &#34;&#34;&#34;
+
+    ks = [
+        f&#34;n_comp-{method}_needed-{variance_threshold}&#34;,
+        f&#34;first_comp-{method}_explained_variance&#34;,
+    ]
+    variance_across_layers = {k: {} for k in ks}
+
+    # Get the PCA explained variance per layer
+    layer_ids = ann_encoded_dataset.layer.values
+    _, unique_ixs = np.unique(layer_ids, return_index=True)
+
+    # Make sure that layer order is preserved
+    for layer_id in tqdm(layer_ids[np.sort(unique_ixs)]):
+        layer_dataset = (
+            ann_encoded_dataset.isel(neuroid=(ann_encoded_dataset.layer == layer_id))
+            .drop(&#34;timeid&#34;)
+            .squeeze()
+        )
+
+        # Figure out how many PCs we attempt to fit
+        n_comp = np.min([layer_dataset.shape[1], layer_dataset.shape[0]])
+
+        # Get explained variance
+        decomp_method = get_decomposition_method(method=method, n_comp=n_comp, **kwargs)
+
+        decomp_method.fit(layer_dataset.values)
+        explained_variance = decomp_method.explained_variance_ratio_
+
+        # Get the number of PCs needed to explain the variance threshold
+        explained_variance_cum = np.cumsum(explained_variance)
+        n_pc_needed = np.argmax(explained_variance_cum &gt;= variance_threshold) + 1
+
+        # Store per layer
+        layer_id = str(layer_id)
+        print(
+            f&#34;Layer {layer_id}: {n_pc_needed} PCs needed to explain {variance_threshold} variance &#34;
+            f&#34;with the 1st PC explaining {explained_variance[0]:.2f}% of the total variance&#34;
+        )
+
+        variance_across_layers[f&#34;n_comp-{method}_needed-{variance_threshold}&#34;][
+            layer_id
+        ] = n_pc_needed
+        variance_across_layers[f&#34;first_comp-{method}_explained_variance&#34;][
+            layer_id
+        ] = explained_variance[0]
+
+    return variance_across_layers</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.get_layer_sparsity"><code class="name flex">
+<span>def <span class="ident">get_layer_sparsity</span></span>(<span>ann_encoded_dataset, zero_threshold: float = 0.0001, **kwargs) ‑> xarray.core.dataset.Dataset</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check how sparse activations within a given layer are.</p>
+<p>Sparsity is defined as 1 - values below the zero_threshold / total number of values.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ann_encoded_dataset</code></strong> :&ensp;<code>xr.Dataset</code></dt>
+<dd>ANN encoded dataset</dd>
+<dt><strong><code>zero_threshold</code></strong> :&ensp;<code>float</code></dt>
+<dd>Threshold to use for determining sparsity (default: 0.0001)</dd>
+<dt><strong><code>**kwargs</code></strong></dt>
+<dd>Additional keyword arguments to pass to the underlying method</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>sparsity_across_layers (dict): Nested dict with value of interest as key (e.g., sparsity) and
+layer id as key (e.g., 0, 1, 2, &hellip;) with corresponding values.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_layer_sparsity(
+    ann_encoded_dataset, zero_threshold: float = 0.0001, **kwargs
+) -&gt; xr.Dataset:
+    &#34;&#34;&#34;
+    Check how sparse activations within a given layer are.
+
+    Sparsity is defined as 1 - values below the zero_threshold / total number of values.
+
+    Args:
+            ann_encoded_dataset (xr.Dataset): ANN encoded dataset
+            zero_threshold (float): Threshold to use for determining sparsity (default: 0.0001)
+            **kwargs: Additional keyword arguments to pass to the underlying method
+
+    Returns:
+            sparsity_across_layers (dict): Nested dict with value of interest as key (e.g., sparsity) and
+                    layer id as key (e.g., 0, 1, 2, ...) with corresponding values.
+
+    &#34;&#34;&#34;
+    # Obtain embedding dimension (for sanity checks)
+    # if self.model_specs[&#34;hidden_emb_dim&#34;]:
+    #     hidden_emb_dim = self.model_specs[&#34;hidden_emb_dim&#34;]
+    # else:
+    #     hidden_emb_dim = None
+    #     log(
+    #         f&#34;Hidden embedding dimension not specified yet&#34;,
+    #         cmap=&#34;WARN&#34;,
+    #         type=&#34;WARN&#34;,
+    #     )
+
+    ks = [f&#34;sparsity-{zero_threshold}&#34;]
+    sparsity_across_layers = {k: {} for k in ks}
+
+    # Get the PCA explained variance per layer
+    layer_ids = ann_encoded_dataset.layer.values
+    _, unique_ixs = np.unique(layer_ids, return_index=True)
+
+    # Make sure that layer order is preserved
+    for layer_id in tqdm(layer_ids[np.sort(unique_ixs)]):
+        layer_dataset = (
+            ann_encoded_dataset.isel(neuroid=(ann_encoded_dataset.layer == layer_id))
+            .drop(&#34;timeid&#34;)
+            .squeeze()
+        )
+
+        # if hidden_emb_dim is not None:
+        #     assert layer_dataset.shape[1] == hidden_emb_dim
+        #
+        # Get sparsity
+        zero_values = count_zero_threshold_values(layer_dataset.values, zero_threshold)
+        sparsity = 1 - (zero_values / layer_dataset.size)
+
+        # Store per layer
+        layer_id = str(layer_id)
+        print(f&#34;Layer {layer_id}: {sparsity:.3f} sparsity&#34;)
+
+        sparsity_across_layers[f&#34;sparsity-{zero_threshold}&#34;][layer_id] = sparsity
+
+    return sparsity_across_layers</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.get_torch_device"><code class="name flex">
+<span>def <span class="ident">get_torch_device</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>get torch device based on whether cuda is available or not</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_torch_device():
+    &#34;&#34;&#34;
+    get torch device based on whether cuda is available or not
+    &#34;&#34;&#34;
+    import torch
+
+    # Set device to GPU if cuda is available.
+    if torch.cuda.is_available():
+        device = torch.device(&#34;cuda&#34;)
+        torch.set_default_tensor_type(torch.cuda.FloatTensor)
+    else:
+        device = torch.device(&#34;cpu&#34;)
+    return device</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.pick_matching_token_ixs"><code class="name flex">
+<span>def <span class="ident">pick_matching_token_ixs</span></span>(<span>batchencoding: transformers.tokenization_utils_base.BatchEncoding, char_span_of_interest: slice) ‑> slice</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Picks token indices in a tokenized encoded sequence that best correspond to
+a substring of interest in the original sequence, given by a char span (slice)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>batchencoding</code></strong> :&ensp;<code>transformers.tokenization_utils_base.BatchEncoding</code></dt>
+<dd>the output of a
+<code>tokenizer(text)</code> call on a single text instance (not a batch, i.e. <code>tokenizer([text])</code>).</dd>
+<dt><strong><code>char_span_of_interest</code></strong> :&ensp;<code>slice</code></dt>
+<dd>a <code>slice</code> object denoting the character indices in the
+original <code>text</code> string we want to extract the corresponding tokens for</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>slice</code></dt>
+<dd>the start and stop indices within an encoded sequence that
+best match the <code>char_span_of_interest</code></dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pick_matching_token_ixs(
+    batchencoding: &#34;transformers.tokenization_utils_base.BatchEncoding&#34;,
+    char_span_of_interest: slice,
+) -&gt; slice:
+    &#34;&#34;&#34;Picks token indices in a tokenized encoded sequence that best correspond to
+        a substring of interest in the original sequence, given by a char span (slice)
+
+    Args:
+        batchencoding (transformers.tokenization_utils_base.BatchEncoding): the output of a
+            `tokenizer(text)` call on a single text instance (not a batch, i.e. `tokenizer([text])`).
+        char_span_of_interest (slice): a `slice` object denoting the character indices in the
+            original `text` string we want to extract the corresponding tokens for
+
+    Returns:
+        slice: the start and stop indices within an encoded sequence that
+            best match the `char_span_of_interest`
+    &#34;&#34;&#34;
+    from transformers import tokenization_utils_base
+
+    start_token = 0
+    end_token = batchencoding.input_ids.shape[-1]
+    for i, _ in enumerate(batchencoding.input_ids.reshape(-1)):
+        span = batchencoding[0].token_to_chars(
+            i
+        )  # batchencoding 0 gives access to the encoded string
+
+        if span is None:  # for [CLS], no span is returned
+            log(
+                f&#39;No span returned for token at {i}: &#34;{batchencoding.tokens()[i]}&#34;&#39;,
+                type=&#34;WARN&#34;,
+                cmap=&#34;WARN&#34;,
+                verbosity_check=True,
+            )
+            continue
+        else:
+            span = tokenization_utils_base.CharSpan(*span)
+
+        if span.start &lt;= char_span_of_interest.start:
+            start_token = i
+        if span.end &gt;= char_span_of_interest.stop:
+            end_token = i + 1
+            break
+
+    assert (
+        end_token - start_token &lt;= batchencoding.input_ids.shape[-1]
+    ), f&#34;Extracted span is larger than original span&#34;
+
+    return slice(start_token, end_token)</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.postprocess_activations"><code class="name flex">
+<span>def <span class="ident">postprocess_activations</span></span>(<span>activations_2d: numpy.ndarray = None, layer_ids_1d: numpy.ndarray = None, emb_preproc_mode: str = None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def postprocess_activations(
+    activations_2d: np.ndarray = None,
+    layer_ids_1d: np.ndarray = None,
+    emb_preproc_mode: str = None,  # &#34;demean&#34;,
+):
+
+    activations_processed = []
+    layer_ids_processed = []
+
+    # log(f&#34;Preprocessing activations with {p_id}&#34;)
+    for l_id in np.sort(np.unique(layer_ids_1d)):  # For each layer
+        preprocessor = preprocessor_classes[emb_preproc_mode]
+
+        # Get the activations for this layer and retain 2d shape: [n_samples, emb_dim]
+        activations_2d_layer = activations_2d[:, layer_ids_1d == l_id]
+
+        preprocessor.fit(
+            activations_2d_layer
+        )  # obtain a scaling per unit (in emb space)
+
+        # Apply the scaling to the activations and reassamble the activations (might have different shape than original)
+        activations_2d_layer_processed = preprocessor.transform(activations_2d_layer)
+        activations_processed += [activations_2d_layer_processed]
+        layer_ids_processed += [np.full(activations_2d_layer_processed.shape[1], l_id)]
+
+    # Concatenate to obtain [n_samples, emb_dim across layers], i.e., flattened activations
+    activations_2d_layer_processed = np.hstack(activations_processed)
+    layer_ids_1d_processed = np.hstack(layer_ids_processed)
+
+    return activations_2d_layer_processed, layer_ids_1d_processed</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.preprocess_activations"><code class="name flex">
+<span>def <span class="ident">preprocess_activations</span></span>(<span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def preprocess_activations(*args, **kwargs):
+    return postprocess_activations(*args, **kwargs)</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.repackage_flattened_activations"><code class="name flex">
+<span>def <span class="ident">repackage_flattened_activations</span></span>(<span>activations_2d: numpy.ndarray = None, layer_ids_1d: numpy.ndarray = None, dataset: xarray.core.dataset.Dataset = None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def repackage_flattened_activations(
+    activations_2d: np.ndarray = None,
+    layer_ids_1d: np.ndarray = None,
+    dataset: xr.Dataset = None,
+):
+    return xr.DataArray(
+        np.expand_dims(activations_2d, axis=2),  # add in time dimension
+        dims=(&#34;sampleid&#34;, &#34;neuroid&#34;, &#34;timeid&#34;),
+        coords={
+            &#34;sampleid&#34;: dataset.contents.sampleid.values,
+            &#34;neuroid&#34;: np.arange(len(layer_ids_1d)),
+            &#34;timeid&#34;: np.arange(1),
+            &#34;layer&#34;: (&#34;neuroid&#34;, np.array(layer_ids_1d, dtype=&#34;int64&#34;)),
+        },
+    )</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.encoder.set_case"><code class="name flex">
+<span>def <span class="ident">set_case</span></span>(<span>sample: str, emb_case: Optional[str] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_case(sample: str, emb_case: typing.Union[str, None] = None):
+    if emb_case == &#34;lower&#34;:
+        return sample.lower()
+    elif emb_case == &#34;upper&#34;:
+        return sample.upper()
+    return sample</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="langbrainscore.utils" href="index.html">langbrainscore.utils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="langbrainscore.utils.encoder.aggregate_layers" href="#langbrainscore.utils.encoder.aggregate_layers">aggregate_layers</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.cos_contrib" href="#langbrainscore.utils.encoder.cos_contrib">cos_contrib</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.cos_sim_matrix" href="#langbrainscore.utils.encoder.cos_sim_matrix">cos_sim_matrix</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.count_zero_threshold_values" href="#langbrainscore.utils.encoder.count_zero_threshold_values">count_zero_threshold_values</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.dataset_from_stimuli" href="#langbrainscore.utils.encoder.dataset_from_stimuli">dataset_from_stimuli</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.encode_stimuli_in_context" href="#langbrainscore.utils.encoder.encode_stimuli_in_context">encode_stimuli_in_context</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.flatten_activations_per_sample" href="#langbrainscore.utils.encoder.flatten_activations_per_sample">flatten_activations_per_sample</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.get_anisotropy" href="#langbrainscore.utils.encoder.get_anisotropy">get_anisotropy</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.get_context_groups" href="#langbrainscore.utils.encoder.get_context_groups">get_context_groups</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.get_decomposition_method" href="#langbrainscore.utils.encoder.get_decomposition_method">get_decomposition_method</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.get_explainable_variance" href="#langbrainscore.utils.encoder.get_explainable_variance">get_explainable_variance</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.get_layer_sparsity" href="#langbrainscore.utils.encoder.get_layer_sparsity">get_layer_sparsity</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.get_torch_device" href="#langbrainscore.utils.encoder.get_torch_device">get_torch_device</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.pick_matching_token_ixs" href="#langbrainscore.utils.encoder.pick_matching_token_ixs">pick_matching_token_ixs</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.postprocess_activations" href="#langbrainscore.utils.encoder.postprocess_activations">postprocess_activations</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.preprocess_activations" href="#langbrainscore.utils.encoder.preprocess_activations">preprocess_activations</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.repackage_flattened_activations" href="#langbrainscore.utils.encoder.repackage_flattened_activations">repackage_flattened_activations</a></code></li>
+<li><code><a title="langbrainscore.utils.encoder.set_case" href="#langbrainscore.utils.encoder.set_case">set_case</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.10.0</a>.</p>
+</footer>
+</body>
+</html>

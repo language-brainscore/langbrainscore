@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>langbrainscore.utils.encoder_utils API documentation</title>
-<meta name="description" content="Utils for brain and silico encoders (might be separated out in two scripts) …" />
+<title>langbrainscore.utils.preprocessing API documentation</title>
+<meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,33 +19,33 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>langbrainscore.utils.encoder_utils</code></h1>
+<h1 class="title">Module <code>langbrainscore.utils.preprocessing</code></h1>
 </header>
 <section id="section-intro">
-<p>Utils for brain and silico encoders (might be separated out in two scripts)</p>
-<p>For silico encoder, we want utils for:
-1. Obtaining activations from a HF interface
-2. Different ways of aggregating the embedding
-3. Merging sub-word token embeddings into word embeddings (? &ndash; is this necessary)
-4.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Utils for brain and silico encoders (might be separated out in two scripts)
+<pre><code class="python">from sklearn.preprocessing import (
+    MinMaxScaler,
+    StandardScaler,
+    KBinsDiscretizer,
+    RobustScaler,
+)
+from sklearn.random_projection import GaussianRandomProjection
+from sklearn.decomposition import PCA
 
-For silico encoder, we want utils for:
-1. Obtaining activations from a HF interface
-2. Different ways of aggregating the embedding
-3. Merging sub-word token embeddings into word embeddings (? -- is this necessary)
-4. 
-
-
-
-
-
-
-&#34;&#34;&#34;</code></pre>
+# TODO: decide whether hardocded n_bins, n_components should be kept that way
+#   or allowed to be changed
+preprocessor_classes = {
+    &#34;demean&#34;: StandardScaler(with_std=False),
+    &#34;demean_std&#34;: StandardScaler(with_std=True),
+    &#34;minmax&#34;: MinMaxScaler,
+    &#34;discretize&#34;: KBinsDiscretizer(n_bins=10, encode=&#34;ordinal&#34;, strategy=&#34;uniform&#34;),
+    &#34;robust_scaler&#34;: RobustScaler(),
+    &#34;pca&#34;: PCA(n_components=10),
+    &#34;gaussian_random_projection&#34;: GaussianRandomProjection(n_components=10),
+}</code></pre>
 </details>
 </section>
 <section>

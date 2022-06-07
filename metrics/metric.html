@@ -26,61 +26,141 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import scipy.stats
+<pre><code class="python">import typing
+
 import numpy as np
-import typing
-from tqdm import tqdm
-from langbrainscore.interface.metrics import _Metric
 import xarray as xr
-
-from langbrainscore.metrics.rsa import RSA, RDM
-
-class Metric(_Metric):
-
-    def __init__(self, metric: typing.Union[str, typing.Callable]) -&gt; None:
-        self.metric = metric
-
-    def __call__(self, A: xr.DataArray, B: xr.DataArray, **kwds: dict) -&gt; np.ndarray:
-        if A.shape != B.shape:
-            raise ValueError(f&#39;mismatched shapes of A, B:  {A.shape}, {B.shape}&#39;)
-        if len(A.shape) &gt; 1:
-            raise ValueError
-        # return np.apply_along_axis(self.metric, 1, )
-        return self.metric(A, B, **kwds)
-# hack self.metric(A.dropna(dim=&#39;neuroid&#39;).values, B.dropna(dim=&#39;neuroid&#39;).values)
+from langbrainscore.interface import _MatrixMetric, _Metric, _VectorMetric
+from scipy.stats import kendalltau, pearsonr, spearmanr
+from sklearn.metrics import accuracy_score, mean_squared_error, pairwise_distances
 
 
-def pearson_r(x, y):
+# class Metric:
+#     &#34;&#34;&#34;
+#     wrapper for metric classes that confirms they instantiate the proper interface
+#     and coordinates their execution over the contents of supplied xarrays
+#     &#34;&#34;&#34;
+
+#     def __init__(self, metric: typing.Union[_Metric, str], **kwargs) -&gt; &#34;Metric&#34;:
+#         assert issubclass(metric, _Metric)
+#         self._metric = metric(**kwargs)
+
+#     def __call__(self, X: xr.DataArray, Y: xr.DataArray) -&gt; np.ndarray:
+#         &#34;&#34;&#34;
+#         args:
+#             xr.DataArray: X
+#             xr.DataArray: Y
+
+#         returns:
+#             score of specified metric applied to X and Y
+#         &#34;&#34;&#34;
+#         score = self._metric(X.values, Y.values)
+#         if not isinstance(score, np.ndarray):
+#             return np.array(score).reshape(-1)
+#         return score
+
+
+class PearsonR(_VectorMetric):
+    @staticmethod
+    def _score(x: np.ndarray, y: np.ndarray) -&gt; np.float:
+        r, p = pearsonr(x, y)
+        return r
+
+
+class SpearmanRho(_VectorMetric):
+    @staticmethod
+    def _score(x: np.ndarray, y: np.ndarray) -&gt; np.float:
+        rho, p = spearmanr(x, y)
+        return rho
+
+
+class KendallTau(_VectorMetric):
+    @staticmethod
+    def _score(x: np.ndarray, y: np.ndarray) -&gt; np.float:
+        tau, p = kendalltau(x, y)
+        return tau
+
+
+class FisherCorr(_VectorMetric):
+    @staticmethod
+    def _score(x: np.ndarray, y: np.ndarray) -&gt; np.float:
+        r, p = pearsonr(x, y)
+        corr = np.arctanh(r)
+        return corr
+
+
+class RMSE(_VectorMetric):
+    @staticmethod
+    def _score(x: np.ndarray, y: np.ndarray) -&gt; np.float:
+        loss = mean_squared_error(x, y, squared=False)
+        return loss
+
+
+class ClassificationAccuracy(_VectorMetric):
+    @staticmethod
+    def _score(x: np.ndarray, y: np.ndarray) -&gt; np.float:
+        score = accuracy_score(x, y, normalize=True)
+        return score
+
+
+class RSA(_MatrixMetric):
     &#34;&#34;&#34;
-    Calculates the Pearson correlation coefficient between two lists of
-    numbers.
-
-    Parameters
-    ----------
-    x : list
-        List of numbers.
-    y : list
-        List of numbers.
-
-    Returns
-    -------
-    float
-        Pearson correlation coefficient.
-
-    Raises
-    ------
-    ValueError
-        If lists are not of equal length.
+    evaluates representational similarity between two matrices for a given
+    distance measure and vector comparison metric
     &#34;&#34;&#34;
-    if len(x) != len(y):
-        raise ValueError(&#34;Lists must be of equal length.&#34;)
 
-    r, p = scipy.stats.pearsonr(x, y)
-    return r
+    def __init__(self, distance=&#34;correlation&#34;, comparison=PearsonR()):
+        &#34;&#34;&#34;
+        args:
+            string: distance (anything accepted by sklearn.metrics.pairwise_distances)
+            _VectorMetric: comparison
+        &#34;&#34;&#34;
+        self._distance = distance
+        self._comparison = comparison
+        super().__init__()
 
-def pearson_r_nd(X, Y):
-    assert X.shape == Y.shape
-    return np.diag(np.corrcoef(X.T,Y.T)[X.shape[1]:,:X.shape[1]])</code></pre>
+    def _score(self, X: np.ndarray, Y: np.ndarray) -&gt; np.float:
+        X_rdm = pairwise_distances(X, metric=self._distance)
+        Y_rdm = pairwise_distances(Y, metric=self._distance)
+        if any([m.shape[1] == 1 for m in (X, Y)]):  # can&#39;t calc 1D corr dists
+            X_rdm[np.isnan(X_rdm)] = 0
+            Y_rdm[np.isnan(Y_rdm)] = 0
+        indices = np.triu_indices(X_rdm.shape[0], k=1)
+        score = self._comparison(X_rdm[indices], Y_rdm[indices])
+        return score
+
+
+# inspired by https://github.com/yuanli2333/CKA-Centered-Kernel-Alignment/blob/master/CKA.py
+class CKA(_MatrixMetric):
+    &#34;&#34;&#34;
+    evaluates centered kernel alignment distance between two matrices
+    currently only implements linear kernel
+    &#34;&#34;&#34;
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def _center(K):
+        N = K.shape[0]
+        U = np.ones([N, N])
+        I = np.eye(N)
+        H = I - U / N
+        centered = H @ K @ H
+        return centered
+
+    def _HSIC(self, A, B):
+        L_A = A @ A.T
+        L_B = B @ B.T
+        HSIC = np.sum(self._center(L_A) * self._center(L_B))
+        return HSIC
+
+    def _score(self, X: np.ndarray, Y: np.ndarray) -&gt; np.float:
+        HSIC_XY = self._HSIC(X, Y)
+        HSIC_XX = self._HSIC(X, X)
+        HSIC_YY = self._HSIC(Y, Y)
+        score = HSIC_XY / (np.sqrt(HSIC_XX) * np.sqrt(HSIC_YY))
+        return score</code></pre>
 </details>
 </section>
 <section>
@@ -88,110 +168,295 @@ def pearson_r_nd(X, Y):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="langbrainscore.metrics.metric.pearson_r"><code class="name flex">
-<span>def <span class="ident">pearson_r</span></span>(<span>x, y)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Calculates the Pearson correlation coefficient between two lists of
-numbers.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>list</code></dt>
-<dd>List of numbers.</dd>
-<dt><strong><code>y</code></strong> :&ensp;<code>list</code></dt>
-<dd>List of numbers.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>float</code></dt>
-<dd>Pearson correlation coefficient.</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>ValueError</code></dt>
-<dd>If lists are not of equal length.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def pearson_r(x, y):
-    &#34;&#34;&#34;
-    Calculates the Pearson correlation coefficient between two lists of
-    numbers.
-
-    Parameters
-    ----------
-    x : list
-        List of numbers.
-    y : list
-        List of numbers.
-
-    Returns
-    -------
-    float
-        Pearson correlation coefficient.
-
-    Raises
-    ------
-    ValueError
-        If lists are not of equal length.
-    &#34;&#34;&#34;
-    if len(x) != len(y):
-        raise ValueError(&#34;Lists must be of equal length.&#34;)
-
-    r, p = scipy.stats.pearsonr(x, y)
-    return r</code></pre>
-</details>
-</dd>
-<dt id="langbrainscore.metrics.metric.pearson_r_nd"><code class="name flex">
-<span>def <span class="ident">pearson_r_nd</span></span>(<span>X, Y)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def pearson_r_nd(X, Y):
-    assert X.shape == Y.shape
-    return np.diag(np.corrcoef(X.T,Y.T)[X.shape[1]:,:X.shape[1]])</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="langbrainscore.metrics.metric.Metric"><code class="flex name class">
-<span>class <span class="ident">Metric</span></span>
-<span>(</span><span>metric: Union[str, Callable])</span>
+<dt id="langbrainscore.metrics.metric.CKA"><code class="flex name class">
+<span>class <span class="ident">CKA</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p></div>
+<div class="desc"><p>evaluates centered kernel alignment distance between two matrices
+currently only implements linear kernel</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Metric(_Metric):
+<pre><code class="python">class CKA(_MatrixMetric):
+    &#34;&#34;&#34;
+    evaluates centered kernel alignment distance between two matrices
+    currently only implements linear kernel
+    &#34;&#34;&#34;
 
-    def __init__(self, metric: typing.Union[str, typing.Callable]) -&gt; None:
-        self.metric = metric
+    def __init__(self):
+        super().__init__()
 
-    def __call__(self, A: xr.DataArray, B: xr.DataArray, **kwds: dict) -&gt; np.ndarray:
-        if A.shape != B.shape:
-            raise ValueError(f&#39;mismatched shapes of A, B:  {A.shape}, {B.shape}&#39;)
-        if len(A.shape) &gt; 1:
-            raise ValueError
-        # return np.apply_along_axis(self.metric, 1, )
-        return self.metric(A, B, **kwds)</code></pre>
+    @staticmethod
+    def _center(K):
+        N = K.shape[0]
+        U = np.ones([N, N])
+        I = np.eye(N)
+        H = I - U / N
+        centered = H @ K @ H
+        return centered
+
+    def _HSIC(self, A, B):
+        L_A = A @ A.T
+        L_B = B @ B.T
+        HSIC = np.sum(self._center(L_A) * self._center(L_B))
+        return HSIC
+
+    def _score(self, X: np.ndarray, Y: np.ndarray) -&gt; np.float:
+        HSIC_XY = self._HSIC(X, Y)
+        HSIC_XX = self._HSIC(X, X)
+        HSIC_YY = self._HSIC(Y, Y)
+        score = HSIC_XY / (np.sqrt(HSIC_XX) * np.sqrt(HSIC_YY))
+        return score</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>langbrainscore.interface.metrics._Metric</li>
+<li>langbrainscore.interface.metric._MatrixMetric</li>
+<li>langbrainscore.interface.metric._Metric</li>
+<li>langbrainscore.interface.cacheable._Cacheable</li>
+<li>typing.Protocol</li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+</dd>
+<dt id="langbrainscore.metrics.metric.ClassificationAccuracy"><code class="flex name class">
+<span>class <span class="ident">ClassificationAccuracy</span></span>
+<span>(</span><span>reduction=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>subclass of _Metric that applies relevant vector similarity metric
+along each column of the input arrays.</p>
+<p>args:
+callable: reduction (can also be None or False)</p>
+<p>raises:
+TypeError: if reduction argument is not callable.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ClassificationAccuracy(_VectorMetric):
+    @staticmethod
+    def _score(x: np.ndarray, y: np.ndarray) -&gt; np.float:
+        score = accuracy_score(x, y, normalize=True)
+        return score</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>langbrainscore.interface.metric._VectorMetric</li>
+<li>langbrainscore.interface.metric._Metric</li>
+<li>langbrainscore.interface.cacheable._Cacheable</li>
+<li>typing.Protocol</li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+</dd>
+<dt id="langbrainscore.metrics.metric.FisherCorr"><code class="flex name class">
+<span>class <span class="ident">FisherCorr</span></span>
+<span>(</span><span>reduction=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>subclass of _Metric that applies relevant vector similarity metric
+along each column of the input arrays.</p>
+<p>args:
+callable: reduction (can also be None or False)</p>
+<p>raises:
+TypeError: if reduction argument is not callable.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class FisherCorr(_VectorMetric):
+    @staticmethod
+    def _score(x: np.ndarray, y: np.ndarray) -&gt; np.float:
+        r, p = pearsonr(x, y)
+        corr = np.arctanh(r)
+        return corr</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>langbrainscore.interface.metric._VectorMetric</li>
+<li>langbrainscore.interface.metric._Metric</li>
+<li>langbrainscore.interface.cacheable._Cacheable</li>
+<li>typing.Protocol</li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+</dd>
+<dt id="langbrainscore.metrics.metric.KendallTau"><code class="flex name class">
+<span>class <span class="ident">KendallTau</span></span>
+<span>(</span><span>reduction=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>subclass of _Metric that applies relevant vector similarity metric
+along each column of the input arrays.</p>
+<p>args:
+callable: reduction (can also be None or False)</p>
+<p>raises:
+TypeError: if reduction argument is not callable.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class KendallTau(_VectorMetric):
+    @staticmethod
+    def _score(x: np.ndarray, y: np.ndarray) -&gt; np.float:
+        tau, p = kendalltau(x, y)
+        return tau</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>langbrainscore.interface.metric._VectorMetric</li>
+<li>langbrainscore.interface.metric._Metric</li>
+<li>langbrainscore.interface.cacheable._Cacheable</li>
+<li>typing.Protocol</li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+</dd>
+<dt id="langbrainscore.metrics.metric.PearsonR"><code class="flex name class">
+<span>class <span class="ident">PearsonR</span></span>
+<span>(</span><span>reduction=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>subclass of _Metric that applies relevant vector similarity metric
+along each column of the input arrays.</p>
+<p>args:
+callable: reduction (can also be None or False)</p>
+<p>raises:
+TypeError: if reduction argument is not callable.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class PearsonR(_VectorMetric):
+    @staticmethod
+    def _score(x: np.ndarray, y: np.ndarray) -&gt; np.float:
+        r, p = pearsonr(x, y)
+        return r</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>langbrainscore.interface.metric._VectorMetric</li>
+<li>langbrainscore.interface.metric._Metric</li>
+<li>langbrainscore.interface.cacheable._Cacheable</li>
+<li>typing.Protocol</li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+</dd>
+<dt id="langbrainscore.metrics.metric.RMSE"><code class="flex name class">
+<span>class <span class="ident">RMSE</span></span>
+<span>(</span><span>reduction=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>subclass of _Metric that applies relevant vector similarity metric
+along each column of the input arrays.</p>
+<p>args:
+callable: reduction (can also be None or False)</p>
+<p>raises:
+TypeError: if reduction argument is not callable.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RMSE(_VectorMetric):
+    @staticmethod
+    def _score(x: np.ndarray, y: np.ndarray) -&gt; np.float:
+        loss = mean_squared_error(x, y, squared=False)
+        return loss</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>langbrainscore.interface.metric._VectorMetric</li>
+<li>langbrainscore.interface.metric._Metric</li>
+<li>langbrainscore.interface.cacheable._Cacheable</li>
+<li>typing.Protocol</li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+</dd>
+<dt id="langbrainscore.metrics.metric.RSA"><code class="flex name class">
+<span>class <span class="ident">RSA</span></span>
+<span>(</span><span>distance='correlation', comparison=(PearsonR?_reduction=None))</span>
+</code></dt>
+<dd>
+<div class="desc"><p>evaluates representational similarity between two matrices for a given
+distance measure and vector comparison metric</p>
+<p>args:
+string: distance (anything accepted by sklearn.metrics.pairwise_distances)
+_VectorMetric: comparison</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RSA(_MatrixMetric):
+    &#34;&#34;&#34;
+    evaluates representational similarity between two matrices for a given
+    distance measure and vector comparison metric
+    &#34;&#34;&#34;
+
+    def __init__(self, distance=&#34;correlation&#34;, comparison=PearsonR()):
+        &#34;&#34;&#34;
+        args:
+            string: distance (anything accepted by sklearn.metrics.pairwise_distances)
+            _VectorMetric: comparison
+        &#34;&#34;&#34;
+        self._distance = distance
+        self._comparison = comparison
+        super().__init__()
+
+    def _score(self, X: np.ndarray, Y: np.ndarray) -&gt; np.float:
+        X_rdm = pairwise_distances(X, metric=self._distance)
+        Y_rdm = pairwise_distances(Y, metric=self._distance)
+        if any([m.shape[1] == 1 for m in (X, Y)]):  # can&#39;t calc 1D corr dists
+            X_rdm[np.isnan(X_rdm)] = 0
+            Y_rdm[np.isnan(Y_rdm)] = 0
+        indices = np.triu_indices(X_rdm.shape[0], k=1)
+        score = self._comparison(X_rdm[indices], Y_rdm[indices])
+        return score</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>langbrainscore.interface.metric._MatrixMetric</li>
+<li>langbrainscore.interface.metric._Metric</li>
+<li>langbrainscore.interface.cacheable._Cacheable</li>
+<li>typing.Protocol</li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+</dd>
+<dt id="langbrainscore.metrics.metric.SpearmanRho"><code class="flex name class">
+<span>class <span class="ident">SpearmanRho</span></span>
+<span>(</span><span>reduction=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>subclass of _Metric that applies relevant vector similarity metric
+along each column of the input arrays.</p>
+<p>args:
+callable: reduction (can also be None or False)</p>
+<p>raises:
+TypeError: if reduction argument is not callable.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SpearmanRho(_VectorMetric):
+    @staticmethod
+    def _score(x: np.ndarray, y: np.ndarray) -&gt; np.float:
+        rho, p = spearmanr(x, y)
+        return rho</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>langbrainscore.interface.metric._VectorMetric</li>
+<li>langbrainscore.interface.metric._Metric</li>
+<li>langbrainscore.interface.cacheable._Cacheable</li>
+<li>typing.Protocol</li>
+<li>typing.Generic</li>
 <li>abc.ABC</li>
 </ul>
 </dd>
@@ -209,16 +474,31 @@ inheritance.</p></div>
 <li><code><a title="langbrainscore.metrics" href="index.html">langbrainscore.metrics</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="langbrainscore.metrics.metric.pearson_r" href="#langbrainscore.metrics.metric.pearson_r">pearson_r</a></code></li>
-<li><code><a title="langbrainscore.metrics.metric.pearson_r_nd" href="#langbrainscore.metrics.metric.pearson_r_nd">pearson_r_nd</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="langbrainscore.metrics.metric.Metric" href="#langbrainscore.metrics.metric.Metric">Metric</a></code></h4>
+<h4><code><a title="langbrainscore.metrics.metric.CKA" href="#langbrainscore.metrics.metric.CKA">CKA</a></code></h4>
+</li>
+<li>
+<h4><code><a title="langbrainscore.metrics.metric.ClassificationAccuracy" href="#langbrainscore.metrics.metric.ClassificationAccuracy">ClassificationAccuracy</a></code></h4>
+</li>
+<li>
+<h4><code><a title="langbrainscore.metrics.metric.FisherCorr" href="#langbrainscore.metrics.metric.FisherCorr">FisherCorr</a></code></h4>
+</li>
+<li>
+<h4><code><a title="langbrainscore.metrics.metric.KendallTau" href="#langbrainscore.metrics.metric.KendallTau">KendallTau</a></code></h4>
+</li>
+<li>
+<h4><code><a title="langbrainscore.metrics.metric.PearsonR" href="#langbrainscore.metrics.metric.PearsonR">PearsonR</a></code></h4>
+</li>
+<li>
+<h4><code><a title="langbrainscore.metrics.metric.RMSE" href="#langbrainscore.metrics.metric.RMSE">RMSE</a></code></h4>
+</li>
+<li>
+<h4><code><a title="langbrainscore.metrics.metric.RSA" href="#langbrainscore.metrics.metric.RSA">RSA</a></code></h4>
+</li>
+<li>
+<h4><code><a title="langbrainscore.metrics.metric.SpearmanRho" href="#langbrainscore.metrics.metric.SpearmanRho">SpearmanRho</a></code></h4>
 </li>
 </ul>
 </li>

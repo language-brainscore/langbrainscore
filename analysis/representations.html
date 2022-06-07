@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>langbrainscore.utils.cache_utils API documentation</title>
-<meta name="description" content="Utils for caching" />
+<title>langbrainscore.analysis.representations API documentation</title>
+<meta name="description" content="submodule holding functions related to analyzing outputs from LangBrainScore" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,15 +19,21 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>langbrainscore.utils.cache_utils</code></h1>
+<h1 class="title">Module <code>langbrainscore.analysis.representations</code></h1>
 </header>
 <section id="section-intro">
-<p>Utils for caching</p>
+<p>submodule holding functions related to analyzing outputs from LangBrainScore</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#34;&#34;&#34;Utils for caching&#34;&#34;&#34;</code></pre>
+<pre><code class="python">&#34;&#34;&#34;submodule holding functions related to analyzing outputs from LangBrainScore&#34;&#34;&#34;
+
+import numpy as np
+import xarray as xr
+from tqdm.auto import tqdm
+
+from langbrainscore.interface.encoder import EncoderRepresentations, _Encoder</code></pre>
 </details>
 </section>
 <section>
@@ -47,7 +53,7 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="langbrainscore.utils" href="index.html">langbrainscore.utils</a></code></li>
+<li><code><a title="langbrainscore.analysis" href="index.html">langbrainscore.analysis</a></code></li>
 </ul>
 </li>
 </ul>

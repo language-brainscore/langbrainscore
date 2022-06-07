@@ -27,8 +27,41 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">from abc import ABC, abstractmethod
+from typing import Tuple
 
-class _Mapping(ABC): ...</code></pre>
+import xarray as xr
+from langbrainscore.interface.cacheable import _Cacheable
+
+
+class _Mapping(_Cacheable, ABC):
+    # class _Mapping(ABC):
+    &#34;&#34;&#34;
+    object that defines and applies map between two xarrays with the same number of samples
+    &#34;&#34;&#34;
+
+    def __init__(self):
+        pass
+
+    def fit_transform(
+        self, X: xr.DataArray, Y: xr.DataArray
+    ) -&gt; Tuple[xr.DataArray, xr.DataArray]:
+        &#34;&#34;&#34;
+        takes in two xarrays with a shared set of samples and returns a new
+        pair of xarrays (Y_pred, Y_true) to be compared with a metric.T
+
+        Y_pred is either derived from a learned mapping on X or can be X itself
+        when the downstream metric supports comparison of matrices with
+        different dimensions, e.g, RSA, CKA
+
+        args:
+            xr.DataArray: X
+            xr.DataArray: Y
+
+        returns:
+            xr.DataArray: Y_pred
+            xr.DataArray: Y_true
+        &#34;&#34;&#34;
+        raise NotImplementedError</code></pre>
 </details>
 </section>
 <section>

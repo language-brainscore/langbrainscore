@@ -429,7 +429,7 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
 }
 </script>
     <h1>tests.html</h1>
-    <p>Report generated on 28-Feb-2022 at 22:04:23 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v3.1.1</p>
+    <p>Report generated on 07-Jun-2022 at 21:22:15 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v3.1.1</p>
     <h2>Environment</h2>
     <table id="environment">
       <tr>
@@ -440,10 +440,10 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
         <td>main</td></tr>
       <tr>
         <td>CIRCLE_BUILD_NUM</td>
-        <td>165</td></tr>
+        <td>330</td></tr>
       <tr>
         <td>CIRCLE_BUILD_URL</td>
-        <td><a href="https://circleci.com/gh/language-brainscore/langbrainscore/165" target="_blank">https://circleci.com/gh/language-brainscore/langbrainscore/165</a></td></tr>
+        <td><a href="https://circleci.com/gh/language-brainscore/langbrainscore/330" target="_blank">https://circleci.com/gh/language-brainscore/langbrainscore/330</a></td></tr>
       <tr>
         <td>CIRCLE_NODE_INDEX</td>
         <td>0</td></tr>
@@ -452,7 +452,7 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
         <td>1</td></tr>
       <tr>
         <td>CIRCLE_PREVIOUS_BUILD_NUM</td>
-        <td>164</td></tr>
+        <td>303</td></tr>
       <tr>
         <td>CIRCLE_PROJECT_REPONAME</td>
         <td>langbrainscore</td></tr>
@@ -464,22 +464,25 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
         <td>git@github.com:language-brainscore/langbrainscore.git</td></tr>
       <tr>
         <td>CIRCLE_SHA1</td>
-        <td>8f7fc2534887f85a0d889c87941aa786602a9a8b</td></tr>
+        <td>30152415b02e26da4e756d574c601ec6fedd2511</td></tr>
+      <tr>
+        <td>CIRCLE_USERNAME</td>
+        <td>aalok-sathe</td></tr>
       <tr>
         <td>Packages</td>
-        <td>{"pluggy": "1.0.0", "py": "1.11.0", "pytest": "7.0.0"}</td></tr>
+        <td>{"pluggy": "1.0.0", "py": "1.11.0", "pytest": "7.1.2"}</td></tr>
       <tr>
         <td>Platform</td>
-        <td>Linux-5.11.0-1027-aws-x86_64-with-glibc2.29</td></tr>
+        <td>Linux-5.13.0-1023-aws-x86_64-with-glibc2.29</td></tr>
       <tr>
         <td>Plugins</td>
-        <td>{"html": "3.1.1", "metadata": "1.11.0"}</td></tr>
+        <td>{"html": "3.1.1", "metadata": "2.0.1"}</td></tr>
       <tr>
         <td>Python</td>
         <td>3.8.10</td></tr></table>
     <h2>Summary</h2>
-    <p>0 tests ran in 23.06 seconds. </p>
-    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="passed">0 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="failed">0 failed</span>, <input checked="true" class="filter" data-test-result="error" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="error">1 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
+    <p>0 tests ran in 4.21 seconds. </p>
+    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="passed">0 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="failed">0 failed</span>, <input checked="true" class="filter" data-test-result="error" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="error">2 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
     <h2>Results</h2>
     <table id="results-table">
       <thead id="results-table-head">
@@ -493,43 +496,26 @@ function filterTable(elem) { // eslint-disable-line no-unused-vars
       <tbody class="error results-table-row">
         <tr>
           <td class="col-result">Error</td>
+          <td class="col-name">tests/test_caching.py::collect</td>
+          <td class="col-duration"></td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">tests/test_caching.py:11: in &lt;module&gt;<br/>    pereira_xr = lbs.benchmarks.pereira2018_nat_stories()<br/><span class="error">E   AttributeError: module &#x27;langbrainscore.benchmarks&#x27; has no attribute &#x27;pereira2018_nat_stories&#x27;</span><br/></div></td></tr></tbody>
+      <tbody class="error results-table-row">
+        <tr>
+          <td class="col-result">Error</td>
           <td class="col-name">tests/test_identical.py::collect</td>
           <td class="col-duration"></td>
           <td class="col-links"></td></tr>
         <tr>
           <td class="extra" colspan="4">
-            <div class="log">tests/test_identical.py:144: in &lt;module&gt;<br/>    ann_encoded_data = distilgpt_encoder.encode(mock_neuro_dataset, context_dimension=&#x27;passage_experiment&#x27;)<br/>langbrainscore/encoder/ann.py:256: in encode<br/>    for k in dataset._dataset.to_dataset(name=&#x27;data&#x27;).drop_dims([&#x27;neuroid&#x27;, &#x27;timeid&#x27;]).coords: #&lt;- keeps only sampleid, and has no data<br/>/usr/local/lib/python3.8/dist-packages/xarray/core/common.py:246: in __getattr__<br/>    raise AttributeError(<br/><span class="error">E   AttributeError: &#x27;Dataset&#x27; object has no attribute &#x27;to_dataset&#x27;</span><br/> --------------------------------Captured stderr--------------------------------- <br/>%%%% [WARN @ 0.90s] ...............................................................................
-%%%% [INFO @ 0.90s] creating mock data with 62 stimuli and 10000 neuroids
-%%%% [INFO @ 0.90s] recorded_data[:5,:5] == [[0.02542838 0.27797662 0.16654993 0.25321271 0.45669619]  [0.10347193
-.  .  .  .  .  .  .  0.55703955 0.82939725 0.04064911 0.56916762]  [0.63999639 0.85180876 0.38636473 0.18292044
-.  .  .  .  .  .  .  0.61377889]  [0.97946552 0.83452784 0.96548391 0.58526206 0.29393303]  [0.68330641 0.66349698
-.  .  .  .  .  .  .  0.03687728 0.41087675 0.62369886]], of shape (62, 10000)
-%%%% [INFO @ 0.91s] num. of stimuli generated: 62, example: [&#x27;uoocii ize&#x27; &#x27;mai aunpjw&#x27; &#x27;shipwudxlr&#x27; &#x27;tuwephbmts&#x27;]
-.  .  .  .  .  .  .  ...
-%%%% [INFO @ 0.92s] stimuli: [&#x27;uoocii ize&#x27; &#x27;mai aunpjw&#x27; &#x27;shipwudxlr&#x27; &#x27;tuwephbmts&#x27; &#x27;ouveseir r&#x27;  &#x27;rxm frbbog&#x27;
-.  .  .  .  .  .  .  &#x27;orgrolpixg&#x27; &#x27;rqauzdrwsz&#x27; &#x27;awajxgircz&#x27; &#x27;eioilz que&#x27;  &#x27;knnigxouun&#x27; &#x27;oieaeiavdk&#x27; &#x27; juo dauho&#x27;
-.  .  .  .  .  .  .  &#x27;eqqieegogx&#x27; &#x27;br aohiska&#x27;  &#x27;qofuutofuf&#x27; &#x27;utwtvsggoc&#x27; &#x27;hriejbceal&#x27; &#x27;jiotiridif&#x27; &#x27;ziow is ig&#x27;  &#x27;ws
-.  .  .  .  .  .  .  iknfikf&#x27; &#x27;jpuexereuz&#x27; &#x27;e vao lmiw&#x27; &#x27;xe znxpqgi&#x27; &#x27;fauh iof l&#x27;  &#x27;nxoiu zaks&#x27; &#x27;iuoaxoitgi&#x27; &#x27;rnntir
-.  .  .  .  .  .  .  sii&#x27; &#x27;acqeoieooe&#x27; &#x27;foobhpdaao&#x27;  &#x27;aupzaoikep&#x27; &#x27; dvlbpiarc&#x27; &#x27;wviugeruoo&#x27; &#x27;iqbol rgii&#x27; &#x27;iatuu ekur&#x27;
-.  .  .  .  .  .  .  &#x27;gimguajori&#x27; &#x27;ebvtwadafi&#x27; &#x27;lzooajpmog&#x27; &#x27;wxbiqiidmx&#x27; &#x27;sbpeeiwe o&#x27;  &#x27;jmaikkebuu&#x27; &#x27;kjeiadu gf&#x27;
-.  .  .  .  .  .  .  &#x27;uhcehwvpiq&#x27; &#x27;rzrxzhexup&#x27; &#x27;ddlhk zvmh&#x27;  &#x27;uqarjuwraa&#x27; &#x27;ddjqoup qa&#x27; &#x27;aijvvtakac&#x27; &#x27;opcqeonabm&#x27; &#x27;wdz
-.  .  .  .  .  .  .  mipeao&#x27;  &#x27;cg ihtwefr&#x27; &#x27;ajhaxigzzu&#x27; &#x27;u bdzco ih&#x27; &#x27;sxsuuwrizv&#x27; &#x27;oanuiveuij&#x27;  &#x27;nutbquzpvo&#x27; &#x27;iib
-.  .  .  .  .  .  .  ixixcv&#x27; &#x27;ljonuqooeu&#x27; &#x27;jpqotiezks&#x27; &#x27;chxv huiii&#x27;  &#x27;zeqaciubwe&#x27; &#x27;uomqnompoc&#x27;]
-%%%% [WARN @ 0.92s] ...............................................................................
-%%%% [INFO @ 0.92s] creating mock brain encoder
-%%%% [WARN @ 0.92s] ...............................................................................
-%%%% [INFO @ 0.92s] created brain-encoded data of shape: Frozen({&#x27;sampleid&#x27;: 62, &#x27;neuroid&#x27;: 10000, &#x27;timeid&#x27;:
-.  .  .  .  .  .  .  1})
-%%%% [WARN @ 0.92s] ...............................................................................
-%%%% [INFO @ 0.92s] creating an ANN encoder using distilgpt2
-Downloading:   0%|          | 0.00/762 [00:00&lt;?, ?B/s]Downloading: 100%|██████████| 762/762 [00:00&lt;00:00, 946kB/s]
-Downloading:   0%|          | 0.00/1.04M [00:00&lt;?, ?B/s]Downloading: 100%|██████████| 1.04M/1.04M [00:00&lt;00:00, 55.4MB/s]
-Downloading:   0%|          | 0.00/456k [00:00&lt;?, ?B/s]Downloading: 100%|██████████| 456k/456k [00:00&lt;00:00, 52.8MB/s]
-Downloading:   0%|          | 0.00/1.36M [00:00&lt;?, ?B/s]Downloading: 100%|██████████| 1.36M/1.36M [00:00&lt;00:00, 56.8MB/s]
-Downloading:   0%|          | 0.00/353M [00:00&lt;?, ?B/s]Downloading:   2%|▏         | 5.73M/353M [00:00&lt;00:06, 57.3MB/s]Downloading:   3%|▎         | 11.6M/353M [00:00&lt;00:05, 58.0MB/s]Downloading:   5%|▍         | 17.4M/353M [00:00&lt;00:05, 58.0MB/s]Downloading:   7%|▋         | 23.2M/353M [00:00&lt;00:05, 58.0MB/s]Downloading:   8%|▊         | 29.0M/353M [00:00&lt;00:05, 58.2MB/s]Downloading:  10%|▉         | 34.9M/353M [00:00&lt;00:05, 58.4MB/s]Downloading:  12%|█▏        | 40.8M/353M [00:00&lt;00:05, 58.5MB/s]Downloading:  13%|█▎        | 46.6M/353M [00:00&lt;00:05, 57.4MB/s]Downloading:  15%|█▍        | 52.5M/353M [00:00&lt;00:05, 57.8MB/s]Downloading:  17%|█▋        | 58.4M/353M [00:01&lt;00:05, 58.2MB/s]Downloading:  18%|█▊        | 64.2M/353M [00:01&lt;00:04, 57.9MB/s]Downloading:  20%|█▉        | 70.2M/353M [00:01&lt;00:04, 58.4MB/s]Downloading:  22%|██▏       | 76.3M/353M [00:01&lt;00:04, 59.3MB/s]Downloading:  23%|██▎       | 82.4M/353M [00:01&lt;00:04, 59.8MB/s]Downloading:  25%|██▌       | 88.6M/353M [00:01&lt;00:04, 60.3MB/s]Downloading:  27%|██▋       | 94.6M/353M [00:01&lt;00:04, 60.3MB/s]Downloading:  29%|██▊       | 101M/353M [00:01&lt;00:04, 60.6MB/s] Downloading:  30%|███       | 107M/353M [00:01&lt;00:04, 60.7MB/s]Downloading:  32%|███▏      | 113M/353M [00:01&lt;00:03, 60.7MB/s]Downloading:  34%|███▎      | 119M/353M [00:02&lt;00:03, 60.8MB/s]Downloading:  35%|███▌      | 125M/353M [00:02&lt;00:03, 60.9MB/s]Downloading:  37%|███▋      | 131M/353M [00:02&lt;00:03, 59.7MB/s]Downloading:  39%|███▉      | 137M/353M [00:02&lt;00:03, 59.7MB/s]Downloading:  41%|████      | 143M/353M [00:02&lt;00:03, 59.4MB/s]Downloading:  42%|████▏     | 149M/353M [00:02&lt;00:03, 59.7MB/s]Downloading:  44%|████▍     | 155M/353M [00:02&lt;00:03, 60.0MB/s]Downloading:  46%|████▌     | 161M/353M [00:02&lt;00:03, 59.9MB/s]Downloading:  47%|████▋     | 167M/353M [00:02&lt;00:03, 59.8MB/s]Downloading:  49%|████▉     | 173M/353M [00:02&lt;00:03, 59.9MB/s]Downloading:  51%|█████     | 179M/353M [00:03&lt;00:02, 60.2MB/s]Downloading:  53%|█████▎    | 185M/353M [00:03&lt;00:02, 60.4MB/s]Downloading:  54%|█████▍    | 191M/353M [00:03&lt;00:02, 60.4MB/s]Downloading:  56%|█████▌    | 198M/353M [00:03&lt;00:02, 60.7MB/s]Downloading:  58%|█████▊    | 204M/353M [00:03&lt;00:02, 60.8MB/s]Downloading:  59%|█████▉    | 210M/353M [00:03&lt;00:02, 60.5MB/s]Downloading:  61%|██████    | 216M/353M [00:03&lt;00:02, 60.7MB/s]Downloading:  63%|██████▎   | 222M/353M [00:03&lt;00:02, 60.7MB/s]Downloading:  65%|██████▍   | 228M/353M [00:03&lt;00:02, 60.8MB/s]Downloading:  66%|██████▋   | 234M/353M [00:03&lt;00:01, 60.8MB/s]Downloading:  68%|██████▊   | 240M/353M [00:04&lt;00:01, 60.7MB/s]Downloading:  70%|██████▉   | 246M/353M [00:04&lt;00:01, 60.8MB/s]Downloading:  72%|███████▏  | 252M/353M [00:04&lt;00:01, 60.9MB/s]Downloading:  73%|███████▎  | 259M/353M [00:04&lt;00:01, 61.0MB/s]Downloading:  75%|███████▌  | 265M/353M [00:04&lt;00:01, 60.9MB/s]Downloading:  77%|███████▋  | 271M/353M [00:04&lt;00:01, 60.9MB/s]Downloading:  78%|███████▊  | 277M/353M [00:04&lt;00:01, 60.6MB/s]Downloading:  80%|████████  | 283M/353M [00:04&lt;00:01, 60.5MB/s]Downloading:  82%|████████▏ | 289M/353M [00:04&lt;00:01, 60.2MB/s]Downloading:  84%|████████▎ | 295M/353M [00:04&lt;00:00, 60.2MB/s]Downloading:  85%|████████▌ | 301M/353M [00:05&lt;00:00, 54.8MB/s]Downloading:  87%|████████▋ | 307M/353M [00:05&lt;00:00, 51.6MB/s]Downloading:  89%|████████▊ | 313M/353M [00:05&lt;00:00, 54.3MB/s]Downloading:  90%|█████████ | 318M/353M [00:05&lt;00:00, 54.9MB/s]Downloading:  92%|█████████▏| 324M/353M [00:05&lt;00:00, 56.7MB/s]Downloading:  94%|█████████▎| 331M/353M [00:05&lt;00:00, 57.9MB/s]Downloading:  95%|█████████▌| 337M/353M [00:05&lt;00:00, 58.9MB/s]Downloading:  97%|█████████▋| 343M/353M [00:05&lt;00:00, 59.3MB/s]Downloading:  99%|█████████▉| 349M/353M [00:05&lt;00:00, 59.6MB/s]Downloading: 100%|██████████| 353M/353M [00:05&lt;00:00, 59.3MB/s]
-Some weights of the model checkpoint at distilgpt2 were not used when initializing GPT2Model: [&#x27;lm_head.weight&#x27;]
-- This IS expected if you are initializing GPT2Model from the checkpoint of a model trained on another task or with another architecture (e.g. initializing a BertForSequenceClassification model from a BertForPreTraining model).
-- This IS NOT expected if you are initializing GPT2Model from the checkpoint of a model that you expect to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model).
-%%%% [WARN @ 9.32s] ...............................................................................
-  0%|          | 0/18 [00:00&lt;?, ?it/s]  6%|▌         | 1/18 [00:00&lt;00:08,  2.02it/s] 11%|█         | 2/18 [00:01&lt;00:13,  1.17it/s] 17%|█▋        | 3/18 [00:01&lt;00:09,  1.55it/s] 22%|██▏       | 4/18 [00:02&lt;00:08,  1.59it/s] 28%|██▊       | 5/18 [00:02&lt;00:06,  2.11it/s] 33%|███▎      | 6/18 [00:03&lt;00:05,  2.22it/s] 39%|███▉      | 7/18 [00:03&lt;00:04,  2.52it/s] 44%|████▍     | 8/18 [00:04&lt;00:04,  2.15it/s] 50%|█████     | 9/18 [00:04&lt;00:04,  2.25it/s] 56%|█████▌    | 10/18 [00:05&lt;00:04,  1.62it/s] 61%|██████    | 11/18 [00:05&lt;00:03,  1.94it/s] 67%|██████▋   | 12/18 [00:06&lt;00:03,  1.66it/s] 72%|███████▏  | 13/18 [00:06&lt;00:02,  1.96it/s] 78%|███████▊  | 14/18 [00:07&lt;00:02,  1.66it/s] 83%|████████▎ | 15/18 [00:08&lt;00:01,  1.86it/s] 89%|████████▉ | 16/18 [00:09&lt;00:01,  1.47it/s] 94%|█████████▍| 17/18 [00:10&lt;00:00,  1.25it/s]100%|██████████| 18/18 [00:10&lt;00:00,  1.40it/s]100%|██████████| 18/18 [00:10&lt;00:00,  1.68it/s]
+            <div class="log">tests/test_identical.py:96: in &lt;module&gt;<br/>    mock_neuro_dataset = lbs.dataset.Dataset(xr_dataset)<br/>langbrainscore/interface/dataset.py:45: in __init__<br/>    assert isinstance(xr_obj, xr.DataArray)<br/><span class="error">E   AssertionError</span><br/> --------------------------------Captured stderr--------------------------------- <br/>%%% [WARN @ 1.76s] ...............................................................................
+%%% [info @ 1.76s] creating mock data with 62 stimuli and 10000 neuroids
+%%% [info @ 1.86s] recorded_data[:5,:5] == [[0.67379633 0.50865255 0.00284319 0.57203961 0.1761744 ]  [0.91260963
+. . . . . . 0.55427539 0.91940264 0.94720697 0.12924989]  [0.85476376 0.636186   0.32043211 0.52883116 0.91249143]
+. . . . . . [0.18754096 0.2639976  0.93754747 0.00814267 0.0759613 ]  [0.32358442 0.47274197 0.28754726 0.23744372
+. . . . . . 0.19410028]], of shape (62, 10000)
+%%% [info @ 1.87s] num. of stimuli generated: 62, example: [&#x27;onasuoib m&#x27; &#x27;lpanmrbk t&#x27; &#x27;kmrsaufoas&#x27; &#x27;doidozeuut&#x27;]
+. . . . . . ...
 <br/></div></td></tr></tbody></table></body></html>

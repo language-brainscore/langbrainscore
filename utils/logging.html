@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>langbrainscore.utils.logging API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="Utility functions for logging to stdout and tracking parameters using Weights and Biases" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,51 +22,152 @@
 <h1 class="title">Module <code>langbrainscore.utils.logging</code></h1>
 </header>
 <section id="section-intro">
+<p>Utility functions for logging to stdout and tracking parameters using Weights and Biases</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import textwrap
-from datetime import date
-from time import time
-from tqdm import tqdm
-from sys import stderr, stdout
+<pre><code class="python">&#34;&#34;&#34;Utility functions for logging to stdout and tracking parameters using Weights and Biases&#34;&#34;&#34;
 
-from colorama import init, Fore, Back, Style
+################################################################
+# stuff for type annotations
+################################################################
+import typing
+
+# from langbrainscore.interface.cacheable import _Cacheable
+
+################################################################
+# stuff for logging to W&amp;B (https://wandb.ai)
+################################################################
+
+
+def init_wandb(project: str, group: str, use_wandb=True):
+    &#34;&#34;&#34;Initializes an instance of Weights &amp; Biases for logging
+
+    Args:
+        project (str): a broad grouping of what project this wandb instance
+            should be under, e.g., alpha testing, or human-predictive-processing-1
+        group (str): a more immediate grouping, recommended: by benchmark
+        use_wandb (bool, optional): if False, we will not initialize W&amp;B.
+            Mainly for compatibility with CLI. Defaults to True.
+    &#34;&#34;&#34;
+    if use_wandb:
+        import wandb
+
+        wandb.init(
+            project=project,
+            entity=&#34;langbrainscore&#34;,
+            # group=group,
+        )
+
+
+def log_to_wandb(
+    *obs: typing.Collection[typing.Union[&#34;_Cacheable&#34;, dict]],
+    use_wandb=True,
+    commit=False,
+):
+    &#34;&#34;&#34;Given a `_Cacheable` object, logs its salient parameters to W&amp;B by
+        prefixing them with class name.
+
+    Args:
+        ob (typing.Union[_Cacheable, typing.Mapping]): Object to log
+        use_wandb (bool, optional): if False, we will not log anything. For compatibility with CLI.
+            Defaults to True.
+    &#34;&#34;&#34;
+    if use_wandb:
+        import wandb
+
+        # if a singleton object is passed, we convert it to a collection
+        try:
+            iter(obs)
+        except TypeError:
+            obs = [obs]
+
+        for ob in obs:
+            if hasattr(ob, &#34;params&#34;):
+                d = {f&#34;{ob.__class__.__name__}/{k}&#34;: v for k, v in ob.params.items()}
+            else:
+                d = ob
+            wandb.log(d, commit=False)
+
+        wandb.log({}, commit=commit)
+
+
+################################################################
+# stuff for logging to the terminal
+################################################################
+import textwrap
+from datetime import date
+from sys import stderr, stdout
+from time import time
+import shutil
+import os
+
+from colorama import Back, Fore, Style, init
+from tqdm import tqdm
+
+
+def verbose() -&gt; bool:
+    &#34;&#34;&#34;returns True if env variable &#34;VERBOSE&#34; is set to 1&#34;&#34;&#34;
+    return os.environ.get(&#34;VERBOSE&#34;, None) == &#34;1&#34;
+
 
 init(autoreset=True)
 _START_TIME = time()
-def START_TIME(): return _START_TIME
 
-def log(message, cmap=&#39;INFO&#39;, type=None, **kwargs):
-    # if kwargs is not None:
+
+def START_TIME():
+    return _START_TIME
+
+
+def log(message, cmap=&#34;INFO&#34;, type=None, verbosity_check=False, **kwargs):
+    &#34;&#34;&#34;Utility function to log a `message` to stdout
+
+    Args:
+        message (typing.Any): an object that supports `__str__()`
+        cmap (str, optional): what  colormap to use. &#34;INFO&#34; corresponds to blue,
+            &#34;WARN&#34; Defaults to &#34;INFO&#34;.
+        type (str, optional): Type of message, for user knowledge. If provided, will be used as the
+            tag for this output (e.g. &#34;info&#34;).  If no value is provided, the same string as `cmap` is
+            used as the tag. Defaults to None.
+        verbosity_check (bool, optional): Whether to check for a &#34;VERBOSE&#34; environment flag before
+            outputting.  If false, always output text regardless of verbosity setting. Defaults to False.
+    &#34;&#34;&#34;
+    if verbosity_check and not verbose():
+        return
+
     _message = str(message)
-    class T:
-        HEADER = &#39;\033[95m&#39;
-        OKBLUE = &#39;\033[94m&#39;
-        OKCYAN = &#39;\033[96m&#39;
-        OKGREEN = &#39;\033[92m&#39;
-        WARNING = &#39;\033[93m&#39;
-        FAIL = &#39;\033[91m&#39;
-        ENDC = &#39;\033[0m&#39;
-        BOLD = &#39;\033[1m&#39;
-        UNDERLINE = &#39;\033[4m&#39;
 
-    if cmap == &#39;INFO&#39;:
-        c = T.OKGREEN
-    elif cmap == &#39;WARN&#39;:
+    class T:
+        HEADER = &#34;\033[95m&#34;
+        OKBLUE = &#34;\033[94m&#34;
+        OKCYAN = &#34;\033[96m&#34;
+        OKGREEN = &#34;\033[92m&#34;
+        WARNING = &#34;\033[93m&#34;
+        FAIL = &#34;\033[91m&#34;
+        ENDC = &#34;\033[0m&#34;
+        BOLD = &#34;\033[1m&#34;
+        UNDERLINE = &#34;\033[4m&#34;
+
+    if cmap == &#34;INFO&#34;:
+        c = T.OKBLUE
+    elif cmap == &#34;WARN&#34;:
         c = T.BOLD + T.WARNING
-    elif cmap == &#39;ERR&#39;:
-        c = &#39;\n&#39; + T.BOLD + T.FAIL
+    elif cmap == &#34;ANNOUNCE&#34;:
+        c = T.BOLD + T.OKGREEN
+    elif cmap == &#34;ERR&#34;:
+        c = &#34;\n&#34; + T.BOLD + T.FAIL
     else:
         c = T.OKBLUE
 
-    timestamp = f&#39;{time() - START_TIME():.2f}s&#39;
-    lines = textwrap.wrap(_message+T.ENDC,
-                          width=120,
-                          initial_indent=c + &#39;%&#39;*4 + f&#39; [{type or cmap} @ {timestamp}] &#39;,
-                          subsequent_indent=&#39;.  &#39;*7+&#39;&#39;)
-    tqdm.write(&#39;\n&#39;.join(lines), file=stderr)
+    timestamp = f&#34;{time() - START_TIME():.2f}s&#34;
+    lines = textwrap.wrap(
+        _message + T.ENDC,
+        width=shutil.get_terminal_size((120, 24))[0] - 1,
+        initial_indent=c + &#34;%&#34; * 3 + f&#34; [{type or cmap.lower()} @ {timestamp}] &#34;,
+        subsequent_indent=&#34;. &#34; * 6 + &#34;&#34;,
+    )
+    tqdm.write(&#34;\n&#34;.join(lines), file=stderr)
     # print(*lines, sep=&#39;\n&#39;, file=stderr)</code></pre>
 </details>
 </section>
@@ -86,48 +187,190 @@ def log(message, cmap=&#39;INFO&#39;, type=None, **kwargs):
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def START_TIME(): return _START_TIME</code></pre>
+<pre><code class="python">def START_TIME():
+    return _START_TIME</code></pre>
 </details>
 </dd>
-<dt id="langbrainscore.utils.logging.log"><code class="name flex">
-<span>def <span class="ident">log</span></span>(<span>message, cmap='INFO', type=None, **kwargs)</span>
+<dt id="langbrainscore.utils.logging.init_wandb"><code class="name flex">
+<span>def <span class="ident">init_wandb</span></span>(<span>project: str, group: str, use_wandb=True)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Initializes an instance of Weights &amp; Biases for logging</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>project</code></strong> :&ensp;<code>str</code></dt>
+<dd>a broad grouping of what project this wandb instance
+should be under, e.g., alpha testing, or human-predictive-processing-1</dd>
+<dt><strong><code>group</code></strong> :&ensp;<code>str</code></dt>
+<dd>a more immediate grouping, recommended: by benchmark</dd>
+<dt><strong><code>use_wandb</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>if False, we will not initialize W&amp;B.
+Mainly for compatibility with CLI. Defaults to True.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def log(message, cmap=&#39;INFO&#39;, type=None, **kwargs):
-    # if kwargs is not None:
-    _message = str(message)
-    class T:
-        HEADER = &#39;\033[95m&#39;
-        OKBLUE = &#39;\033[94m&#39;
-        OKCYAN = &#39;\033[96m&#39;
-        OKGREEN = &#39;\033[92m&#39;
-        WARNING = &#39;\033[93m&#39;
-        FAIL = &#39;\033[91m&#39;
-        ENDC = &#39;\033[0m&#39;
-        BOLD = &#39;\033[1m&#39;
-        UNDERLINE = &#39;\033[4m&#39;
+<pre><code class="python">def init_wandb(project: str, group: str, use_wandb=True):
+    &#34;&#34;&#34;Initializes an instance of Weights &amp; Biases for logging
 
-    if cmap == &#39;INFO&#39;:
-        c = T.OKGREEN
-    elif cmap == &#39;WARN&#39;:
+    Args:
+        project (str): a broad grouping of what project this wandb instance
+            should be under, e.g., alpha testing, or human-predictive-processing-1
+        group (str): a more immediate grouping, recommended: by benchmark
+        use_wandb (bool, optional): if False, we will not initialize W&amp;B.
+            Mainly for compatibility with CLI. Defaults to True.
+    &#34;&#34;&#34;
+    if use_wandb:
+        import wandb
+
+        wandb.init(
+            project=project,
+            entity=&#34;langbrainscore&#34;,
+            # group=group,
+        )</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.logging.log"><code class="name flex">
+<span>def <span class="ident">log</span></span>(<span>message, cmap='INFO', type=None, verbosity_check=False, **kwargs)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Utility function to log a <code>message</code> to stdout</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>typing.Any</code></dt>
+<dd>an object that supports <code>__str__()</code></dd>
+<dt><strong><code>cmap</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>what
+colormap to use. "INFO" corresponds to blue,
+"WARN" Defaults to "INFO".</dd>
+<dt><strong><code>type</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Type of message, for user knowledge. If provided, will be used as the
+tag for this output (e.g. "info").
+If no value is provided, the same string as <code>cmap</code> is
+used as the tag. Defaults to None.</dd>
+<dt><strong><code>verbosity_check</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether to check for a "VERBOSE" environment flag before
+outputting.
+If false, always output text regardless of verbosity setting. Defaults to False.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log(message, cmap=&#34;INFO&#34;, type=None, verbosity_check=False, **kwargs):
+    &#34;&#34;&#34;Utility function to log a `message` to stdout
+
+    Args:
+        message (typing.Any): an object that supports `__str__()`
+        cmap (str, optional): what  colormap to use. &#34;INFO&#34; corresponds to blue,
+            &#34;WARN&#34; Defaults to &#34;INFO&#34;.
+        type (str, optional): Type of message, for user knowledge. If provided, will be used as the
+            tag for this output (e.g. &#34;info&#34;).  If no value is provided, the same string as `cmap` is
+            used as the tag. Defaults to None.
+        verbosity_check (bool, optional): Whether to check for a &#34;VERBOSE&#34; environment flag before
+            outputting.  If false, always output text regardless of verbosity setting. Defaults to False.
+    &#34;&#34;&#34;
+    if verbosity_check and not verbose():
+        return
+
+    _message = str(message)
+
+    class T:
+        HEADER = &#34;\033[95m&#34;
+        OKBLUE = &#34;\033[94m&#34;
+        OKCYAN = &#34;\033[96m&#34;
+        OKGREEN = &#34;\033[92m&#34;
+        WARNING = &#34;\033[93m&#34;
+        FAIL = &#34;\033[91m&#34;
+        ENDC = &#34;\033[0m&#34;
+        BOLD = &#34;\033[1m&#34;
+        UNDERLINE = &#34;\033[4m&#34;
+
+    if cmap == &#34;INFO&#34;:
+        c = T.OKBLUE
+    elif cmap == &#34;WARN&#34;:
         c = T.BOLD + T.WARNING
-    elif cmap == &#39;ERR&#39;:
-        c = &#39;\n&#39; + T.BOLD + T.FAIL
+    elif cmap == &#34;ANNOUNCE&#34;:
+        c = T.BOLD + T.OKGREEN
+    elif cmap == &#34;ERR&#34;:
+        c = &#34;\n&#34; + T.BOLD + T.FAIL
     else:
         c = T.OKBLUE
 
-    timestamp = f&#39;{time() - START_TIME():.2f}s&#39;
-    lines = textwrap.wrap(_message+T.ENDC,
-                          width=120,
-                          initial_indent=c + &#39;%&#39;*4 + f&#39; [{type or cmap} @ {timestamp}] &#39;,
-                          subsequent_indent=&#39;.  &#39;*7+&#39;&#39;)
-    tqdm.write(&#39;\n&#39;.join(lines), file=stderr)
+    timestamp = f&#34;{time() - START_TIME():.2f}s&#34;
+    lines = textwrap.wrap(
+        _message + T.ENDC,
+        width=shutil.get_terminal_size((120, 24))[0] - 1,
+        initial_indent=c + &#34;%&#34; * 3 + f&#34; [{type or cmap.lower()} @ {timestamp}] &#34;,
+        subsequent_indent=&#34;. &#34; * 6 + &#34;&#34;,
+    )
+    tqdm.write(&#34;\n&#34;.join(lines), file=stderr)
     # print(*lines, sep=&#39;\n&#39;, file=stderr)</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.logging.log_to_wandb"><code class="name flex">
+<span>def <span class="ident">log_to_wandb</span></span>(<span>*obs: Collection[Union[ForwardRef('_Cacheable'), dict]], use_wandb=True, commit=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Given a <code>_Cacheable</code> object, logs its salient parameters to W&amp;B by
+prefixing them with class name.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>ob</code></strong> :&ensp;<code>typing.Union[_Cacheable, typing.Mapping]</code></dt>
+<dd>Object to log</dd>
+<dt><strong><code>use_wandb</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>if False, we will not log anything. For compatibility with CLI.
+Defaults to True.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def log_to_wandb(
+    *obs: typing.Collection[typing.Union[&#34;_Cacheable&#34;, dict]],
+    use_wandb=True,
+    commit=False,
+):
+    &#34;&#34;&#34;Given a `_Cacheable` object, logs its salient parameters to W&amp;B by
+        prefixing them with class name.
+
+    Args:
+        ob (typing.Union[_Cacheable, typing.Mapping]): Object to log
+        use_wandb (bool, optional): if False, we will not log anything. For compatibility with CLI.
+            Defaults to True.
+    &#34;&#34;&#34;
+    if use_wandb:
+        import wandb
+
+        # if a singleton object is passed, we convert it to a collection
+        try:
+            iter(obs)
+        except TypeError:
+            obs = [obs]
+
+        for ob in obs:
+            if hasattr(ob, &#34;params&#34;):
+                d = {f&#34;{ob.__class__.__name__}/{k}&#34;: v for k, v in ob.params.items()}
+            else:
+                d = ob
+            wandb.log(d, commit=False)
+
+        wandb.log({}, commit=commit)</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.utils.logging.verbose"><code class="name flex">
+<span>def <span class="ident">verbose</span></span>(<span>) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns True if env variable "VERBOSE" is set to 1</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def verbose() -&gt; bool:
+    &#34;&#34;&#34;returns True if env variable &#34;VERBOSE&#34; is set to 1&#34;&#34;&#34;
+    return os.environ.get(&#34;VERBOSE&#34;, None) == &#34;1&#34;</code></pre>
 </details>
 </dd>
 </dl>
@@ -149,7 +392,10 @@ def log(message, cmap=&#39;INFO&#39;, type=None, **kwargs):
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
 <li><code><a title="langbrainscore.utils.logging.START_TIME" href="#langbrainscore.utils.logging.START_TIME">START_TIME</a></code></li>
+<li><code><a title="langbrainscore.utils.logging.init_wandb" href="#langbrainscore.utils.logging.init_wandb">init_wandb</a></code></li>
 <li><code><a title="langbrainscore.utils.logging.log" href="#langbrainscore.utils.logging.log">log</a></code></li>
+<li><code><a title="langbrainscore.utils.logging.log_to_wandb" href="#langbrainscore.utils.logging.log_to_wandb">log_to_wandb</a></code></li>
+<li><code><a title="langbrainscore.utils.logging.verbose" href="#langbrainscore.utils.logging.verbose">verbose</a></code></li>
 </ul>
 </li>
 </ul>

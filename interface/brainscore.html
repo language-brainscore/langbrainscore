@@ -26,33 +26,36 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from abc import ABC, abstractmethod
+<pre><code class="python">import typing
+from abc import ABC, abstractmethod
 from mimetypes import init
-import typing
+
 import numpy as np
-
+import xarray as xr
 from langbrainscore.interface.mapping import _Mapping
-from langbrainscore.interface.metrics import _Metric
+from langbrainscore.interface.metric import _Metric
+from langbrainscore.interface.cacheable import _Cacheable
 
-class _BrainScore(ABC):
-    
-    mapping: _Mapping = None
-    &#39;&#39;&#39; an instance of the Mapping class with a particular 
-        split, stratification, and data&#39;&#39;&#39;
 
-    def __init__(self, mapping: _Mapping, metric: _Metric) -&gt; &#39;_BrainScore&#39;:
-        NotImplemented
+class _BrainScore(_Cacheable, ABC):
+    # class _BrainScore(ABC):
+    &#34;&#34;&#34;
+    evaluates a `Mapping` of `X` and `Y` using `Metric`
+    &#34;&#34;&#34;
 
-    @staticmethod
-    def _score(A, B, metric: typing.Union[str, typing.Any]) -&gt; np.ndarray:
-        NotImplemented
+    def __init__(
+        self, X: xr.DataArray, Y: xr.DataArray, mapping: _Mapping, metric: _Metric
+    ):
+        pass
 
-    def score(self):
-        &#39;&#39;&#39;
-        Scores the Mapping instance we have according to a metric this object was
-        instantiated with
-        &#39;&#39;&#39;
-        NotImplemented</code></pre>
+    def score(self) -&gt; xr.DataArray:
+        &#34;&#34;&#34;
+        applies mapping to (X, Y), then evaluates using metric
+
+        Returns:
+            xr.DataArray: scores
+        &#34;&#34;&#34;
+        raise NotImplementedError</code></pre>
 </details>
 </section>
 <section>

@@ -26,59 +26,69 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from langbrainscore.interface.encoder import _BrainEncoder
-import numpy as np
+<pre><code class="python">import langbrainscore
+import xarray as xr
+from langbrainscore.interface.encoder import _Encoder, EncoderRepresentations
 
-from langbrainscore.utils import logging
 
+class BrainEncoder(_Encoder):
+    &#34;&#34;&#34;
+    This class is used to extract the relevant contents of a given
+    `langbrainscore.dataset.Dataset` object and maintains the Encoder interface.
+    &#34;&#34;&#34;
 
-class BrainEncoder(_BrainEncoder):
-    &#39;&#39;&#39;
-    This class provides a wrapper around real-world brain data of various kinds
-        which may be: 
-            - neuroimaging [fMRI, PET]
-            - physiological [ERP, MEG, ECOG]
-            - behavioral [RT, Eye-tracking]
-    across several subjects. The class implements `BrainEncoder.encode` which takes in
-    a collection of stimuli (typically `np.array` or `list`) 
-    &#39;&#39;&#39;
-
-    _dataset: &#39;langbrainscore.dataset.Dataset&#39; = None
-
-    def __init__(self, dataset = None) -&gt; None:
-        # if not isinstance(dataset, langbrainscore.dataset.BrainDataset):
-        #     raise TypeError(f&#34;dataset must be of type `langbrainscore.dataset.BrainDataset`, not {type(dataset)}&#34;)
-        self._dataset = dataset
-
-    @property
-    def dataset(self) -&gt; &#39;langbrainscore.dataset.Dataset&#39;:
-        return self._dataset
-
-    # @typing.overload
-    # def encode(self, stimuli: typing.Union[np.array, list]): ...
-    def encode(self, dataset: &#39;langbrainscore.dataset.BrainDataSet&#39; = None,
-               average_time = True):
-        &#34;&#34;&#34;returns an &#34;encoding&#34; of stimuli (passed in as a BrainDataset)
+    def __init__(
+        self, measurement: str = &#34;unknown&#34;, aggregate_time: bool = False
+    ) -&gt; &#34;BrainEncoder&#34;:
+        &#34;&#34;&#34;Initialize a BrainEncoder
 
         Args:
-            stimuli (langbrainscore.dataset.BrainDataset):
+            modality (str, optional): The modality/type of human data. Defaults to None.
+            aggregate_time (bool, optional): Whether we should aggregate timeid dimension of the
+                data during encoding. Defaults to False.
 
         Returns:
-            pd.DataFrame: neural recordings for each stimulus, multi-indexed 
-                          by layer (trivially just 1 layer)
-        &#34;&#34;&#34;        
-        
-        dataset = dataset or self.dataset
+            BrainEncoder: _description_
+        &#34;&#34;&#34;
+        self._measurement = measurement
+        self._aggregate_time = aggregate_time
 
-        if (timeid_dims := dataset._dataset[&#39;timeid&#39;].size) &gt;= 1:
-            # TODO: revisit this
-            if average_time:
-                return dataset._dataset.mean(&#39;timeid&#39;).expand_dims(&#39;timeid&#39;, 2)
-            return dataset._dataset
-        # elif timeid_dims == 1:
-        #     return dataset._dataset.squeeze(&#39;timeid&#39;)
-        else:
-            raise ValueError(f&#39;timeid has invalid shape {timeid_dims}&#39;)</code></pre>
+    def encode(
+        self,
+        dataset: langbrainscore.dataset.Dataset,
+    ) -&gt; EncoderRepresentations:
+        &#34;&#34;&#34;
+        returns human measurements related to stimuli (passed in as a Dataset)
+
+        Args:
+            langbrainscore.dataset.Dataset: brain dataset object
+
+        Returns:
+            xr.DataArray: contents of brain dataset
+        &#34;&#34;&#34;
+        self._check_dataset_interface(dataset)
+        if self._aggregate_time:
+            dim = &#34;timeid&#34;
+            return (
+                dataset.contents.mean(dim)
+                .expand_dims(dim, 2)
+                .assign_coords({dim: (dim, [0])})
+            )
+
+        if &#34;measurement&#34; in dataset.contents.attrs:
+            self._measurement = dataset.contents.attrs[&#34;measurement&#34;]
+
+        # return dataset.contents
+        return EncoderRepresentations(
+            dataset=dataset,
+            representations=dataset.contents,
+            model_id=self._measurement,
+            emb_aggregation=None,
+            emb_preproc=(),
+            include_special_tokens=None,
+            context_dimension=None,
+            bidirectional=False,
+        )</code></pre>
 </details>
 </section>
 <section>
@@ -92,131 +102,150 @@ class BrainEncoder(_BrainEncoder):
 <dl>
 <dt id="langbrainscore.encoder.brain.BrainEncoder"><code class="flex name class">
 <span>class <span class="ident">BrainEncoder</span></span>
-<span>(</span><span>dataset=None)</span>
+<span>(</span><span>measurement: str = 'unknown', aggregate_time: bool = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This class provides a wrapper around real-world brain data of various kinds
-which may be:
-- neuroimaging [fMRI, PET]
-- physiological [ERP, MEG, ECOG]
-- behavioral [RT, Eye-tracking]
-across several subjects. The class implements <code><a title="langbrainscore.encoder.brain.BrainEncoder.encode" href="#langbrainscore.encoder.brain.BrainEncoder.encode">BrainEncoder.encode()</a></code> which takes in
-a collection of stimuli (typically <code>np.array</code> or <code>list</code>)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class BrainEncoder(_BrainEncoder):
-    &#39;&#39;&#39;
-    This class provides a wrapper around real-world brain data of various kinds
-        which may be: 
-            - neuroimaging [fMRI, PET]
-            - physiological [ERP, MEG, ECOG]
-            - behavioral [RT, Eye-tracking]
-    across several subjects. The class implements `BrainEncoder.encode` which takes in
-    a collection of stimuli (typically `np.array` or `list`) 
-    &#39;&#39;&#39;
-
-    _dataset: &#39;langbrainscore.dataset.Dataset&#39; = None
-
-    def __init__(self, dataset = None) -&gt; None:
-        # if not isinstance(dataset, langbrainscore.dataset.BrainDataset):
-        #     raise TypeError(f&#34;dataset must be of type `langbrainscore.dataset.BrainDataset`, not {type(dataset)}&#34;)
-        self._dataset = dataset
-
-    @property
-    def dataset(self) -&gt; &#39;langbrainscore.dataset.Dataset&#39;:
-        return self._dataset
-
-    # @typing.overload
-    # def encode(self, stimuli: typing.Union[np.array, list]): ...
-    def encode(self, dataset: &#39;langbrainscore.dataset.BrainDataSet&#39; = None,
-               average_time = True):
-        &#34;&#34;&#34;returns an &#34;encoding&#34; of stimuli (passed in as a BrainDataset)
-
-        Args:
-            stimuli (langbrainscore.dataset.BrainDataset):
-
-        Returns:
-            pd.DataFrame: neural recordings for each stimulus, multi-indexed 
-                          by layer (trivially just 1 layer)
-        &#34;&#34;&#34;        
-        
-        dataset = dataset or self.dataset
-
-        if (timeid_dims := dataset._dataset[&#39;timeid&#39;].size) &gt;= 1:
-            # TODO: revisit this
-            if average_time:
-                return dataset._dataset.mean(&#39;timeid&#39;).expand_dims(&#39;timeid&#39;, 2)
-            return dataset._dataset
-        # elif timeid_dims == 1:
-        #     return dataset._dataset.squeeze(&#39;timeid&#39;)
-        else:
-            raise ValueError(f&#39;timeid has invalid shape {timeid_dims}&#39;)</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>langbrainscore.interface.encoder._BrainEncoder</li>
-<li><a title="langbrainscore.interface.encoder.Encoder" href="../interface/encoder.html#langbrainscore.interface.encoder.Encoder">Encoder</a></li>
-<li>abc.ABC</li>
-</ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="langbrainscore.encoder.brain.BrainEncoder.dataset"><code class="name">var <span class="ident">dataset</span> : langbrainscore.dataset.Dataset</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def dataset(self) -&gt; &#39;langbrainscore.dataset.Dataset&#39;:
-    return self._dataset</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="langbrainscore.encoder.brain.BrainEncoder.encode"><code class="name flex">
-<span>def <span class="ident">encode</span></span>(<span>self, dataset: langbrainscore.dataset.BrainDataSet = None, average_time=True)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>returns an "encoding" of stimuli (passed in as a BrainDataset)</p>
+<div class="desc"><p>This class is used to extract the relevant contents of a given
+<code>langbrainscore.dataset.Dataset</code> object and maintains the Encoder interface.</p>
+<p>Initialize a BrainEncoder</p>
 <h2 id="args">Args</h2>
-<p>stimuli (langbrainscore.dataset.BrainDataset):</p>
+<dl>
+<dt><strong><code>modality</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>The modality/type of human data. Defaults to None.</dd>
+<dt><strong><code>aggregate_time</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Whether we should aggregate timeid dimension of the
+data during encoding. Defaults to False.</dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>pd.DataFrame</code></dt>
-<dd>neural recordings for each stimulus, multi-indexed
-by layer (trivially just 1 layer)</dd>
+<dt><code><a title="langbrainscore.encoder.brain.BrainEncoder" href="#langbrainscore.encoder.brain.BrainEncoder">BrainEncoder</a></code></dt>
+<dd><em>description</em></dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def encode(self, dataset: &#39;langbrainscore.dataset.BrainDataSet&#39; = None,
-           average_time = True):
-    &#34;&#34;&#34;returns an &#34;encoding&#34; of stimuli (passed in as a BrainDataset)
+<pre><code class="python">class BrainEncoder(_Encoder):
+    &#34;&#34;&#34;
+    This class is used to extract the relevant contents of a given
+    `langbrainscore.dataset.Dataset` object and maintains the Encoder interface.
+    &#34;&#34;&#34;
+
+    def __init__(
+        self, measurement: str = &#34;unknown&#34;, aggregate_time: bool = False
+    ) -&gt; &#34;BrainEncoder&#34;:
+        &#34;&#34;&#34;Initialize a BrainEncoder
+
+        Args:
+            modality (str, optional): The modality/type of human data. Defaults to None.
+            aggregate_time (bool, optional): Whether we should aggregate timeid dimension of the
+                data during encoding. Defaults to False.
+
+        Returns:
+            BrainEncoder: _description_
+        &#34;&#34;&#34;
+        self._measurement = measurement
+        self._aggregate_time = aggregate_time
+
+    def encode(
+        self,
+        dataset: langbrainscore.dataset.Dataset,
+    ) -&gt; EncoderRepresentations:
+        &#34;&#34;&#34;
+        returns human measurements related to stimuli (passed in as a Dataset)
+
+        Args:
+            langbrainscore.dataset.Dataset: brain dataset object
+
+        Returns:
+            xr.DataArray: contents of brain dataset
+        &#34;&#34;&#34;
+        self._check_dataset_interface(dataset)
+        if self._aggregate_time:
+            dim = &#34;timeid&#34;
+            return (
+                dataset.contents.mean(dim)
+                .expand_dims(dim, 2)
+                .assign_coords({dim: (dim, [0])})
+            )
+
+        if &#34;measurement&#34; in dataset.contents.attrs:
+            self._measurement = dataset.contents.attrs[&#34;measurement&#34;]
+
+        # return dataset.contents
+        return EncoderRepresentations(
+            dataset=dataset,
+            representations=dataset.contents,
+            model_id=self._measurement,
+            emb_aggregation=None,
+            emb_preproc=(),
+            include_special_tokens=None,
+            context_dimension=None,
+            bidirectional=False,
+        )</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>langbrainscore.interface.encoder._Encoder</li>
+<li>langbrainscore.interface.cacheable._Cacheable</li>
+<li>typing.Protocol</li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="langbrainscore.encoder.brain.BrainEncoder.encode"><code class="name flex">
+<span>def <span class="ident">encode</span></span>(<span>self, dataset: <a title="langbrainscore.dataset.dataset.Dataset" href="../dataset/dataset.html#langbrainscore.dataset.dataset.Dataset">Dataset</a>) ‑> <a title="langbrainscore.interface.encoder.EncoderRepresentations" href="../interface/encoder.html#langbrainscore.interface.encoder.EncoderRepresentations">EncoderRepresentations</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>returns human measurements related to stimuli (passed in as a Dataset)</p>
+<h2 id="args">Args</h2>
+<p>langbrainscore.dataset.Dataset: brain dataset object</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>xr.DataArray</code></dt>
+<dd>contents of brain dataset</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def encode(
+    self,
+    dataset: langbrainscore.dataset.Dataset,
+) -&gt; EncoderRepresentations:
+    &#34;&#34;&#34;
+    returns human measurements related to stimuli (passed in as a Dataset)
 
     Args:
-        stimuli (langbrainscore.dataset.BrainDataset):
+        langbrainscore.dataset.Dataset: brain dataset object
 
     Returns:
-        pd.DataFrame: neural recordings for each stimulus, multi-indexed 
-                      by layer (trivially just 1 layer)
-    &#34;&#34;&#34;        
-    
-    dataset = dataset or self.dataset
+        xr.DataArray: contents of brain dataset
+    &#34;&#34;&#34;
+    self._check_dataset_interface(dataset)
+    if self._aggregate_time:
+        dim = &#34;timeid&#34;
+        return (
+            dataset.contents.mean(dim)
+            .expand_dims(dim, 2)
+            .assign_coords({dim: (dim, [0])})
+        )
 
-    if (timeid_dims := dataset._dataset[&#39;timeid&#39;].size) &gt;= 1:
-        # TODO: revisit this
-        if average_time:
-            return dataset._dataset.mean(&#39;timeid&#39;).expand_dims(&#39;timeid&#39;, 2)
-        return dataset._dataset
-    # elif timeid_dims == 1:
-    #     return dataset._dataset.squeeze(&#39;timeid&#39;)
-    else:
-        raise ValueError(f&#39;timeid has invalid shape {timeid_dims}&#39;)</code></pre>
+    if &#34;measurement&#34; in dataset.contents.attrs:
+        self._measurement = dataset.contents.attrs[&#34;measurement&#34;]
+
+    # return dataset.contents
+    return EncoderRepresentations(
+        dataset=dataset,
+        representations=dataset.contents,
+        model_id=self._measurement,
+        emb_aggregation=None,
+        emb_preproc=(),
+        include_special_tokens=None,
+        context_dimension=None,
+        bidirectional=False,
+    )</code></pre>
 </details>
 </dd>
 </dl>
@@ -240,7 +269,6 @@ by layer (trivially just 1 layer)</dd>
 <li>
 <h4><code><a title="langbrainscore.encoder.brain.BrainEncoder" href="#langbrainscore.encoder.brain.BrainEncoder">BrainEncoder</a></code></h4>
 <ul class="">
-<li><code><a title="langbrainscore.encoder.brain.BrainEncoder.dataset" href="#langbrainscore.encoder.brain.BrainEncoder.dataset">dataset</a></code></li>
 <li><code><a title="langbrainscore.encoder.brain.BrainEncoder.encode" href="#langbrainscore.encoder.brain.BrainEncoder.encode">encode</a></code></li>
 </ul>
 </li>

@@ -26,119 +26,294 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">import typing
+<pre><code class="python"># stdlib imports
+import typing
+from collections import abc
+from pathlib import Path
+
 import numpy as np
-import pandas as pd
 import xarray as xr
+from joblib import Parallel, delayed
+from langbrainscore.interface import _Dataset
+from langbrainscore.utils.logging import log
+from langbrainscore.utils.xarray import collapse_multidim_coord
+from tqdm import tqdm
 
-class Dataset:
-    _stimuli_path = None
-    _stimuli = None
-    _stim_metadata = None
 
-    def __init__(self, xr_dataset: xr.Dataset) -&gt; None:
-        # TODO: the below is no longer true
-        &#34;&#34;&#34;initializer method that accepts an xarray with at least the following 
-            core coordinates: sampleid, neuroid, timeid
-
-            https://docs.google.com/document/d/10U9cPphFQdXcCDQtq-yTqbB_jLa-k4hy5pe9VoD08Sg/edit?usp=sharing
-
-        Args:
-            xr_dataset (xr.Dataset): Xarray dataset object with minimal core dimensions
-        &#34;&#34;&#34;        
-        # set the internal `_xr_dataset` reference to the one passed in to this method 
-        self._xr_dataset = xr_dataset
-
+class Dataset(_Dataset):
+    @property
+    def contents(self) -&gt; xr.DataArray:
+        &#34;&#34;&#34;
+        access the internal xarray object. use with caution.
+        &#34;&#34;&#34;
+        return self._xr_obj
 
     @property
-    def _dataset(self):
-        &#39;&#39;&#39;
-        returns the internal xarray dataset object. use with caution.
-        &#39;&#39;&#39;
-        return self._xr_dataset
-
-
-    @property
-    def stimuli(self) -&gt; typing.Union[np.ndarray, xr.DataArray]:
-        &#34;&#34;&#34;getter method that returns an ndarray-like object of stimuli
+    def stimuli(self) -&gt; xr.DataArray:
+        &#34;&#34;&#34;
+        getter method that returns an xarray object of stimuli and associated metadata
 
         Returns:
-            typing.Union[np.ndarray, xr.DataArray]: array-like object containing the stimuli from the dataset
-        &#34;&#34;&#34;        
-        return self._xr_dataset.stimuli
+            xr.DataArray: xarray object containing the stimuli from the dataset and associated metadata
+        &#34;&#34;&#34;
+        return self.contents.stimulus
 
     @property
     def dims(self) -&gt; tuple:
-        &#39;&#39;&#39;
-        &#39;&#39;&#39;
-        return self._xr_dataset.dims
+        &#34;&#34;&#34;
+        getter method that returns internal xarray dimensions
+
+        Returns:
+            tuple[str]: dimensions of internal xarray object
+        &#34;&#34;&#34;
+        return self.contents.dims
+
+    def to_netcdf(self, filename):
+        &#34;&#34;&#34;
+        outputs the xarray.DataArray object to a netCDF file identified by
+        `filename`. if it already exists, overwrites it.
+        &#34;&#34;&#34;
+        if Path(filename).expanduser().resolve().exists():
+            log(f&#34;{filename} already exists. overwriting.&#34;, type=&#34;WARN&#34;)
+        self._xr_obj.to_netcdf(filename)
+
+    @classmethod
+    def load_netcdf(cls, filename):
+        &#34;&#34;&#34;
+        loads a netCDF object that contains a pre-packaged xarray instance from
+        a file at `filename`.
+        &#34;&#34;&#34;
+        return cls(xr.load_dataarray(filename))
+
+    @classmethod
+    def from_file_or_url(
+        cls,
+        file_path_or_url: typing.Union[str, Path],
+        data_column: str,
+        sampleid_index: str,
+        neuroid_index: str,
+        stimuli_index: str,
+        timeid_index: str = None,
+        subject_index: str = None,
+        sampleid_metadata: typing.Union[
+            typing.Iterable[str], typing.Mapping[str, str]
+        ] = None,
+        neuroid_metadata: typing.Union[
+            typing.Iterable[str], typing.Mapping[str, str]
+        ] = None,
+        timeid_metadata: typing.Union[
+            typing.Iterable[str], typing.Mapping[str, str]
+        ] = None,
+        multidim_metadata: typing.Iterable[
+            typing.Mapping[str, typing.Iterable[str]]
+        ] = None,
+        sort_by: typing.Iterable[str] = (),
+        sep=&#34;,&#34;,
+        parallel: int = -2,
+    ) -&gt; _Dataset:
+        &#34;&#34;&#34;Creates a Dataset object holding an `xr.DataArray` instance using a CSV file readable by pandas.
+            Constructs the `xr.DataArray` using specified columns to construct dimensions and
+            metadata along those dimensions in the form of coordinates.
+            Minimally requires `sampleid` and `neuroid` to be provided.
+
+            Note: Each row of the supplied file must have a single data point corresponding
+            to a unique `sampleid`, `neuroid`, and `timeid` (unique dimension values).
+            I.e., each neuroid (which could be a voxel, an ROI, a reaction time RT value, etc.)
+            must be on a new line for the same stimulus trial at a certain time.
+            If `timeid` and `subjectid` is not provided:
+                - a singleton timeid dimension is created with the value &#34;0&#34; for each sample.
+                - a singleton subjectid dimension is created with value &#34;0&#34; that spans the entire data.
+            For help on what these terms mean, please visit the
+            [xarray glossary page](https://xarray.pydata.org/en/stable/user-guide/terminology.html)
 
 
-# TODO: we should implement the packaging into a xarray dataset all in here ^ and below, not expect a pre-packaged xarray.
-# we will minimally require only stimuli and (below:) recorded data, and then construct an xarray internally
-# NOTE: this is to protect users from the low-level details of our data packaging.
+        Args:
+            file_path_or_url (typing.Union[str, Path]): a path or URL to a csv file
+            data_column (str): title of the column that holds the datapoints per unit of measurement
+                (e.g., BOLD contrast effect size, reaction time, voltage amplitude, etc)
+            sampleid_index (str): title of the column that should be used to construct an index for sampleids.
+                this should be unique for each stimulus in the dataset.
+            neuroid_index (str): title of the column that should be used to construct an index for neuroids.
+                this should be unique for each point of measurement within a subject. e.g., voxel1, voxel2, ...
+                neuroids in the packaged dataset are transformed to be a product of subject_index and neuroid_index.
+            stimuli_index (str): title of the column that holds stimuli shown to participants
+            timeid_index (str, optional): title of the column that holds timepoints of stimulus presentation.
+                optional. if not provided, a singleton timepoint &#39;0&#39; is assigned to each datapoint. Defaults to None.
+            subject_index (str, optional): title of the column specifiying subject IDs. Defaults to None.
+            sampleid_metadata (typing.Union[typing.Iterable[str], typing.Mapping[str,str]], optional):
+                names of columns (and optionally mapping of existing column names to new coordinate names)
+                that supply metadata along the sampleid dimension. Defaults to None.
+            neuroid_metadata (typing.Union[typing.Iterable[str], typing.Mapping[str,str]], optional):
+                see `sampleid_metadata`. Defaults to None.
+            timeid_metadata (typing.Union[typing.Iterable[str], typing.Mapping[str,str]], optional):
+                see `sampleid_metadata`. Defaults to None.
+            multidim_metadata (typing.Iterable[typing.Mapping[str, typing.Iterable[str]]], optional):
+                metadata to go with more than one dimension. e.g., chunks of a stimulus that unfolds with time.
+                currently `NotImplemented`. Defaults to None.
+            sort_by (typing.Iterable[str], optional): Sort data by these columns while repackaging it.
+                data is sorted by `sampleid_index`, `neuroid_index`, and `timeid_index` in addition to this
+                value. Defaults to ().
+            sep (str, optional): separator to read a value-delimited file. this argument is passed to pandas.
+                Defaults to &#39;,&#39;.
 
-class BrainDataset(Dataset):
-    &#39;&#39;&#39;
-    A subclass of `Dataset` to support storage and retrieval of brain data.
-    &#34;Brain data&#34; broadly refers to _real-world_ data collected from individuals with a brain,
-    and may be of the following forms:
-            - neuroimaging [fMRI, PET]
-            - physiological [ERP, MEG, ECOG]
-            - behavioral [RT, Eye-tracking]
-    In general, data must be supplied in the mapping
-            stimulus --&gt; neuroid
-        where `neuroid` is the basic unit of brain recording (it may be a voxel, an electrode, etc).
+        Raises:
+            ValueError: _description_
 
-    Inputs:
-        recorded_data: &lt;n_stimuli&gt; x &lt;n_neuroids&gt;
-        metadata: &lt;n_stimuli&gt; x -1
-    &#39;&#39;&#39;
-    _recorded_data = None
-    _recording_metadata = None
+        Returns:
+            _Dataset: a subclass of the `_Dataset` interface with the packaged xarray.DataArray as a member.
+        &#34;&#34;&#34;
 
-    def __init__(self,
-                #  stimuli: typing.Union[list, pd.DataFrame, np.array],
-                #  recorded_data: typing.Union[np.ndarray, pd.DataFrame, str],
-                #  stimuli_metadata: typing.Union[pd.DataFrame, str] = None,
-                #  recording_metadata: typing.Union[pd.DataFrame, str] = None
-                ) -&gt; None:
-        pass
+        T = typing.TypeVar(&#34;T&#34;)
 
-        # TODOs for the (distant) future:
-        # scipy.io.loadmat stuf
-        # h5py 2 GB limit issue
-        
-        # super().__init__()
-        # self._recorded_data = recorded_data
-    
-        # if recording_metadata is not None: 
-        #   # ^-- may not be necessary; users should always provide subject_ids
-        #   # for cross-validation 
-        #     self._recording_metadata = recording_metadata
-        # else:
-        #     raise ValueError(f&#39;forgot to pass recording metadata?&#39;)
+        def collapse_same_value(arr: typing.Iterable[T]) -&gt; T:
+            &#34;&#34;&#34;
+            makes sure each element in an iterable is identical (using __eq__)
+            to every other element by value and returns (any) one of the elements.
+            if a non-identical element (!=) is found, raises ValueError
+            &#34;&#34;&#34;
+            try:
+                first_thing = next(iter(arr))
+            except StopIteration:
+                log(f&#34;failed to obtain value from {arr}&#34;, verbosity_check=True)
+                return np.nan
+            for each_thing in arr:
+                if first_thing != each_thing:
+                    raise ValueError(f&#34;{first_thing} != {each_thing}&#34;)
+            return first_thing
 
-        # # make sure the data dimensions make sense
-        # self.num_stimuli = len(self.stimuli)
-        # self.num_neuroids = self._recorded_data.shape[1]
+        import pandas as pd
 
-        # # recorded_data contains a row per stimulus
-        # assert self.num_stimuli == self._recorded_data.shape[0]
-        # # recording_metadata contains a row per neuroid
-        # assert self.num_neuroids == self._recording_metadata.shape[0]
+        if str(file_path_or_url).endswith(&#34;.parquet.gzip&#34;):
+            try:
+                df = pd.read_parquet(file_path_or_url)
+            except Exception as invalid_file:
+                raise ValueError(&#34;invalid parquet file / filename&#34;) from invalid_file
+        else:
+            try:
+                df = pd.read_csv(file_path_or_url, sep=sep)
+            except Exception as invalid_file:
+                raise ValueError(&#34;invalid csv file / filename&#34;) from invalid_file
 
+        if timeid_index is None:
+            timeid_index = &#34;timeid&#34;
+            # create singleton timeid
+            # we don&#39;t need to inflate data since each datapoint will just
+            # correspond to timeid == 0 per sample
+            timeid_column = [0] * len(df)
+            df[timeid_index] = timeid_column
+        if subject_index is None:
+            subject_index = &#34;subject&#34;
+            # create singleton subjectID
+            # we don&#39;t need to inflate data since each datapoint will just
+            # correspond to subject == 0 per sample
+            subject_column = [&#34;subject0&#34;] * len(df)
+            df[subject_index] = subject_column
+        if not parallel:
+            parallel = 1
 
-    @property
-    def recorded_data(self) -&gt; np.array:
-        if type(self._recorded_data) not in {np.array, np.ndarray, }:
-            # TODO: standardize output format for the recorded data 
-            raise NotImplementedError(f&#39;recorded_data of type {type(self._recorded_data)} cannot be returned&#39;)
-        return self._recorded_data
+        subjects = list(set(df[subject_index]))
+        sampleids = list(
+            set(df[sampleid_index])
+        )  # what happens when the same stimulus is shown multiple times?
+        # it will add entries with same sampleid that will have to
+        # then be differentiated on the basis of metadata only
+        # https://i.imgur.com/4V2DsIo.png
+        neuroids = list(set(df[neuroid_index]))
+        timeids = list(set(df[timeid_index]))
 
-    @property
-    def recording_metadata(self):
-        return self._recording_metadata</code></pre>
+        if not isinstance(sampleid_metadata, abc.Mapping):
+            sampleid_metadata = {k: k for k in sampleid_metadata}
+        if not isinstance(neuroid_metadata, abc.Mapping):
+            neuroid_metadata = {k: k for k in neuroid_metadata}
+        if not isinstance(timeid_metadata, abc.Mapping):
+            timeid_metadata = {k: k for k in timeid_metadata or ()}
+
+        df = df.sort_values(
+            [*sort_by, subject_index, sampleid_index, neuroid_index, timeid_index]
+        )
+
+        def get_sampleid_xr(sampleid):
+            sample_view = df[df[sampleid_index] == sampleid]  # why not sampleid_view?
+
+            neuroid_xrs = []
+            for neuroid in neuroids:
+                neuroid_view = sample_view[sample_view[neuroid_index] == neuroid]
+
+                timeid_xrs = []
+                for timeid in timeids:
+                    timeid_view = neuroid_view[neuroid_view[timeid_index] == timeid]
+                    data = timeid_view[data_column].values
+                    timeid_xr = xr.DataArray(
+                        data.reshape(1, len(timeid_view[subject_index]), 1),
+                        dims=(&#34;sampleid&#34;, &#34;neuroid&#34;, &#34;timeid&#34;),
+                        coords={
+                            &#34;sampleid&#34;: np.repeat(sampleid, 1),
+                            &#34;neuroid&#34;: [
+                                f&#34;{a}_{b}&#34;
+                                for a, b in zip(
+                                    timeid_view[subject_index],
+                                    timeid_view[neuroid_index],
+                                )
+                            ],
+                            &#34;timeid&#34;: np.repeat(timeid, 1),
+                            &#34;subject&#34;: (&#34;neuroid&#34;, timeid_view[subject_index]),
+                            &#34;stimulus&#34;: (
+                                &#34;sampleid&#34;,
+                                [collapse_same_value(timeid_view[stimuli_index])],
+                            ),
+                            **{
+                                metadata_names[column]: (
+                                    dimension,
+                                    [collapse_same_value(timeid_view[column])],
+                                )
+                                for dimension, metadata_names in (
+                                    (&#34;sampleid&#34;, sampleid_metadata),
+                                    (&#34;timeid&#34;, timeid_metadata),
+                                )
+                                for column in metadata_names
+                            },
+                            **{
+                                neuroid_metadata[column]: (
+                                    &#34;neuroid&#34;,
+                                    (timeid_view[column]),
+                                )
+                                for column in neuroid_metadata
+                            },
+                        },
+                    )
+                    timeid_xrs += [timeid_xr]
+
+                neuroid_xr = xr.concat(timeid_xrs, dim=&#34;timeid&#34;)
+                neuroid_xrs += [neuroid_xr]
+
+            sampleid_xr = xr.concat(neuroid_xrs, dim=&#34;neuroid&#34;)
+            return sampleid_xr
+
+        sampleid_xrs = Parallel(n_jobs=parallel)(
+            delayed(get_sampleid_xr)(sampleid)
+            for sampleid in tqdm(sampleids, desc=&#34;reassembling data per sampleid&#34;)
+        )
+
+        unified_xr = xr.concat(sampleid_xrs, dim=&#34;sampleid&#34;)
+
+        for dimension, metadata_names in (
+            (&#34;sampleid&#34;, {**sampleid_metadata, &#34;stimulus&#34;: &#34;stimulus&#34;}),
+            (&#34;timeid&#34;, timeid_metadata),
+            (&#34;neuroid&#34;, {**neuroid_metadata, &#34;subject&#34;: &#34;subject&#34;}),
+        ):
+            for column in metadata_names:
+                try:
+                    unified_xr = collapse_multidim_coord(
+                        unified_xr, metadata_names[column], dimension
+                    )
+                except ValueError as e:
+                    log(
+                        f&#34;dimension:{dimension}, column:{column}, shape:{unified_xr[metadata_names[column]].shape}&#34;,
+                        type=&#34;ERR&#34;,
+                    )
+
+        return cls(unified_xr)  # NOTE: we use `cls` rather than `Dataset` so any
+        # subclasses will use the subclass rather than parent</code></pre>
 </details>
 </section>
 <section>
@@ -150,240 +325,723 @@ class BrainDataset(Dataset):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="langbrainscore.dataset.dataset.BrainDataset"><code class="flex name class">
-<span>class <span class="ident">BrainDataset</span></span>
-</code></dt>
-<dd>
-<div class="desc"><p>A subclass of <code><a title="langbrainscore.dataset.dataset.Dataset" href="#langbrainscore.dataset.dataset.Dataset">Dataset</a></code> to support storage and retrieval of brain data.
-"Brain data" broadly refers to <em>real-world</em> data collected from individuals with a brain,
-and may be of the following forms:
-- neuroimaging [fMRI, PET]
-- physiological [ERP, MEG, ECOG]
-- behavioral [RT, Eye-tracking]
-In general, data must be supplied in the mapping
-stimulus &ndash;&gt; neuroid
-where <code>neuroid</code> is the basic unit of brain recording (it may be a voxel, an electrode, etc).</p>
-<h2 id="inputs">Inputs</h2>
-<p>recorded_data: <n_stimuli> x <n_neuroids>
-metadata: <n_stimuli> x -1</p>
-<p>initializer method that accepts an xarray with at least the following
-core coordinates: sampleid, neuroid, timeid</p>
-<pre><code>&lt;https://docs.google.com/document/d/10U9cPphFQdXcCDQtq-yTqbB_jLa-k4hy5pe9VoD08Sg/edit?usp=sharing&gt;
-</code></pre>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>xr_dataset</code></strong> :&ensp;<code>xr.Dataset</code></dt>
-<dd>Xarray dataset object with minimal core dimensions</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class BrainDataset(Dataset):
-    &#39;&#39;&#39;
-    A subclass of `Dataset` to support storage and retrieval of brain data.
-    &#34;Brain data&#34; broadly refers to _real-world_ data collected from individuals with a brain,
-    and may be of the following forms:
-            - neuroimaging [fMRI, PET]
-            - physiological [ERP, MEG, ECOG]
-            - behavioral [RT, Eye-tracking]
-    In general, data must be supplied in the mapping
-            stimulus --&gt; neuroid
-        where `neuroid` is the basic unit of brain recording (it may be a voxel, an electrode, etc).
-
-    Inputs:
-        recorded_data: &lt;n_stimuli&gt; x &lt;n_neuroids&gt;
-        metadata: &lt;n_stimuli&gt; x -1
-    &#39;&#39;&#39;
-    _recorded_data = None
-    _recording_metadata = None
-
-    def __init__(self,
-                #  stimuli: typing.Union[list, pd.DataFrame, np.array],
-                #  recorded_data: typing.Union[np.ndarray, pd.DataFrame, str],
-                #  stimuli_metadata: typing.Union[pd.DataFrame, str] = None,
-                #  recording_metadata: typing.Union[pd.DataFrame, str] = None
-                ) -&gt; None:
-        pass
-
-        # TODOs for the (distant) future:
-        # scipy.io.loadmat stuf
-        # h5py 2 GB limit issue
-        
-        # super().__init__()
-        # self._recorded_data = recorded_data
-    
-        # if recording_metadata is not None: 
-        #   # ^-- may not be necessary; users should always provide subject_ids
-        #   # for cross-validation 
-        #     self._recording_metadata = recording_metadata
-        # else:
-        #     raise ValueError(f&#39;forgot to pass recording metadata?&#39;)
-
-        # # make sure the data dimensions make sense
-        # self.num_stimuli = len(self.stimuli)
-        # self.num_neuroids = self._recorded_data.shape[1]
-
-        # # recorded_data contains a row per stimulus
-        # assert self.num_stimuli == self._recorded_data.shape[0]
-        # # recording_metadata contains a row per neuroid
-        # assert self.num_neuroids == self._recording_metadata.shape[0]
-
-
-    @property
-    def recorded_data(self) -&gt; np.array:
-        if type(self._recorded_data) not in {np.array, np.ndarray, }:
-            # TODO: standardize output format for the recorded data 
-            raise NotImplementedError(f&#39;recorded_data of type {type(self._recorded_data)} cannot be returned&#39;)
-        return self._recorded_data
-
-    @property
-    def recording_metadata(self):
-        return self._recording_metadata</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="langbrainscore.dataset.dataset.Dataset" href="#langbrainscore.dataset.dataset.Dataset">Dataset</a></li>
-</ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="langbrainscore.dataset.dataset.BrainDataset.recorded_data"><code class="name">var <span class="ident">recorded_data</span> : <built-in function array></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def recorded_data(self) -&gt; np.array:
-    if type(self._recorded_data) not in {np.array, np.ndarray, }:
-        # TODO: standardize output format for the recorded data 
-        raise NotImplementedError(f&#39;recorded_data of type {type(self._recorded_data)} cannot be returned&#39;)
-    return self._recorded_data</code></pre>
-</details>
-</dd>
-<dt id="langbrainscore.dataset.dataset.BrainDataset.recording_metadata"><code class="name">var <span class="ident">recording_metadata</span></code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def recording_metadata(self):
-    return self._recording_metadata</code></pre>
-</details>
-</dd>
-</dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="langbrainscore.dataset.dataset.Dataset" href="#langbrainscore.dataset.dataset.Dataset">Dataset</a></b></code>:
-<ul class="hlist">
-<li><code><a title="langbrainscore.dataset.dataset.Dataset.stimuli" href="#langbrainscore.dataset.dataset.Dataset.stimuli">stimuli</a></code></li>
-</ul>
-</li>
-</ul>
-</dd>
 <dt id="langbrainscore.dataset.dataset.Dataset"><code class="flex name class">
 <span>class <span class="ident">Dataset</span></span>
-<span>(</span><span>xr_dataset: xarray.core.dataset.Dataset)</span>
+<span>(</span><span>xr_obj: xarray.core.dataarray.DataArray, dataset_name: str = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>initializer method that accepts an xarray with at least the following
-core coordinates: sampleid, neuroid, timeid</p>
-<pre><code>&lt;https://docs.google.com/document/d/10U9cPphFQdXcCDQtq-yTqbB_jLa-k4hy5pe9VoD08Sg/edit?usp=sharing&gt;
-</code></pre>
+<div class="desc"><p>wrapper class for xarray DataArray that confirms format adheres to interface.</p>
+<p>accepts an xarray with the following core
+dimensions: sampleid, neuroid, timeid
+and at least the following core
+coordinates: sampleid, neuroid, timeid, stimulus, subject</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>xr_dataset</code></strong> :&ensp;<code>xr.Dataset</code></dt>
-<dd>Xarray dataset object with minimal core dimensions</dd>
+<dt><strong><code>xr_obj</code></strong> :&ensp;<code>xr.DataArray</code></dt>
+<dd>xarray object with core dimensions and coordinates</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class Dataset:
-    _stimuli_path = None
-    _stimuli = None
-    _stim_metadata = None
-
-    def __init__(self, xr_dataset: xr.Dataset) -&gt; None:
-        # TODO: the below is no longer true
-        &#34;&#34;&#34;initializer method that accepts an xarray with at least the following 
-            core coordinates: sampleid, neuroid, timeid
-
-            https://docs.google.com/document/d/10U9cPphFQdXcCDQtq-yTqbB_jLa-k4hy5pe9VoD08Sg/edit?usp=sharing
-
-        Args:
-            xr_dataset (xr.Dataset): Xarray dataset object with minimal core dimensions
-        &#34;&#34;&#34;        
-        # set the internal `_xr_dataset` reference to the one passed in to this method 
-        self._xr_dataset = xr_dataset
-
+<pre><code class="python">class Dataset(_Dataset):
+    @property
+    def contents(self) -&gt; xr.DataArray:
+        &#34;&#34;&#34;
+        access the internal xarray object. use with caution.
+        &#34;&#34;&#34;
+        return self._xr_obj
 
     @property
-    def _dataset(self):
-        &#39;&#39;&#39;
-        returns the internal xarray dataset object. use with caution.
-        &#39;&#39;&#39;
-        return self._xr_dataset
-
-
-    @property
-    def stimuli(self) -&gt; typing.Union[np.ndarray, xr.DataArray]:
-        &#34;&#34;&#34;getter method that returns an ndarray-like object of stimuli
+    def stimuli(self) -&gt; xr.DataArray:
+        &#34;&#34;&#34;
+        getter method that returns an xarray object of stimuli and associated metadata
 
         Returns:
-            typing.Union[np.ndarray, xr.DataArray]: array-like object containing the stimuli from the dataset
-        &#34;&#34;&#34;        
-        return self._xr_dataset.stimuli
+            xr.DataArray: xarray object containing the stimuli from the dataset and associated metadata
+        &#34;&#34;&#34;
+        return self.contents.stimulus
 
     @property
     def dims(self) -&gt; tuple:
-        &#39;&#39;&#39;
-        &#39;&#39;&#39;
-        return self._xr_dataset.dims</code></pre>
+        &#34;&#34;&#34;
+        getter method that returns internal xarray dimensions
+
+        Returns:
+            tuple[str]: dimensions of internal xarray object
+        &#34;&#34;&#34;
+        return self.contents.dims
+
+    def to_netcdf(self, filename):
+        &#34;&#34;&#34;
+        outputs the xarray.DataArray object to a netCDF file identified by
+        `filename`. if it already exists, overwrites it.
+        &#34;&#34;&#34;
+        if Path(filename).expanduser().resolve().exists():
+            log(f&#34;{filename} already exists. overwriting.&#34;, type=&#34;WARN&#34;)
+        self._xr_obj.to_netcdf(filename)
+
+    @classmethod
+    def load_netcdf(cls, filename):
+        &#34;&#34;&#34;
+        loads a netCDF object that contains a pre-packaged xarray instance from
+        a file at `filename`.
+        &#34;&#34;&#34;
+        return cls(xr.load_dataarray(filename))
+
+    @classmethod
+    def from_file_or_url(
+        cls,
+        file_path_or_url: typing.Union[str, Path],
+        data_column: str,
+        sampleid_index: str,
+        neuroid_index: str,
+        stimuli_index: str,
+        timeid_index: str = None,
+        subject_index: str = None,
+        sampleid_metadata: typing.Union[
+            typing.Iterable[str], typing.Mapping[str, str]
+        ] = None,
+        neuroid_metadata: typing.Union[
+            typing.Iterable[str], typing.Mapping[str, str]
+        ] = None,
+        timeid_metadata: typing.Union[
+            typing.Iterable[str], typing.Mapping[str, str]
+        ] = None,
+        multidim_metadata: typing.Iterable[
+            typing.Mapping[str, typing.Iterable[str]]
+        ] = None,
+        sort_by: typing.Iterable[str] = (),
+        sep=&#34;,&#34;,
+        parallel: int = -2,
+    ) -&gt; _Dataset:
+        &#34;&#34;&#34;Creates a Dataset object holding an `xr.DataArray` instance using a CSV file readable by pandas.
+            Constructs the `xr.DataArray` using specified columns to construct dimensions and
+            metadata along those dimensions in the form of coordinates.
+            Minimally requires `sampleid` and `neuroid` to be provided.
+
+            Note: Each row of the supplied file must have a single data point corresponding
+            to a unique `sampleid`, `neuroid`, and `timeid` (unique dimension values).
+            I.e., each neuroid (which could be a voxel, an ROI, a reaction time RT value, etc.)
+            must be on a new line for the same stimulus trial at a certain time.
+            If `timeid` and `subjectid` is not provided:
+                - a singleton timeid dimension is created with the value &#34;0&#34; for each sample.
+                - a singleton subjectid dimension is created with value &#34;0&#34; that spans the entire data.
+            For help on what these terms mean, please visit the
+            [xarray glossary page](https://xarray.pydata.org/en/stable/user-guide/terminology.html)
+
+
+        Args:
+            file_path_or_url (typing.Union[str, Path]): a path or URL to a csv file
+            data_column (str): title of the column that holds the datapoints per unit of measurement
+                (e.g., BOLD contrast effect size, reaction time, voltage amplitude, etc)
+            sampleid_index (str): title of the column that should be used to construct an index for sampleids.
+                this should be unique for each stimulus in the dataset.
+            neuroid_index (str): title of the column that should be used to construct an index for neuroids.
+                this should be unique for each point of measurement within a subject. e.g., voxel1, voxel2, ...
+                neuroids in the packaged dataset are transformed to be a product of subject_index and neuroid_index.
+            stimuli_index (str): title of the column that holds stimuli shown to participants
+            timeid_index (str, optional): title of the column that holds timepoints of stimulus presentation.
+                optional. if not provided, a singleton timepoint &#39;0&#39; is assigned to each datapoint. Defaults to None.
+            subject_index (str, optional): title of the column specifiying subject IDs. Defaults to None.
+            sampleid_metadata (typing.Union[typing.Iterable[str], typing.Mapping[str,str]], optional):
+                names of columns (and optionally mapping of existing column names to new coordinate names)
+                that supply metadata along the sampleid dimension. Defaults to None.
+            neuroid_metadata (typing.Union[typing.Iterable[str], typing.Mapping[str,str]], optional):
+                see `sampleid_metadata`. Defaults to None.
+            timeid_metadata (typing.Union[typing.Iterable[str], typing.Mapping[str,str]], optional):
+                see `sampleid_metadata`. Defaults to None.
+            multidim_metadata (typing.Iterable[typing.Mapping[str, typing.Iterable[str]]], optional):
+                metadata to go with more than one dimension. e.g., chunks of a stimulus that unfolds with time.
+                currently `NotImplemented`. Defaults to None.
+            sort_by (typing.Iterable[str], optional): Sort data by these columns while repackaging it.
+                data is sorted by `sampleid_index`, `neuroid_index`, and `timeid_index` in addition to this
+                value. Defaults to ().
+            sep (str, optional): separator to read a value-delimited file. this argument is passed to pandas.
+                Defaults to &#39;,&#39;.
+
+        Raises:
+            ValueError: _description_
+
+        Returns:
+            _Dataset: a subclass of the `_Dataset` interface with the packaged xarray.DataArray as a member.
+        &#34;&#34;&#34;
+
+        T = typing.TypeVar(&#34;T&#34;)
+
+        def collapse_same_value(arr: typing.Iterable[T]) -&gt; T:
+            &#34;&#34;&#34;
+            makes sure each element in an iterable is identical (using __eq__)
+            to every other element by value and returns (any) one of the elements.
+            if a non-identical element (!=) is found, raises ValueError
+            &#34;&#34;&#34;
+            try:
+                first_thing = next(iter(arr))
+            except StopIteration:
+                log(f&#34;failed to obtain value from {arr}&#34;, verbosity_check=True)
+                return np.nan
+            for each_thing in arr:
+                if first_thing != each_thing:
+                    raise ValueError(f&#34;{first_thing} != {each_thing}&#34;)
+            return first_thing
+
+        import pandas as pd
+
+        if str(file_path_or_url).endswith(&#34;.parquet.gzip&#34;):
+            try:
+                df = pd.read_parquet(file_path_or_url)
+            except Exception as invalid_file:
+                raise ValueError(&#34;invalid parquet file / filename&#34;) from invalid_file
+        else:
+            try:
+                df = pd.read_csv(file_path_or_url, sep=sep)
+            except Exception as invalid_file:
+                raise ValueError(&#34;invalid csv file / filename&#34;) from invalid_file
+
+        if timeid_index is None:
+            timeid_index = &#34;timeid&#34;
+            # create singleton timeid
+            # we don&#39;t need to inflate data since each datapoint will just
+            # correspond to timeid == 0 per sample
+            timeid_column = [0] * len(df)
+            df[timeid_index] = timeid_column
+        if subject_index is None:
+            subject_index = &#34;subject&#34;
+            # create singleton subjectID
+            # we don&#39;t need to inflate data since each datapoint will just
+            # correspond to subject == 0 per sample
+            subject_column = [&#34;subject0&#34;] * len(df)
+            df[subject_index] = subject_column
+        if not parallel:
+            parallel = 1
+
+        subjects = list(set(df[subject_index]))
+        sampleids = list(
+            set(df[sampleid_index])
+        )  # what happens when the same stimulus is shown multiple times?
+        # it will add entries with same sampleid that will have to
+        # then be differentiated on the basis of metadata only
+        # https://i.imgur.com/4V2DsIo.png
+        neuroids = list(set(df[neuroid_index]))
+        timeids = list(set(df[timeid_index]))
+
+        if not isinstance(sampleid_metadata, abc.Mapping):
+            sampleid_metadata = {k: k for k in sampleid_metadata}
+        if not isinstance(neuroid_metadata, abc.Mapping):
+            neuroid_metadata = {k: k for k in neuroid_metadata}
+        if not isinstance(timeid_metadata, abc.Mapping):
+            timeid_metadata = {k: k for k in timeid_metadata or ()}
+
+        df = df.sort_values(
+            [*sort_by, subject_index, sampleid_index, neuroid_index, timeid_index]
+        )
+
+        def get_sampleid_xr(sampleid):
+            sample_view = df[df[sampleid_index] == sampleid]  # why not sampleid_view?
+
+            neuroid_xrs = []
+            for neuroid in neuroids:
+                neuroid_view = sample_view[sample_view[neuroid_index] == neuroid]
+
+                timeid_xrs = []
+                for timeid in timeids:
+                    timeid_view = neuroid_view[neuroid_view[timeid_index] == timeid]
+                    data = timeid_view[data_column].values
+                    timeid_xr = xr.DataArray(
+                        data.reshape(1, len(timeid_view[subject_index]), 1),
+                        dims=(&#34;sampleid&#34;, &#34;neuroid&#34;, &#34;timeid&#34;),
+                        coords={
+                            &#34;sampleid&#34;: np.repeat(sampleid, 1),
+                            &#34;neuroid&#34;: [
+                                f&#34;{a}_{b}&#34;
+                                for a, b in zip(
+                                    timeid_view[subject_index],
+                                    timeid_view[neuroid_index],
+                                )
+                            ],
+                            &#34;timeid&#34;: np.repeat(timeid, 1),
+                            &#34;subject&#34;: (&#34;neuroid&#34;, timeid_view[subject_index]),
+                            &#34;stimulus&#34;: (
+                                &#34;sampleid&#34;,
+                                [collapse_same_value(timeid_view[stimuli_index])],
+                            ),
+                            **{
+                                metadata_names[column]: (
+                                    dimension,
+                                    [collapse_same_value(timeid_view[column])],
+                                )
+                                for dimension, metadata_names in (
+                                    (&#34;sampleid&#34;, sampleid_metadata),
+                                    (&#34;timeid&#34;, timeid_metadata),
+                                )
+                                for column in metadata_names
+                            },
+                            **{
+                                neuroid_metadata[column]: (
+                                    &#34;neuroid&#34;,
+                                    (timeid_view[column]),
+                                )
+                                for column in neuroid_metadata
+                            },
+                        },
+                    )
+                    timeid_xrs += [timeid_xr]
+
+                neuroid_xr = xr.concat(timeid_xrs, dim=&#34;timeid&#34;)
+                neuroid_xrs += [neuroid_xr]
+
+            sampleid_xr = xr.concat(neuroid_xrs, dim=&#34;neuroid&#34;)
+            return sampleid_xr
+
+        sampleid_xrs = Parallel(n_jobs=parallel)(
+            delayed(get_sampleid_xr)(sampleid)
+            for sampleid in tqdm(sampleids, desc=&#34;reassembling data per sampleid&#34;)
+        )
+
+        unified_xr = xr.concat(sampleid_xrs, dim=&#34;sampleid&#34;)
+
+        for dimension, metadata_names in (
+            (&#34;sampleid&#34;, {**sampleid_metadata, &#34;stimulus&#34;: &#34;stimulus&#34;}),
+            (&#34;timeid&#34;, timeid_metadata),
+            (&#34;neuroid&#34;, {**neuroid_metadata, &#34;subject&#34;: &#34;subject&#34;}),
+        ):
+            for column in metadata_names:
+                try:
+                    unified_xr = collapse_multidim_coord(
+                        unified_xr, metadata_names[column], dimension
+                    )
+                except ValueError as e:
+                    log(
+                        f&#34;dimension:{dimension}, column:{column}, shape:{unified_xr[metadata_names[column]].shape}&#34;,
+                        type=&#34;ERR&#34;,
+                    )
+
+        return cls(unified_xr)  # NOTE: we use `cls` rather than `Dataset` so any
+        # subclasses will use the subclass rather than parent</code></pre>
 </details>
-<h3>Subclasses</h3>
+<h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="langbrainscore.dataset.dataset.BrainDataset" href="#langbrainscore.dataset.dataset.BrainDataset">BrainDataset</a></li>
+<li>langbrainscore.interface.dataset._Dataset</li>
+<li>langbrainscore.interface.cacheable._Cacheable</li>
+<li>typing.Protocol</li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
 </ul>
-<h3>Instance variables</h3>
+<h3>Class variables</h3>
 <dl>
-<dt id="langbrainscore.dataset.dataset.Dataset.dims"><code class="name">var <span class="ident">dims</span> : tuple</code></dt>
+<dt id="langbrainscore.dataset.dataset.Dataset.dataset_name"><code class="name">var <span class="ident">dataset_name</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="langbrainscore.dataset.dataset.Dataset.from_file_or_url"><code class="name flex">
+<span>def <span class="ident">from_file_or_url</span></span>(<span>file_path_or_url: Union[str, pathlib.Path], data_column: str, sampleid_index: str, neuroid_index: str, stimuli_index: str, timeid_index: str = None, subject_index: str = None, sampleid_metadata: Union[Iterable[str], Mapping[str, str]] = None, neuroid_metadata: Union[Iterable[str], Mapping[str, str]] = None, timeid_metadata: Union[Iterable[str], Mapping[str, str]] = None, multidim_metadata: Iterable[Mapping[str, Iterable[str]]] = None, sort_by: Iterable[str] = (), sep=',', parallel: int = -2) ‑> langbrainscore.interface.dataset._Dataset</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Creates a Dataset object holding an <code>xr.DataArray</code> instance using a CSV file readable by pandas.
+Constructs the <code>xr.DataArray</code> using specified columns to construct dimensions and
+metadata along those dimensions in the form of coordinates.
+Minimally requires <code>sampleid</code> and <code>neuroid</code> to be provided.</p>
+<pre><code>Note: Each row of the supplied file must have a single data point corresponding
+to a unique &lt;code&gt;sampleid&lt;/code&gt;, &lt;code&gt;neuroid&lt;/code&gt;, and &lt;code&gt;timeid&lt;/code&gt; (unique dimension values).
+I.e., each neuroid (which could be a voxel, an ROI, a reaction time RT value, etc.)
+must be on a new line for the same stimulus trial at a certain time.
+If &lt;code&gt;timeid&lt;/code&gt; and &lt;code&gt;subjectid&lt;/code&gt; is not provided:
+    - a singleton timeid dimension is created with the value "0" for each sample.
+    - a singleton subjectid dimension is created with value "0" that spans the entire data.
+For help on what these terms mean, please visit the
+[xarray glossary page](https://xarray.pydata.org/en/stable/user-guide/terminology.html)
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_path_or_url</code></strong> :&ensp;<code>typing.Union[str, Path]</code></dt>
+<dd>a path or URL to a csv file</dd>
+<dt><strong><code>data_column</code></strong> :&ensp;<code>str</code></dt>
+<dd>title of the column that holds the datapoints per unit of measurement
+(e.g., BOLD contrast effect size, reaction time, voltage amplitude, etc)</dd>
+<dt><strong><code>sampleid_index</code></strong> :&ensp;<code>str</code></dt>
+<dd>title of the column that should be used to construct an index for sampleids.
+this should be unique for each stimulus in the dataset.</dd>
+<dt><strong><code>neuroid_index</code></strong> :&ensp;<code>str</code></dt>
+<dd>title of the column that should be used to construct an index for neuroids.
+this should be unique for each point of measurement within a subject. e.g., voxel1, voxel2, &hellip;
+neuroids in the packaged dataset are transformed to be a product of subject_index and neuroid_index.</dd>
+<dt><strong><code>stimuli_index</code></strong> :&ensp;<code>str</code></dt>
+<dd>title of the column that holds stimuli shown to participants</dd>
+<dt><strong><code>timeid_index</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>title of the column that holds timepoints of stimulus presentation.
+optional. if not provided, a singleton timepoint '0' is assigned to each datapoint. Defaults to None.</dd>
+<dt><strong><code>subject_index</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>title of the column specifiying subject IDs. Defaults to None.</dd>
+<dt>sampleid_metadata (typing.Union[typing.Iterable[str], typing.Mapping[str,str]], optional):</dt>
+<dt>names of columns (and optionally mapping of existing column names to new coordinate names)</dt>
+<dt>that supply metadata along the sampleid dimension. Defaults to None.</dt>
+<dt>neuroid_metadata (typing.Union[typing.Iterable[str], typing.Mapping[str,str]], optional):</dt>
+<dt>see <code>sampleid_metadata</code>. Defaults to None.</dt>
+<dt>timeid_metadata (typing.Union[typing.Iterable[str], typing.Mapping[str,str]], optional):</dt>
+<dt>see <code>sampleid_metadata</code>. Defaults to None.</dt>
+<dt>multidim_metadata (typing.Iterable[typing.Mapping[str, typing.Iterable[str]]], optional):</dt>
+<dt>metadata to go with more than one dimension. e.g., chunks of a stimulus that unfolds with time.</dt>
+<dt>currently <code>NotImplemented</code>. Defaults to None.</dt>
+<dt><strong><code>sort_by</code></strong> :&ensp;<code>typing.Iterable[str]</code>, optional</dt>
+<dd>Sort data by these columns while repackaging it.
+data is sorted by <code>sampleid_index</code>, <code>neuroid_index</code>, and <code>timeid_index</code> in addition to this
+value. Defaults to ().</dd>
+<dt><strong><code>sep</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>separator to read a value-delimited file. this argument is passed to pandas.
+Defaults to ','.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd><em>description</em></dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>_Dataset</code></dt>
+<dd>a subclass of the <code>_Dataset</code> interface with the packaged xarray.DataArray as a member.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def from_file_or_url(
+    cls,
+    file_path_or_url: typing.Union[str, Path],
+    data_column: str,
+    sampleid_index: str,
+    neuroid_index: str,
+    stimuli_index: str,
+    timeid_index: str = None,
+    subject_index: str = None,
+    sampleid_metadata: typing.Union[
+        typing.Iterable[str], typing.Mapping[str, str]
+    ] = None,
+    neuroid_metadata: typing.Union[
+        typing.Iterable[str], typing.Mapping[str, str]
+    ] = None,
+    timeid_metadata: typing.Union[
+        typing.Iterable[str], typing.Mapping[str, str]
+    ] = None,
+    multidim_metadata: typing.Iterable[
+        typing.Mapping[str, typing.Iterable[str]]
+    ] = None,
+    sort_by: typing.Iterable[str] = (),
+    sep=&#34;,&#34;,
+    parallel: int = -2,
+) -&gt; _Dataset:
+    &#34;&#34;&#34;Creates a Dataset object holding an `xr.DataArray` instance using a CSV file readable by pandas.
+        Constructs the `xr.DataArray` using specified columns to construct dimensions and
+        metadata along those dimensions in the form of coordinates.
+        Minimally requires `sampleid` and `neuroid` to be provided.
+
+        Note: Each row of the supplied file must have a single data point corresponding
+        to a unique `sampleid`, `neuroid`, and `timeid` (unique dimension values).
+        I.e., each neuroid (which could be a voxel, an ROI, a reaction time RT value, etc.)
+        must be on a new line for the same stimulus trial at a certain time.
+        If `timeid` and `subjectid` is not provided:
+            - a singleton timeid dimension is created with the value &#34;0&#34; for each sample.
+            - a singleton subjectid dimension is created with value &#34;0&#34; that spans the entire data.
+        For help on what these terms mean, please visit the
+        [xarray glossary page](https://xarray.pydata.org/en/stable/user-guide/terminology.html)
+
+
+    Args:
+        file_path_or_url (typing.Union[str, Path]): a path or URL to a csv file
+        data_column (str): title of the column that holds the datapoints per unit of measurement
+            (e.g., BOLD contrast effect size, reaction time, voltage amplitude, etc)
+        sampleid_index (str): title of the column that should be used to construct an index for sampleids.
+            this should be unique for each stimulus in the dataset.
+        neuroid_index (str): title of the column that should be used to construct an index for neuroids.
+            this should be unique for each point of measurement within a subject. e.g., voxel1, voxel2, ...
+            neuroids in the packaged dataset are transformed to be a product of subject_index and neuroid_index.
+        stimuli_index (str): title of the column that holds stimuli shown to participants
+        timeid_index (str, optional): title of the column that holds timepoints of stimulus presentation.
+            optional. if not provided, a singleton timepoint &#39;0&#39; is assigned to each datapoint. Defaults to None.
+        subject_index (str, optional): title of the column specifiying subject IDs. Defaults to None.
+        sampleid_metadata (typing.Union[typing.Iterable[str], typing.Mapping[str,str]], optional):
+            names of columns (and optionally mapping of existing column names to new coordinate names)
+            that supply metadata along the sampleid dimension. Defaults to None.
+        neuroid_metadata (typing.Union[typing.Iterable[str], typing.Mapping[str,str]], optional):
+            see `sampleid_metadata`. Defaults to None.
+        timeid_metadata (typing.Union[typing.Iterable[str], typing.Mapping[str,str]], optional):
+            see `sampleid_metadata`. Defaults to None.
+        multidim_metadata (typing.Iterable[typing.Mapping[str, typing.Iterable[str]]], optional):
+            metadata to go with more than one dimension. e.g., chunks of a stimulus that unfolds with time.
+            currently `NotImplemented`. Defaults to None.
+        sort_by (typing.Iterable[str], optional): Sort data by these columns while repackaging it.
+            data is sorted by `sampleid_index`, `neuroid_index`, and `timeid_index` in addition to this
+            value. Defaults to ().
+        sep (str, optional): separator to read a value-delimited file. this argument is passed to pandas.
+            Defaults to &#39;,&#39;.
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        _Dataset: a subclass of the `_Dataset` interface with the packaged xarray.DataArray as a member.
+    &#34;&#34;&#34;
+
+    T = typing.TypeVar(&#34;T&#34;)
+
+    def collapse_same_value(arr: typing.Iterable[T]) -&gt; T:
+        &#34;&#34;&#34;
+        makes sure each element in an iterable is identical (using __eq__)
+        to every other element by value and returns (any) one of the elements.
+        if a non-identical element (!=) is found, raises ValueError
+        &#34;&#34;&#34;
+        try:
+            first_thing = next(iter(arr))
+        except StopIteration:
+            log(f&#34;failed to obtain value from {arr}&#34;, verbosity_check=True)
+            return np.nan
+        for each_thing in arr:
+            if first_thing != each_thing:
+                raise ValueError(f&#34;{first_thing} != {each_thing}&#34;)
+        return first_thing
+
+    import pandas as pd
+
+    if str(file_path_or_url).endswith(&#34;.parquet.gzip&#34;):
+        try:
+            df = pd.read_parquet(file_path_or_url)
+        except Exception as invalid_file:
+            raise ValueError(&#34;invalid parquet file / filename&#34;) from invalid_file
+    else:
+        try:
+            df = pd.read_csv(file_path_or_url, sep=sep)
+        except Exception as invalid_file:
+            raise ValueError(&#34;invalid csv file / filename&#34;) from invalid_file
+
+    if timeid_index is None:
+        timeid_index = &#34;timeid&#34;
+        # create singleton timeid
+        # we don&#39;t need to inflate data since each datapoint will just
+        # correspond to timeid == 0 per sample
+        timeid_column = [0] * len(df)
+        df[timeid_index] = timeid_column
+    if subject_index is None:
+        subject_index = &#34;subject&#34;
+        # create singleton subjectID
+        # we don&#39;t need to inflate data since each datapoint will just
+        # correspond to subject == 0 per sample
+        subject_column = [&#34;subject0&#34;] * len(df)
+        df[subject_index] = subject_column
+    if not parallel:
+        parallel = 1
+
+    subjects = list(set(df[subject_index]))
+    sampleids = list(
+        set(df[sampleid_index])
+    )  # what happens when the same stimulus is shown multiple times?
+    # it will add entries with same sampleid that will have to
+    # then be differentiated on the basis of metadata only
+    # https://i.imgur.com/4V2DsIo.png
+    neuroids = list(set(df[neuroid_index]))
+    timeids = list(set(df[timeid_index]))
+
+    if not isinstance(sampleid_metadata, abc.Mapping):
+        sampleid_metadata = {k: k for k in sampleid_metadata}
+    if not isinstance(neuroid_metadata, abc.Mapping):
+        neuroid_metadata = {k: k for k in neuroid_metadata}
+    if not isinstance(timeid_metadata, abc.Mapping):
+        timeid_metadata = {k: k for k in timeid_metadata or ()}
+
+    df = df.sort_values(
+        [*sort_by, subject_index, sampleid_index, neuroid_index, timeid_index]
+    )
+
+    def get_sampleid_xr(sampleid):
+        sample_view = df[df[sampleid_index] == sampleid]  # why not sampleid_view?
+
+        neuroid_xrs = []
+        for neuroid in neuroids:
+            neuroid_view = sample_view[sample_view[neuroid_index] == neuroid]
+
+            timeid_xrs = []
+            for timeid in timeids:
+                timeid_view = neuroid_view[neuroid_view[timeid_index] == timeid]
+                data = timeid_view[data_column].values
+                timeid_xr = xr.DataArray(
+                    data.reshape(1, len(timeid_view[subject_index]), 1),
+                    dims=(&#34;sampleid&#34;, &#34;neuroid&#34;, &#34;timeid&#34;),
+                    coords={
+                        &#34;sampleid&#34;: np.repeat(sampleid, 1),
+                        &#34;neuroid&#34;: [
+                            f&#34;{a}_{b}&#34;
+                            for a, b in zip(
+                                timeid_view[subject_index],
+                                timeid_view[neuroid_index],
+                            )
+                        ],
+                        &#34;timeid&#34;: np.repeat(timeid, 1),
+                        &#34;subject&#34;: (&#34;neuroid&#34;, timeid_view[subject_index]),
+                        &#34;stimulus&#34;: (
+                            &#34;sampleid&#34;,
+                            [collapse_same_value(timeid_view[stimuli_index])],
+                        ),
+                        **{
+                            metadata_names[column]: (
+                                dimension,
+                                [collapse_same_value(timeid_view[column])],
+                            )
+                            for dimension, metadata_names in (
+                                (&#34;sampleid&#34;, sampleid_metadata),
+                                (&#34;timeid&#34;, timeid_metadata),
+                            )
+                            for column in metadata_names
+                        },
+                        **{
+                            neuroid_metadata[column]: (
+                                &#34;neuroid&#34;,
+                                (timeid_view[column]),
+                            )
+                            for column in neuroid_metadata
+                        },
+                    },
+                )
+                timeid_xrs += [timeid_xr]
+
+            neuroid_xr = xr.concat(timeid_xrs, dim=&#34;timeid&#34;)
+            neuroid_xrs += [neuroid_xr]
+
+        sampleid_xr = xr.concat(neuroid_xrs, dim=&#34;neuroid&#34;)
+        return sampleid_xr
+
+    sampleid_xrs = Parallel(n_jobs=parallel)(
+        delayed(get_sampleid_xr)(sampleid)
+        for sampleid in tqdm(sampleids, desc=&#34;reassembling data per sampleid&#34;)
+    )
+
+    unified_xr = xr.concat(sampleid_xrs, dim=&#34;sampleid&#34;)
+
+    for dimension, metadata_names in (
+        (&#34;sampleid&#34;, {**sampleid_metadata, &#34;stimulus&#34;: &#34;stimulus&#34;}),
+        (&#34;timeid&#34;, timeid_metadata),
+        (&#34;neuroid&#34;, {**neuroid_metadata, &#34;subject&#34;: &#34;subject&#34;}),
+    ):
+        for column in metadata_names:
+            try:
+                unified_xr = collapse_multidim_coord(
+                    unified_xr, metadata_names[column], dimension
+                )
+            except ValueError as e:
+                log(
+                    f&#34;dimension:{dimension}, column:{column}, shape:{unified_xr[metadata_names[column]].shape}&#34;,
+                    type=&#34;ERR&#34;,
+                )
+
+    return cls(unified_xr)  # NOTE: we use `cls` rather than `Dataset` so any
+    # subclasses will use the subclass rather than parent</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.dataset.dataset.Dataset.load_netcdf"><code class="name flex">
+<span>def <span class="ident">load_netcdf</span></span>(<span>filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>loads a netCDF object that contains a pre-packaged xarray instance from
+a file at <code>filename</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@classmethod
+def load_netcdf(cls, filename):
+    &#34;&#34;&#34;
+    loads a netCDF object that contains a pre-packaged xarray instance from
+    a file at `filename`.
+    &#34;&#34;&#34;
+    return cls(xr.load_dataarray(filename))</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="langbrainscore.dataset.dataset.Dataset.contents"><code class="name">var <span class="ident">contents</span> : xarray.core.dataarray.DataArray</code></dt>
+<dd>
+<div class="desc"><p>access the internal xarray object. use with caution.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def contents(self) -&gt; xr.DataArray:
+    &#34;&#34;&#34;
+    access the internal xarray object. use with caution.
+    &#34;&#34;&#34;
+    return self._xr_obj</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.dataset.dataset.Dataset.dims"><code class="name">var <span class="ident">dims</span> : tuple</code></dt>
+<dd>
+<div class="desc"><p>getter method that returns internal xarray dimensions</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>tuple[str]</code></dt>
+<dd>dimensions of internal xarray object</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
 def dims(self) -&gt; tuple:
-    &#39;&#39;&#39;
-    &#39;&#39;&#39;
-    return self._xr_dataset.dims</code></pre>
+    &#34;&#34;&#34;
+    getter method that returns internal xarray dimensions
+
+    Returns:
+        tuple[str]: dimensions of internal xarray object
+    &#34;&#34;&#34;
+    return self.contents.dims</code></pre>
 </details>
 </dd>
-<dt id="langbrainscore.dataset.dataset.Dataset.stimuli"><code class="name">var <span class="ident">stimuli</span> : Union[numpy.ndarray, xarray.core.dataarray.DataArray]</code></dt>
+<dt id="langbrainscore.dataset.dataset.Dataset.stimuli"><code class="name">var <span class="ident">stimuli</span> : xarray.core.dataarray.DataArray</code></dt>
 <dd>
-<div class="desc"><p>getter method that returns an ndarray-like object of stimuli</p>
+<div class="desc"><p>getter method that returns an xarray object of stimuli and associated metadata</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><code>typing.Union[np.ndarray, xr.DataArray]</code></dt>
-<dd>array-like object containing the stimuli from the dataset</dd>
+<dt><code>xr.DataArray</code></dt>
+<dd>xarray object containing the stimuli from the dataset and associated metadata</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@property
-def stimuli(self) -&gt; typing.Union[np.ndarray, xr.DataArray]:
-    &#34;&#34;&#34;getter method that returns an ndarray-like object of stimuli
+def stimuli(self) -&gt; xr.DataArray:
+    &#34;&#34;&#34;
+    getter method that returns an xarray object of stimuli and associated metadata
 
     Returns:
-        typing.Union[np.ndarray, xr.DataArray]: array-like object containing the stimuli from the dataset
-    &#34;&#34;&#34;        
-    return self._xr_dataset.stimuli</code></pre>
+        xr.DataArray: xarray object containing the stimuli from the dataset and associated metadata
+    &#34;&#34;&#34;
+    return self.contents.stimulus</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="langbrainscore.dataset.dataset.Dataset.to_netcdf"><code class="name flex">
+<span>def <span class="ident">to_netcdf</span></span>(<span>self, filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>outputs the xarray.DataArray object to a netCDF file identified by
+<code>filename</code>. if it already exists, overwrites it.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_netcdf(self, filename):
+    &#34;&#34;&#34;
+    outputs the xarray.DataArray object to a netCDF file identified by
+    `filename`. if it already exists, overwrites it.
+    &#34;&#34;&#34;
+    if Path(filename).expanduser().resolve().exists():
+        log(f&#34;{filename} already exists. overwriting.&#34;, type=&#34;WARN&#34;)
+    self._xr_obj.to_netcdf(filename)</code></pre>
 </details>
 </dd>
 </dl>
@@ -405,17 +1063,15 @@ def stimuli(self) -&gt; typing.Union[np.ndarray, xr.DataArray]:
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="langbrainscore.dataset.dataset.BrainDataset" href="#langbrainscore.dataset.dataset.BrainDataset">BrainDataset</a></code></h4>
-<ul class="">
-<li><code><a title="langbrainscore.dataset.dataset.BrainDataset.recorded_data" href="#langbrainscore.dataset.dataset.BrainDataset.recorded_data">recorded_data</a></code></li>
-<li><code><a title="langbrainscore.dataset.dataset.BrainDataset.recording_metadata" href="#langbrainscore.dataset.dataset.BrainDataset.recording_metadata">recording_metadata</a></code></li>
-</ul>
-</li>
-<li>
 <h4><code><a title="langbrainscore.dataset.dataset.Dataset" href="#langbrainscore.dataset.dataset.Dataset">Dataset</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="langbrainscore.dataset.dataset.Dataset.contents" href="#langbrainscore.dataset.dataset.Dataset.contents">contents</a></code></li>
+<li><code><a title="langbrainscore.dataset.dataset.Dataset.dataset_name" href="#langbrainscore.dataset.dataset.Dataset.dataset_name">dataset_name</a></code></li>
 <li><code><a title="langbrainscore.dataset.dataset.Dataset.dims" href="#langbrainscore.dataset.dataset.Dataset.dims">dims</a></code></li>
+<li><code><a title="langbrainscore.dataset.dataset.Dataset.from_file_or_url" href="#langbrainscore.dataset.dataset.Dataset.from_file_or_url">from_file_or_url</a></code></li>
+<li><code><a title="langbrainscore.dataset.dataset.Dataset.load_netcdf" href="#langbrainscore.dataset.dataset.Dataset.load_netcdf">load_netcdf</a></code></li>
 <li><code><a title="langbrainscore.dataset.dataset.Dataset.stimuli" href="#langbrainscore.dataset.dataset.Dataset.stimuli">stimuli</a></code></li>
+<li><code><a title="langbrainscore.dataset.dataset.Dataset.to_netcdf" href="#langbrainscore.dataset.dataset.Dataset.to_netcdf">to_netcdf</a></code></li>
 </ul>
 </li>
 </ul>

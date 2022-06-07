@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
 <title>langbrainscore.metrics API documentation</title>
-<meta name="description" content="Collection of functions with the general signature
-(`np.ndarray`, `np.ndarray`) -&gt; `np.ndarray`" />
+<meta name="description" content="submodule housing metrics used to evaluate similarity of representations" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -23,44 +22,49 @@
 <h1 class="title">Module <code>langbrainscore.metrics</code></h1>
 </header>
 <section id="section-intro">
-<p>Collection of functions with the general signature
-(<code>np.ndarray</code>, <code>np.ndarray</code>) -&gt; <code>np.ndarray</code></p>
+<p>submodule housing metrics used to evaluate similarity of representations</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">&#39;&#39;&#39;
-Collection of functions with the general signature
-    (`np.ndarray`, `np.ndarray`) -&gt; `np.ndarray`
-&#39;&#39;&#39;
+<pre><code class="python">&#34;&#34;&#34;submodule housing metrics used to evaluate similarity of representations&#34;&#34;&#34;
 
-from langbrainscore.metrics.metric import *</code></pre>
+import typing
+from langbrainscore.metrics.metric import (
+    CKA,
+    FisherCorr,
+    PearsonR,
+    RSA,
+    ClassificationAccuracy,
+    RMSE,
+    KendallTau,
+    SpearmanRho,
+    # Metric,
+)
+
+metric_classes = {
+    &#34;cka&#34;: CKA,
+    &#34;rsa&#34;: RSA,
+    &#34;pearsonr&#34;: PearsonR,
+    &#34;spearmanrho&#34;: SpearmanRho,
+    &#34;fishercorr&#34;: FisherCorr,
+    &#34;kendalltau&#34;: KendallTau,
+    &#34;rmse&#34;: RMSE,
+    &#34;acc&#34;: ClassificationAccuracy,
+}
+
+
+# def load_metric(metric_class: typing.Union[str, Metric]):
+#     if metric_class in metric_class_mapping:
+#         return Metric(metric_class_mapping[metric_class])
+#     elif callable(metric_class):
+#         return Metric(metric_class)</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="langbrainscore.metrics.kendall_tau" href="kendall_tau.html">langbrainscore.metrics.kendall_tau</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt><code class="name"><a title="langbrainscore.metrics.metric" href="metric.html">langbrainscore.metrics.metric</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="langbrainscore.metrics.pearson_r" href="pearson_r.html">langbrainscore.metrics.pearson_r</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="langbrainscore.metrics.rank_acc" href="rank_acc.html">langbrainscore.metrics.rank_acc</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="langbrainscore.metrics.rsa" href="rsa.html">langbrainscore.metrics.rsa</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="langbrainscore.metrics.spearman_rho" href="spearman_rho.html">langbrainscore.metrics.spearman_rho</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -86,12 +90,7 @@ from langbrainscore.metrics.metric import *</code></pre>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="langbrainscore.metrics.kendall_tau" href="kendall_tau.html">langbrainscore.metrics.kendall_tau</a></code></li>
 <li><code><a title="langbrainscore.metrics.metric" href="metric.html">langbrainscore.metrics.metric</a></code></li>
-<li><code><a title="langbrainscore.metrics.pearson_r" href="pearson_r.html">langbrainscore.metrics.pearson_r</a></code></li>
-<li><code><a title="langbrainscore.metrics.rank_acc" href="rank_acc.html">langbrainscore.metrics.rank_acc</a></code></li>
-<li><code><a title="langbrainscore.metrics.rsa" href="rsa.html">langbrainscore.metrics.rsa</a></code></li>
-<li><code><a title="langbrainscore.metrics.spearman_rho" href="spearman_rho.html">langbrainscore.metrics.spearman_rho</a></code></li>
 </ul>
 </li>
 </ul>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>langbrainscore.metrics.pearson_r API documentation</title>
+<title>langbrainscore.analysis API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,127 +19,22 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>langbrainscore.metrics.pearson_r</code></h1>
+<h1 class="title">Namespace <code>langbrainscore.analysis</code></h1>
 </header>
 <section id="section-intro">
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">import scipy
-
-
-def pearson_r(x, y):
-    &#34;&#34;&#34;
-    Calculates the Pearson correlation coefficient between two lists of
-    numbers.
-
-    Parameters
-    ----------
-    x : list
-        List of numbers.
-    y : list
-        List of numbers.
-
-    Returns
-    -------
-    float
-        Pearson correlation coefficient.
-
-    Raises
-    ------
-    ValueError
-        If lists are not of equal length.
-    &#34;&#34;&#34;
-    if len(x) != len(y):
-        raise ValueError(&#34;Lists must be of equal length.&#34;)
-
-    r, p = scipy.stats.pearsonr(x, y)
-    return r
-
-def pearson_r_nd(X, Y):
-    assert X.shape == Y.shape
-    return np.diag(np.corrcoef(X.T,Y.T)[X.shape[1]:,:X.shape[1]])</code></pre>
-</details>
 </section>
 <section>
-</section>
-<section>
-</section>
-<section>
-<h2 class="section-title" id="header-functions">Functions</h2>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt id="langbrainscore.metrics.pearson_r.pearson_r"><code class="name flex">
-<span>def <span class="ident">pearson_r</span></span>(<span>x, y)</span>
-</code></dt>
+<dt><code class="name"><a title="langbrainscore.analysis.representations" href="representations.html">langbrainscore.analysis.representations</a></code></dt>
 <dd>
-<div class="desc"><p>Calculates the Pearson correlation coefficient between two lists of
-numbers.</p>
-<h2 id="parameters">Parameters</h2>
-<dl>
-<dt><strong><code>x</code></strong> :&ensp;<code>list</code></dt>
-<dd>List of numbers.</dd>
-<dt><strong><code>y</code></strong> :&ensp;<code>list</code></dt>
-<dd>List of numbers.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>float</code></dt>
-<dd>Pearson correlation coefficient.</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>ValueError</code></dt>
-<dd>If lists are not of equal length.</dd>
-</dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def pearson_r(x, y):
-    &#34;&#34;&#34;
-    Calculates the Pearson correlation coefficient between two lists of
-    numbers.
-
-    Parameters
-    ----------
-    x : list
-        List of numbers.
-    y : list
-        List of numbers.
-
-    Returns
-    -------
-    float
-        Pearson correlation coefficient.
-
-    Raises
-    ------
-    ValueError
-        If lists are not of equal length.
-    &#34;&#34;&#34;
-    if len(x) != len(y):
-        raise ValueError(&#34;Lists must be of equal length.&#34;)
-
-    r, p = scipy.stats.pearsonr(x, y)
-    return r</code></pre>
-</details>
-</dd>
-<dt id="langbrainscore.metrics.pearson_r.pearson_r_nd"><code class="name flex">
-<span>def <span class="ident">pearson_r_nd</span></span>(<span>X, Y)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def pearson_r_nd(X, Y):
-    assert X.shape == Y.shape
-    return np.diag(np.corrcoef(X.T,Y.T)[X.shape[1]:,:X.shape[1]])</code></pre>
-</details>
+<div class="desc"><p>submodule holding functions related to analyzing outputs from LangBrainScore</p></div>
 </dd>
 </dl>
+</section>
+<section>
+</section>
+<section>
 </section>
 <section>
 </section>
@@ -152,13 +47,12 @@ numbers.</p>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="langbrainscore.metrics" href="index.html">langbrainscore.metrics</a></code></li>
+<li><code><a title="langbrainscore" href="../index.html">langbrainscore</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="langbrainscore.metrics.pearson_r.pearson_r" href="#langbrainscore.metrics.pearson_r.pearson_r">pearson_r</a></code></li>
-<li><code><a title="langbrainscore.metrics.pearson_r.pearson_r_nd" href="#langbrainscore.metrics.pearson_r.pearson_r_nd">pearson_r_nd</a></code></li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="langbrainscore.analysis.representations" href="representations.html">langbrainscore.analysis.representations</a></code></li>
 </ul>
 </li>
 </ul>

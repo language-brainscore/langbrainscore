@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="1" failures="0" skipped="0" tests="1" time="23.060" timestamp="2022-02-28T22:04:00.475321" hostname="b9371cd0a963"><testcase classname="" name="tests.test_identical" time="0.000"><error message="collection failure">tests/test_identical.py:144: in &lt;module&gt;
-    ann_encoded_data = distilgpt_encoder.encode(mock_neuro_dataset, context_dimension='passage_experiment')
-langbrainscore/encoder/ann.py:256: in encode
-    for k in dataset._dataset.to_dataset(name='data').drop_dims(['neuroid', 'timeid']).coords: #&lt;- keeps only sampleid, and has no data
-/usr/local/lib/python3.8/dist-packages/xarray/core/common.py:246: in __getattr__
-    raise AttributeError(
-E   AttributeError: 'Dataset' object has no attribute 'to_dataset'</error></testcase></testsuite></testsuites>
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="2" failures="0" skipped="0" tests="2" time="4.206" timestamp="2022-06-07T21:22:10.920059" hostname="30a145c29189"><testcase classname="" name="tests.test_caching" time="0.000"><error message="collection failure">tests/test_caching.py:11: in &lt;module&gt;
+    pereira_xr = lbs.benchmarks.pereira2018_nat_stories()
+E   AttributeError: module 'langbrainscore.benchmarks' has no attribute 'pereira2018_nat_stories'</error></testcase><testcase classname="" name="tests.test_identical" time="0.000"><error message="collection failure">tests/test_identical.py:96: in &lt;module&gt;
+    mock_neuro_dataset = lbs.dataset.Dataset(xr_dataset)
+langbrainscore/interface/dataset.py:45: in __init__
+    assert isinstance(xr_obj, xr.DataArray)
+E   AssertionError</error></testcase></testsuite></testsuites>

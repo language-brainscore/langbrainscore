@@ -26,7 +26,15 @@
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">from langbrainscore.interface import encoder</code></pre>
+<pre><code class="python">from langbrainscore.interface.brainscore import _BrainScore
+from langbrainscore.interface.dataset import _Dataset
+from langbrainscore.interface.encoder import (
+    _Encoder,
+    _ModelEncoder,
+    EncoderRepresentations,
+)
+from langbrainscore.interface.mapping import _Mapping
+from langbrainscore.interface.metric import _MatrixMetric, _Metric, _VectorMetric</code></pre>
 </details>
 </section>
 <section>
@@ -36,15 +44,23 @@
 <dd>
 <div class="desc"></div>
 </dd>
-<dt><code class="name"><a title="langbrainscore.interface.encoder" href="encoder.html">langbrainscore.interface.encoder</a></code></dt>
+<dt><code class="name"><a title="langbrainscore.interface.cacheable" href="cacheable.html">langbrainscore.interface.cacheable</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="langbrainscore.interface.dataset" href="dataset.html">langbrainscore.interface.dataset</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="langbrainscore.interface.encoder" href="encoder.html">langbrainscore.interface.encoder</a></code></dt>
+<dd>
+<div class="desc"><p>Interface and (partial) base implementation classes for Encoders and EncodedRepresentations</p></div>
 </dd>
 <dt><code class="name"><a title="langbrainscore.interface.mapping" href="mapping.html">langbrainscore.interface.mapping</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt><code class="name"><a title="langbrainscore.interface.metrics" href="metrics.html">langbrainscore.interface.metrics</a></code></dt>
+<dt><code class="name"><a title="langbrainscore.interface.metric" href="metric.html">langbrainscore.interface.metric</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -71,9 +87,11 @@
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
 <li><code><a title="langbrainscore.interface.brainscore" href="brainscore.html">langbrainscore.interface.brainscore</a></code></li>
+<li><code><a title="langbrainscore.interface.cacheable" href="cacheable.html">langbrainscore.interface.cacheable</a></code></li>
+<li><code><a title="langbrainscore.interface.dataset" href="dataset.html">langbrainscore.interface.dataset</a></code></li>
 <li><code><a title="langbrainscore.interface.encoder" href="encoder.html">langbrainscore.interface.encoder</a></code></li>
 <li><code><a title="langbrainscore.interface.mapping" href="mapping.html">langbrainscore.interface.mapping</a></code></li>
-<li><code><a title="langbrainscore.interface.metrics" href="metrics.html">langbrainscore.interface.metrics</a></code></li>
+<li><code><a title="langbrainscore.interface.metric" href="metric.html">langbrainscore.interface.metric</a></code></li>
 </ul>
 </li>
 </ul>

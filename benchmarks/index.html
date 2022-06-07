@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.10.0" />
-<title>langbrainscore.metrics.spearman_rho API documentation</title>
+<title>langbrainscore.benchmarks API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,15 +19,112 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>langbrainscore.metrics.spearman_rho</code></h1>
+<h1 class="title">Module <code>langbrainscore.benchmarks</code></h1>
 </header>
 <section id="section-intro">
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">import typing
+from pathlib import Path
+from functools import partial
+
+from langbrainscore.benchmarks.pereira2018 import pereira2018_mean_froi
+
+
+supported_benchmarks: typing.Mapping[str, typing.Callable] = {
+    &#34;pereira2018_mean_froi_Lang&#34;: partial(pereira2018_mean_froi, network=&#34;Lang&#34;),
+    &#34;pereira2018_mean_froi_MD&#34;: partial(pereira2018_mean_froi, network=&#34;MD&#34;),
+    &#34;pereira2018_mean_froi&#34;: pereira2018_mean_froi,
+    &#34;pereira2018_ind_voxels&#34;: NotImplemented,
+}
+
+
+def load_benchmark(
+    benchmark_name_or_path: typing.Union[str, Path],
+    *loading_args,
+    load_cache=True,
+    **loading_kwargs,
+) -&gt; &#34;langbrainscore.dataset.Dataset&#34;:
+    &#34;&#34;&#34;A method that, given a name or a path to a benchmark, loads it and returns
+        a dataset object.
+
+    Args:
+        benchmark_name_or_path (typing.Union[str, Path]): name of a pre-packaged/officially supported benchmark
+            or a path to a benchmark with valid formatting
+
+    Returns:
+        langbrainscore.dataset.Dataset: a langbrainscore Dataset object
+    &#34;&#34;&#34;
+    if benchmark_name_or_path in supported_benchmarks:
+        loader = supported_benchmarks[benchmark_name_or_path]
+        return loader(*loading_args, load_cache=load_cache, **loading_kwargs)
+    raise NotImplementedError(
+        f&#34;Benchmark identified by `{benchmark_name_or_path}` currently not supported.&#34;
+    )</code></pre>
+</details>
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="langbrainscore.benchmarks.pereira2018" href="pereira2018.html">langbrainscore.benchmarks.pereira2018</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 </section>
 <section>
 </section>
 <section>
-</section>
-<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="langbrainscore.benchmarks.load_benchmark"><code class="name flex">
+<span>def <span class="ident">load_benchmark</span></span>(<span>benchmark_name_or_path: Union[str, pathlib.Path], *loading_args, load_cache=True, **loading_kwargs) ‑> langbrainscore.dataset.Dataset</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A method that, given a name or a path to a benchmark, loads it and returns
+a dataset object.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>benchmark_name_or_path</code></strong> :&ensp;<code>typing.Union[str, Path]</code></dt>
+<dd>name of a pre-packaged/officially supported benchmark
+or a path to a benchmark with valid formatting</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>langbrainscore.dataset.Dataset</code></dt>
+<dd>a langbrainscore Dataset object</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_benchmark(
+    benchmark_name_or_path: typing.Union[str, Path],
+    *loading_args,
+    load_cache=True,
+    **loading_kwargs,
+) -&gt; &#34;langbrainscore.dataset.Dataset&#34;:
+    &#34;&#34;&#34;A method that, given a name or a path to a benchmark, loads it and returns
+        a dataset object.
+
+    Args:
+        benchmark_name_or_path (typing.Union[str, Path]): name of a pre-packaged/officially supported benchmark
+            or a path to a benchmark with valid formatting
+
+    Returns:
+        langbrainscore.dataset.Dataset: a langbrainscore Dataset object
+    &#34;&#34;&#34;
+    if benchmark_name_or_path in supported_benchmarks:
+        loader = supported_benchmarks[benchmark_name_or_path]
+        return loader(*loading_args, load_cache=load_cache, **loading_kwargs)
+    raise NotImplementedError(
+        f&#34;Benchmark identified by `{benchmark_name_or_path}` currently not supported.&#34;
+    )</code></pre>
+</details>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -40,7 +137,17 @@
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="langbrainscore.metrics" href="index.html">langbrainscore.metrics</a></code></li>
+<li><code><a title="langbrainscore" href="../index.html">langbrainscore</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="langbrainscore.benchmarks.pereira2018" href="pereira2018.html">langbrainscore.benchmarks.pereira2018</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="langbrainscore.benchmarks.load_benchmark" href="#langbrainscore.benchmarks.load_benchmark">load_benchmark</a></code></li>
 </ul>
 </li>
 </ul>

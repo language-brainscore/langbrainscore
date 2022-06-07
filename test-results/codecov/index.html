@@ -11,29 +11,42 @@
 <header>
     <div class="content">
         <h1>Coverage report:
-            <span class="pc_cov">54%</span>
+            <span class="pc_cov">29%</span>
         </h1>
-        <div id="help_panel_wrapper">
+        <aside id="help_panel_wrapper">
             <input id="help_panel_state" type="checkbox">
             <label for="help_panel_state">
                 <img id="keyboard_icon" src="keybd_closed.png" alt="Show/hide keyboard shortcuts" />
             </label>
             <div id="help_panel">
                 <p class="legend">Shortcuts on this page</p>
-                <div>
-                    <p class="keyhelp">
+                <div class="keyhelp">
+                    <p>
                         <kbd>n</kbd>
                         <kbd>s</kbd>
                         <kbd>m</kbd>
                         <kbd>x</kbd>
-                        <kbd>c</kbd> &nbsp; change column sorting
+                        <kbd>c</kbd>
+                        &nbsp; change column sorting
+                    </p>
+                    <p>
+                        <kbd>[</kbd>
+                        <kbd>]</kbd>
+                        &nbsp; prev/next file
+                    </p>
+                    <p>
+                        <kbd>?</kbd> &nbsp; show/hide this help
                     </p>
                 </div>
             </div>
-        </div>
+        </aside>
         <form id="filter_container">
             <input id="filter" type="text" value="" placeholder="filter..." />
         </form>
+        <p class="text">
+            <a class="nav" href="https://coverage.readthedocs.io">coverage.py v6.4</a>,
+            created at 2022-06-07 21:22 +0000
+        </p>
     </div>
 </header>
 <main id="index">
@@ -49,11 +62,25 @@
         </thead>
         <tbody>
             <tr class="file">
-                <td class="name left"><a href="d_d535fc964bf4e831_package_benchmarks_py.html">langbrainscore/benchmark_packaging/package_benchmarks.py</a></td>
-                <td>34</td>
-                <td>34</td>
+                <td class="name left"><a href="d_4db5bae0235f449c_representations_py.html">langbrainscore/analysis/representations.py</a></td>
+                <td>4</td>
+                <td>4</td>
                 <td>0</td>
-                <td class="right" data-ratio="0 34">0%</td>
+                <td class="right" data-ratio="0 4">0%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_a6c2f743ce8e0aff___init___py.html">langbrainscore/benchmarks/__init__.py</a></td>
+                <td>10</td>
+                <td>4</td>
+                <td>0</td>
+                <td class="right" data-ratio="6 10">60%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_a6c2f743ce8e0aff_pereira2018_py.html">langbrainscore/benchmarks/pereira2018.py</a></td>
+                <td>52</td>
+                <td>42</td>
+                <td>0</td>
+                <td class="right" data-ratio="10 52">19%</td>
             </tr>
             <tr class="file">
                 <td class="name left"><a href="d_8213b64fa1bc93cb___init___py.html">langbrainscore/brainscore/__init__.py</a></td>
@@ -64,10 +91,10 @@
             </tr>
             <tr class="file">
                 <td class="name left"><a href="d_8213b64fa1bc93cb_brainscore_py.html">langbrainscore/brainscore/brainscore.py</a></td>
-                <td>53</td>
-                <td>33</td>
+                <td>116</td>
+                <td>94</td>
                 <td>0</td>
-                <td class="right" data-ratio="20 53">38%</td>
+                <td class="right" data-ratio="22 116">19%</td>
             </tr>
             <tr class="file">
                 <td class="name left"><a href="d_00fb228fd3f69cff___init___py.html">langbrainscore/dataset/__init__.py</a></td>
@@ -78,129 +105,108 @@
             </tr>
             <tr class="file">
                 <td class="name left"><a href="d_00fb228fd3f69cff_dataset_py.html">langbrainscore/dataset/dataset.py</a></td>
-                <td>32</td>
-                <td>6</td>
+                <td>95</td>
+                <td>73</td>
                 <td>0</td>
-                <td class="right" data-ratio="26 32">81%</td>
+                <td class="right" data-ratio="22 95">23%</td>
             </tr>
             <tr class="file">
                 <td class="name left"><a href="d_87ce2584f2ba8c7f___init___py.html">langbrainscore/encoder/__init__.py</a></td>
-                <td>3</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="right" data-ratio="3 3">100%</td>
-            </tr>
-            <tr class="file">
-                <td class="name left"><a href="d_87ce2584f2ba8c7f_ann_py.html">langbrainscore/encoder/ann.py</a></td>
-                <td>103</td>
-                <td>21</td>
-                <td>0</td>
-                <td class="right" data-ratio="82 103">80%</td>
-            </tr>
-            <tr class="file">
-                <td class="name left"><a href="d_87ce2584f2ba8c7f_brain_py.html">langbrainscore/encoder/brain.py</a></td>
-                <td>17</td>
-                <td>3</td>
-                <td>0</td>
-                <td class="right" data-ratio="14 17">82%</td>
-            </tr>
-            <tr class="file">
-                <td class="name left"><a href="d_11a5f7836162b964___init___py.html">langbrainscore/interface/__init__.py</a></td>
-                <td>1</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="right" data-ratio="1 1">100%</td>
-            </tr>
-            <tr class="file">
-                <td class="name left"><a href="d_11a5f7836162b964_brainscore_py.html">langbrainscore/interface/brainscore.py</a></td>
-                <td>15</td>
-                <td>3</td>
-                <td>0</td>
-                <td class="right" data-ratio="12 15">80%</td>
-            </tr>
-            <tr class="file">
-                <td class="name left"><a href="d_11a5f7836162b964_encoder_py.html">langbrainscore/interface/encoder.py</a></td>
-                <td>21</td>
-                <td>5</td>
-                <td>0</td>
-                <td class="right" data-ratio="16 21">76%</td>
-            </tr>
-            <tr class="file">
-                <td class="name left"><a href="d_11a5f7836162b964_mapping_py.html">langbrainscore/interface/mapping.py</a></td>
                 <td>2</td>
                 <td>0</td>
                 <td>0</td>
                 <td class="right" data-ratio="2 2">100%</td>
             </tr>
             <tr class="file">
-                <td class="name left"><a href="d_11a5f7836162b964_metrics_py.html">langbrainscore/interface/metrics.py</a></td>
-                <td>3</td>
+                <td class="name left"><a href="d_87ce2584f2ba8c7f_ann_py.html">langbrainscore/encoder/ann.py</a></td>
+                <td>122</td>
+                <td>96</td>
+                <td>0</td>
+                <td class="right" data-ratio="26 122">21%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_87ce2584f2ba8c7f_brain_py.html">langbrainscore/encoder/brain.py</a></td>
+                <td>15</td>
+                <td>9</td>
+                <td>0</td>
+                <td class="right" data-ratio="6 15">40%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_11a5f7836162b964___init___py.html">langbrainscore/interface/__init__.py</a></td>
+                <td>5</td>
                 <td>0</td>
                 <td>0</td>
-                <td class="right" data-ratio="3 3">100%</td>
+                <td class="right" data-ratio="5 5">100%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_11a5f7836162b964_brainscore_py.html">langbrainscore/interface/brainscore.py</a></td>
+                <td>13</td>
+                <td>2</td>
+                <td>0</td>
+                <td class="right" data-ratio="11 13">85%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_11a5f7836162b964_cacheable_py.html">langbrainscore/interface/cacheable.py</a></td>
+                <td>137</td>
+                <td>113</td>
+                <td>0</td>
+                <td class="right" data-ratio="24 137">18%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_11a5f7836162b964_dataset_py.html">langbrainscore/interface/dataset.py</a></td>
+                <td>22</td>
+                <td>4</td>
+                <td>0</td>
+                <td class="right" data-ratio="18 22">82%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_11a5f7836162b964_encoder_py.html">langbrainscore/interface/encoder.py</a></td>
+                <td>37</td>
+                <td>11</td>
+                <td>0</td>
+                <td class="right" data-ratio="26 37">70%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_11a5f7836162b964_mapping_py.html">langbrainscore/interface/mapping.py</a></td>
+                <td>9</td>
+                <td>2</td>
+                <td>0</td>
+                <td class="right" data-ratio="7 9">78%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_11a5f7836162b964_metric_py.html">langbrainscore/interface/metric.py</a></td>
+                <td>60</td>
+                <td>37</td>
+                <td>0</td>
+                <td class="right" data-ratio="23 60">38%</td>
             </tr>
             <tr class="file">
                 <td class="name left"><a href="d_20a483492dfb6498___init___py.html">langbrainscore/mapping/__init__.py</a></td>
-                <td>3</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="right" data-ratio="3 3">100%</td>
-            </tr>
-            <tr class="file">
-                <td class="name left"><a href="d_20a483492dfb6498_mapping_py.html">langbrainscore/mapping/mapping.py</a></td>
-                <td>102</td>
-                <td>79</td>
-                <td>0</td>
-                <td class="right" data-ratio="23 102">23%</td>
-            </tr>
-            <tr class="file">
-                <td class="name left"><a href="d_d53ad2dc18decd4b___init___py.html">langbrainscore/metrics/__init__.py</a></td>
                 <td>1</td>
                 <td>0</td>
                 <td>0</td>
                 <td class="right" data-ratio="1 1">100%</td>
             </tr>
             <tr class="file">
-                <td class="name left"><a href="d_d53ad2dc18decd4b_kendall_tau_py.html">langbrainscore/metrics/kendall_tau.py</a></td>
+                <td class="name left"><a href="d_20a483492dfb6498_mapping_py.html">langbrainscore/mapping/mapping.py</a></td>
+                <td>149</td>
+                <td>123</td>
+                <td>0</td>
+                <td class="right" data-ratio="26 149">17%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_d53ad2dc18decd4b___init___py.html">langbrainscore/metrics/__init__.py</a></td>
+                <td>3</td>
                 <td>0</td>
                 <td>0</td>
-                <td>0</td>
-                <td class="right" data-ratio="0 0">100%</td>
+                <td class="right" data-ratio="3 3">100%</td>
             </tr>
             <tr class="file">
                 <td class="name left"><a href="d_d53ad2dc18decd4b_metric_py.html">langbrainscore/metrics/metric.py</a></td>
-                <td>24</td>
-                <td>12</td>
+                <td>73</td>
+                <td>40</td>
                 <td>0</td>
-                <td class="right" data-ratio="12 24">50%</td>
-            </tr>
-            <tr class="file">
-                <td class="name left"><a href="d_d53ad2dc18decd4b_pearson_r_py.html">langbrainscore/metrics/pearson_r.py</a></td>
-                <td>9</td>
-                <td>9</td>
-                <td>0</td>
-                <td class="right" data-ratio="0 9">0%</td>
-            </tr>
-            <tr class="file">
-                <td class="name left"><a href="d_d53ad2dc18decd4b_rank_acc_py.html">langbrainscore/metrics/rank_acc.py</a></td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="right" data-ratio="0 0">100%</td>
-            </tr>
-            <tr class="file">
-                <td class="name left"><a href="d_d53ad2dc18decd4b_rsa_py.html">langbrainscore/metrics/rsa.py</a></td>
-                <td>16</td>
-                <td>6</td>
-                <td>0</td>
-                <td class="right" data-ratio="10 16">62%</td>
-            </tr>
-            <tr class="file">
-                <td class="name left"><a href="d_d53ad2dc18decd4b_spearman_rho_py.html">langbrainscore/metrics/spearman_rho.py</a></td>
-                <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="right" data-ratio="0 0">100%</td>
+                <td class="right" data-ratio="33 73">45%</td>
             </tr>
             <tr class="file">
                 <td class="name left"><a href="d_938610c91ea29be8___init___py.html">langbrainscore/utils/__init__.py</a></td>
@@ -210,48 +216,62 @@
                 <td class="right" data-ratio="0 0">100%</td>
             </tr>
             <tr class="file">
-                <td class="name left"><a href="d_938610c91ea29be8_cache_utils_py.html">langbrainscore/utils/cache_utils.py</a></td>
+                <td class="name left"><a href="d_938610c91ea29be8_cache_py.html">langbrainscore/utils/cache.py</a></td>
+                <td>20</td>
+                <td>9</td>
                 <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="right" data-ratio="0 0">100%</td>
+                <td class="right" data-ratio="11 20">55%</td>
             </tr>
             <tr class="file">
-                <td class="name left"><a href="d_938610c91ea29be8_encoder_utils_py.html">langbrainscore/utils/encoder_utils.py</a></td>
+                <td class="name left"><a href="d_938610c91ea29be8_encoder_py.html">langbrainscore/utils/encoder.py</a></td>
+                <td>205</td>
+                <td>175</td>
                 <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="right" data-ratio="0 0">100%</td>
+                <td class="right" data-ratio="30 205">15%</td>
             </tr>
             <tr class="file">
                 <td class="name left"><a href="d_938610c91ea29be8_logging_py.html">langbrainscore/utils/logging.py</a></td>
-                <td>31</td>
-                <td>5</td>
+                <td>58</td>
+                <td>24</td>
                 <td>0</td>
-                <td class="right" data-ratio="26 31">84%</td>
+                <td class="right" data-ratio="34 58">59%</td>
             </tr>
             <tr class="file">
-                <td class="name left"><a href="d_938610c91ea29be8_s3_utils_py.html">langbrainscore/utils/s3_utils.py</a></td>
+                <td class="name left"><a href="d_938610c91ea29be8_preprocessing_py.html">langbrainscore/utils/preprocessing.py</a></td>
+                <td>4</td>
+                <td>0</td>
+                <td>0</td>
+                <td class="right" data-ratio="4 4">100%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_938610c91ea29be8_resources_py.html">langbrainscore/utils/resources.py</a></td>
+                <td>2</td>
+                <td>0</td>
+                <td>0</td>
+                <td class="right" data-ratio="2 2">100%</td>
+            </tr>
+            <tr class="file">
+                <td class="name left"><a href="d_938610c91ea29be8_s3_py.html">langbrainscore/utils/s3.py</a></td>
                 <td>0</td>
                 <td>0</td>
                 <td>0</td>
                 <td class="right" data-ratio="0 0">100%</td>
             </tr>
             <tr class="file">
-                <td class="name left"><a href="d_938610c91ea29be8_stim_utils_py.html">langbrainscore/utils/stim_utils.py</a></td>
+                <td class="name left"><a href="d_938610c91ea29be8_xarray_py.html">langbrainscore/utils/xarray.py</a></td>
+                <td>19</td>
+                <td>14</td>
                 <td>0</td>
-                <td>0</td>
-                <td>0</td>
-                <td class="right" data-ratio="0 0">100%</td>
+                <td class="right" data-ratio="5 19">26%</td>
             </tr>
         </tbody>
         <tfoot>
             <tr class="total">
                 <td class="name left">Total</td>
-                <td>472</td>
-                <td>216</td>
+                <td>1235</td>
+                <td>876</td>
                 <td>0</td>
-                <td class="right" data-ratio="256 472">54%</td>
+                <td class="right" data-ratio="359 1235">29%</td>
             </tr>
         </tfoot>
     </table>
@@ -262,10 +282,17 @@
 <footer>
     <div class="content">
         <p>
-            <a class="nav" href="https://coverage.readthedocs.io">coverage.py v6.3.1</a>,
-            created at 2022-02-28 22:04 +0000
+            <a class="nav" href="https://coverage.readthedocs.io">coverage.py v6.4</a>,
+            created at 2022-06-07 21:22 +0000
         </p>
     </div>
+    <aside class="hidden">
+        <a id="prevFileLink" class="nav" href="d_938610c91ea29be8_xarray_py.html"/>
+        <a id="nextFileLink" class="nav" href="d_4db5bae0235f449c_representations_py.html"/>
+        <button type="button" class="button_prev_file" data-shortcut="["/>
+        <button type="button" class="button_next_file" data-shortcut="]"/>
+        <button type="button" class="button_show_hide_help" data-shortcut="?"/>
+    </aside>
 </footer>
 </body>
 </html>

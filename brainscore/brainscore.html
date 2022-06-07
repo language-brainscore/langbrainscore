@@ -27,98 +27,284 @@
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">import typing
+
 import numpy as np
 import xarray as xr
-from methodtools import lru_cache
-from langbrainscore.interface.brainscore import _BrainScore
-from langbrainscore.metrics import Metric
-from langbrainscore.mapping import Mapping
+from tqdm.auto import tqdm
+
+# from methodtools import lru_cache
+from pathlib import Path
+
+from langbrainscore.interface import (
+    _BrainScore,
+    _Mapping,
+    _Metric,
+    EncoderRepresentations,
+)
+
+# from langbrainscore.metrics import Metric
 from langbrainscore.utils import logging
+from langbrainscore.utils.xarray import collapse_multidim_coord, copy_metadata
+
 
 class BrainScore(_BrainScore):
+    scores = None
+    ceilings = None
+    nulls = []
 
-    def __init__(self, mapping: Mapping, metric: Metric, 
-                 fold_aggregation: typing.Union[str, None] = &#39;mean&#39;,
-                 run = True) -&gt; &#39;_BrainScore&#39;:
-        self.mapping = mapping
-        self.metric = metric 
-        self.fold_aggregation = fold_aggregation 
-        self.aggregate_methods_map = {
-            None: self._no_aggregate,
-            &#39;mean&#39;: self._aggregate_mean,
-        }
-
-        if run:
-            self.score()
-            self.aggregate_scores()
-
-    def __str__(self) -&gt; str:
-        return f&#39;{self.scores.mean()}&#39;
-
-    def to_dataarray(self, aggregated=True):
-        # returns the aggregated scores as an xarray
-        return self.scores if aggregated else self.scores_across_folds
-    
-    def to_disk(self, aggregated=True):
-        # outputs the aggregated (or not) object to disk
-        # as a dataarray
-        pass
-
-    def aggregate_scores(self):
-        &#34;&#34;&#34;aggregates scores obtianed over 
+    def __init__(
+        self,
+        X: typing.Union[xr.DataArray, EncoderRepresentations],
+        Y: typing.Union[xr.DataArray, EncoderRepresentations],
+        mapping: _Mapping,
+        metric: _Metric,
+        sample_split_coord: str = None,
+        neuroid_split_coord: str = None,
+        run=False,
+    ) -&gt; &#34;BrainScore&#34;:
+        &#34;&#34;&#34;Initializes the [lang]BrainScore object using two encoded representations and a mapping
+           class, and a metric for evaluation
 
         Args:
-            dim (_type_): _description_
+            X (typing.Union[xr.DataArray, EncoderRepresentations]): Either an xarray DataArray
+                instance, or a wrapper object with a `.representations` attribute that stores the xarray
+                DataArray
+            Y (typing.Union[xr.DataArray, EncoderRepresentations]): see `X`
+            mapping (_Mapping): _description_
+            metric (_Metric): _description_
+            run (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            BrainScore: _description_
         &#34;&#34;&#34;
-        fn = self.aggregate_methods_map[self.fold_aggregation]
-        self.scores = fn()
+        self.X = X.representations if hasattr(X, &#34;representations&#34;) else X
+        self.Y = Y.representations if hasattr(Y, &#34;representations&#34;) else Y
+        assert self.X.sampleid.size == self.Y.sampleid.size
+        self.mapping = mapping
+        self.metric = metric
+        self._sample_split_coord = sample_split_coord
+        self._neuroid_split_coord = neuroid_split_coord
 
-    def _no_aggregate(self):
-        return self.scores_unfolded
+        if run:
+            self.run()
 
-    def _aggregate_mean(self):
-        return self.scores_unfolded.mean(dim=&#39;cvfoldid&#39;)
+    def __str__(self) -&gt; str:
+        try:
+            return f&#34;{self.scores.mean()}&#34;
+        except AttributeError as e:
+            raise ValueError(
+                &#34;missing scores. did you make a call to `score()` or `run()` yet?&#34;
+            )
+
+    def to_netcdf(self, filename):
+        &#34;&#34;&#34;
+        outputs the xarray.DataArray object for &#39;scores&#39; to a netCDF file
+        identified by `filename`. if it already exists, overwrites it.
+        &#34;&#34;&#34;
+        if Path(filename).expanduser().resolve().exists():
+            logging.log(f&#34;{filename} already exists. overwriting.&#34;, type=&#34;WARN&#34;)
+        self.scores.to_netcdf(filename)
+
+    def load_netcdf(self, filename):
+        &#34;&#34;&#34;
+        loads a netCDF object that contains an xarray instance for &#39;scores&#39; from
+        a file at `filename`.
+        &#34;&#34;&#34;
+        self.scores = xr.load_dataarray(filename)
 
     @staticmethod
-    def _score(A, B, metric: Metric) -&gt; np.ndarray:
+    def _score(A, B, metric: _Metric) -&gt; np.ndarray:
         return metric(A, B)
 
-    @lru_cache(maxsize=None)
-    def score(self):
+    # @lru_cache(maxsize=None)
+    def score(
+        self,
+        ceiling=False,
+        null=False,
+        seed=0,
+    ):
+        &#34;&#34;&#34;
+        Computes The BrainScore™ (/s) using predictions/outputs returned by a
+        Mapping instance which is a member attribute of a BrainScore instance
+        &#34;&#34;&#34;
+        assert not (ceiling and null)
+        sample_split_coord = self._sample_split_coord
+        neuroid_split_coord = self._neuroid_split_coord
 
-        scores_per_neuroid = []
-        # returns generator over neuroid
-        for result in self.mapping.fit(): # TODO: wrong, change to for loop
+        if sample_split_coord:
+            assert sample_split_coord in self.Y.coords
 
-            tests, preds = result[&#39;test&#39;], result[&#39;pred&#39;]
-            scores_per_fold = []
-            # A, B are lists of xr DataArrays over timeids
-            for cvid,(A, B) in enumerate(zip(tests, preds)):
-                scores_per_timeid = [] # this is a list of n_folds xarrays
-                for timeid in A.timeid.values:
-                    # A_time, B_time are xr DataArrays at a specific timeid
-                    A_time = A.sel(timeid=0) # TODO RNNs ;_;
-                    B_time = B.sel(timeid=timeid) # B[timeid_ix]
-                    timeid_score_scalar = self._score(A_time, B_time, self.metric)
-                    timeid_score = xr.DataArray(timeid_score_scalar,
-                                                dims=(&#39;neuroid&#39;,&#39;timeid&#39;), 
-                                                coords={&#39;neuroid&#39;:(&#39;neuroid&#39;, B_time.neuroid.values.reshape(-1)),
-                                                                              # ^ we want to extract [int] from 0-d array (scalar array)
-                                                        &#39;timeid&#39;: (&#39;timeid&#39;, [timeid]),
-                                                        })
-                    scores_per_timeid.append(timeid_score)
-            
-                fold_score =  xr.concat(scores_per_timeid, dim=&#39;timeid&#39;).expand_dims(&#39;cvfoldid&#39;,0).assign_coords(cvfoldid=(&#39;cvfoldid&#39;, [cvid]))
-                scores_per_fold.append(fold_score)
+        if neuroid_split_coord:
+            assert neuroid_split_coord in self.Y.coords
 
-            neuroid_score = xr.concat(scores_per_fold,dim=&#34;cvfoldid&#34;)
+        X = self.X
+        if null:
+            y_shuffle = self.Y.copy()
+            y_shuffle.data = np.random.default_rng(seed=seed).permutation(
+                y_shuffle.data, axis=0
+            )
+            Y = y_shuffle
+        else:
+            Y = self.Y
+        y_pred, y_true = self.mapping.fit_transform(X, Y, ceiling=ceiling)
 
-            scores_per_neuroid.append(neuroid_score)
+        if not (ceiling or null):
+            self.Y_pred = y_pred
+            if y_pred.shape == y_true.shape:  # not IdentityMap
+                self.Y_pred = copy_metadata(self.Y_pred, self.Y, &#34;sampleid&#34;)
+                self.Y_pred = copy_metadata(self.Y_pred, self.Y, &#34;neuroid&#34;)
+                self.Y_pred = copy_metadata(self.Y_pred, self.Y, &#34;timeid&#34;)
 
-        self.scores_unfolded = xr.concat(scores_per_neuroid, dim=&#39;neuroid&#39;)
+        scores_over_time = []
+        for timeid in y_true.timeid.values:
 
-        return self.scores_unfolded
-    </code></pre>
+            y_pred_time = y_pred.sel(timeid=timeid).transpose(&#34;sampleid&#34;, &#34;neuroid&#34;)
+            y_true_time = y_true.sel(timeid=timeid).transpose(&#34;sampleid&#34;, &#34;neuroid&#34;)
+
+            if sample_split_coord:
+                if sample_split_coord not in y_true_time.sampleid.coords:
+                    y_pred_time = collapse_multidim_coord(
+                        y_pred_time, sample_split_coord, &#34;sampleid&#34;
+                    )
+                    y_true_time = collapse_multidim_coord(
+                        y_true_time, sample_split_coord, &#34;sampleid&#34;
+                    )
+                score_splits = y_pred_time.sampleid.groupby(sample_split_coord).groups
+            else:
+                score_splits = [0]
+
+            scores_over_time_group = []
+            for scoreid in score_splits:
+
+                if sample_split_coord:
+                    y_pred_time_group = y_pred_time.isel(
+                        sampleid=y_pred_time[sample_split_coord] == scoreid
+                    )
+                    y_true_time_group = y_true_time.isel(
+                        sampleid=y_true_time[sample_split_coord] == scoreid
+                    )
+                else:
+                    y_pred_time_group = y_pred_time
+                    y_true_time_group = y_true_time
+
+                neuroids = []
+                if y_pred.shape != y_true.shape and neuroid_split_coord:  # IdentityMap
+                    if neuroid_split_coord:
+                        if neuroid_split_coord not in y_true_time_group.neuroid.coords:
+                            y_true_time_group = collapse_multidim_coord(
+                                y_true_time_group, neuroid_split_coord, &#34;neuroid&#34;
+                            )
+                        neuroid_splits = y_true_time_group.neuroid.groupby(
+                            neuroid_split_coord
+                        ).groups
+                        score_per_time_group = []
+                        for neuroid in neuroid_splits:
+                            score_per_time_group.append(
+                                self._score(
+                                    y_pred_time_group,
+                                    y_true_time_group.isel(
+                                        neuroid=(
+                                            y_true_time_group[neuroid_split_coord]
+                                            == neuroid
+                                        )
+                                    ),
+                                    self.metric,
+                                )
+                            )
+                            neuroids.append(neuroid)
+                        score_per_time_group = np.array(score_per_time_group)
+                else:
+                    score_per_time_group = self._score(
+                        y_pred_time_group, y_true_time_group, self.metric
+                    )
+
+                if neuroids:
+                    pass
+                elif len(score_per_time_group) == 1:  # e.g., RSA, CKA, w/o split
+                    neuroids = [np.nan]
+                else:
+                    neuroids = y_true_time_group.neuroid.data
+
+                scores_over_time_group.append(
+                    xr.DataArray(
+                        score_per_time_group.reshape(1, -1, 1),
+                        dims=(&#34;scoreid&#34;, &#34;neuroid&#34;, &#34;timeid&#34;),
+                        coords={
+                            &#34;scoreid&#34;: (&#34;scoreid&#34;, [scoreid]),
+                            &#34;neuroid&#34;: (&#34;neuroid&#34;, neuroids),
+                            &#34;timeid&#34;: (&#34;timeid&#34;, [timeid]),
+                        },
+                    )
+                )
+
+            scores_over_time.append(xr.concat(scores_over_time_group, dim=&#34;scoreid&#34;))
+
+        scores = xr.concat(scores_over_time, dim=&#34;timeid&#34;)
+
+        if scores.neuroid.size == self.Y.neuroid.size:  # not RSA, CKA, etc.
+            scores = copy_metadata(scores, self.Y, &#34;neuroid&#34;)
+        scores = copy_metadata(scores, self.Y, &#34;timeid&#34;)
+
+        if not (ceiling or null):
+            self.scores = scores
+        elif ceiling:
+            self.ceilings = scores
+        else:
+            self.nulls.append(
+                scores.expand_dims(dim={&#34;iter&#34;: [seed]}, axis=-1).assign_coords(
+                    iter=[seed]
+                )
+            )
+
+    def ceiling(self):  # , sample_split_coord=None, neuroid_split_coord=None):
+        logging.log(&#34;Calculating ceiling.&#34;, type=&#34;INFO&#34;)
+        self.score(
+            ceiling=True,
+            # sample_split_coord=self._sample_split_coord,
+            # neuroid_split_coord=neuroid_split_coord,
+        )
+
+    def null(
+        self,
+        # sample_split_coord=None, neuroid_split_coord=None,
+        iters=100,
+    ):
+        for i in tqdm([*range(iters)], desc=&#34;Running null permutations&#34;):
+            self.score(
+                null=True,
+                # sample_split_coord=sample_split_coord,
+                # neuroid_split_coord=neuroid_split_coord,
+                seed=i,
+            )
+        self.nulls = xr.concat(self.nulls, dim=&#34;iter&#34;)
+
+    def run(
+        self,
+        sample_split_coord=None,
+        neuroid_split_coord=None,
+        calc_nulls=False,
+        iters=100,
+    ):
+        self.score(
+            sample_split_coord=sample_split_coord,
+            neuroid_split_coord=neuroid_split_coord,
+        )
+        self.ceiling(
+            sample_split_coord=sample_split_coord,
+            neuroid_split_coord=neuroid_split_coord,
+        )
+        if calc_nulls:
+            self.null(
+                sample_split_coord=sample_split_coord,
+                neuroid_split_coord=neuroid_split_coord,
+                iters=iters,
+            )
+            return {
+                &#34;scores&#34;: self.scores,
+                &#34;ceilings&#34;: self.ceilings,
+                &#34;nulls&#34;: self.nulls,
+            }
+        return {&#34;scores&#34;: self.scores, &#34;ceilings&#34;: self.ceilings}</code></pre>
 </details>
 </section>
 <section>
@@ -132,210 +318,586 @@ class BrainScore(_BrainScore):
 <dl>
 <dt id="langbrainscore.brainscore.brainscore.BrainScore"><code class="flex name class">
 <span>class <span class="ident">BrainScore</span></span>
-<span>(</span><span>mapping: <a title="langbrainscore.mapping.mapping.Mapping" href="../mapping/mapping.html#langbrainscore.mapping.mapping.Mapping">Mapping</a>, metric: <a title="langbrainscore.metrics.metric.Metric" href="../metrics/metric.html#langbrainscore.metrics.metric.Metric">Metric</a>, fold_aggregation: Optional[str] = 'mean', run=True)</span>
+<span>(</span><span>X: Union[xarray.core.dataarray.DataArray, <a title="langbrainscore.interface.encoder.EncoderRepresentations" href="../interface/encoder.html#langbrainscore.interface.encoder.EncoderRepresentations">EncoderRepresentations</a>], Y: Union[xarray.core.dataarray.DataArray, <a title="langbrainscore.interface.encoder.EncoderRepresentations" href="../interface/encoder.html#langbrainscore.interface.encoder.EncoderRepresentations">EncoderRepresentations</a>], mapping: langbrainscore.interface.mapping._Mapping, metric: langbrainscore.interface.metric._Metric, sample_split_coord: str = None, neuroid_split_coord: str = None, run=False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class BrainScore(_BrainScore):
-
-    def __init__(self, mapping: Mapping, metric: Metric, 
-                 fold_aggregation: typing.Union[str, None] = &#39;mean&#39;,
-                 run = True) -&gt; &#39;_BrainScore&#39;:
-        self.mapping = mapping
-        self.metric = metric 
-        self.fold_aggregation = fold_aggregation 
-        self.aggregate_methods_map = {
-            None: self._no_aggregate,
-            &#39;mean&#39;: self._aggregate_mean,
-        }
-
-        if run:
-            self.score()
-            self.aggregate_scores()
-
-    def __str__(self) -&gt; str:
-        return f&#39;{self.scores.mean()}&#39;
-
-    def to_dataarray(self, aggregated=True):
-        # returns the aggregated scores as an xarray
-        return self.scores if aggregated else self.scores_across_folds
-    
-    def to_disk(self, aggregated=True):
-        # outputs the aggregated (or not) object to disk
-        # as a dataarray
-        pass
-
-    def aggregate_scores(self):
-        &#34;&#34;&#34;aggregates scores obtianed over 
-
-        Args:
-            dim (_type_): _description_
-        &#34;&#34;&#34;
-        fn = self.aggregate_methods_map[self.fold_aggregation]
-        self.scores = fn()
-
-    def _no_aggregate(self):
-        return self.scores_unfolded
-
-    def _aggregate_mean(self):
-        return self.scores_unfolded.mean(dim=&#39;cvfoldid&#39;)
-
-    @staticmethod
-    def _score(A, B, metric: Metric) -&gt; np.ndarray:
-        return metric(A, B)
-
-    @lru_cache(maxsize=None)
-    def score(self):
-
-        scores_per_neuroid = []
-        # returns generator over neuroid
-        for result in self.mapping.fit(): # TODO: wrong, change to for loop
-
-            tests, preds = result[&#39;test&#39;], result[&#39;pred&#39;]
-            scores_per_fold = []
-            # A, B are lists of xr DataArrays over timeids
-            for cvid,(A, B) in enumerate(zip(tests, preds)):
-                scores_per_timeid = [] # this is a list of n_folds xarrays
-                for timeid in A.timeid.values:
-                    # A_time, B_time are xr DataArrays at a specific timeid
-                    A_time = A.sel(timeid=0) # TODO RNNs ;_;
-                    B_time = B.sel(timeid=timeid) # B[timeid_ix]
-                    timeid_score_scalar = self._score(A_time, B_time, self.metric)
-                    timeid_score = xr.DataArray(timeid_score_scalar,
-                                                dims=(&#39;neuroid&#39;,&#39;timeid&#39;), 
-                                                coords={&#39;neuroid&#39;:(&#39;neuroid&#39;, B_time.neuroid.values.reshape(-1)),
-                                                                              # ^ we want to extract [int] from 0-d array (scalar array)
-                                                        &#39;timeid&#39;: (&#39;timeid&#39;, [timeid]),
-                                                        })
-                    scores_per_timeid.append(timeid_score)
-            
-                fold_score =  xr.concat(scores_per_timeid, dim=&#39;timeid&#39;).expand_dims(&#39;cvfoldid&#39;,0).assign_coords(cvfoldid=(&#39;cvfoldid&#39;, [cvid]))
-                scores_per_fold.append(fold_score)
-
-            neuroid_score = xr.concat(scores_per_fold,dim=&#34;cvfoldid&#34;)
-
-            scores_per_neuroid.append(neuroid_score)
-
-        self.scores_unfolded = xr.concat(scores_per_neuroid, dim=&#39;neuroid&#39;)
-
-        return self.scores_unfolded</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>langbrainscore.interface.brainscore._BrainScore</li>
-<li>abc.ABC</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="langbrainscore.brainscore.brainscore.BrainScore.mapping"><code class="name">var <span class="ident">mapping</span> : langbrainscore.interface.mapping._Mapping</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="langbrainscore.brainscore.brainscore.BrainScore.aggregate_scores"><code class="name flex">
-<span>def <span class="ident">aggregate_scores</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>aggregates scores obtianed over </p>
+<div class="desc"><p>evaluates a <code>Mapping</code> of <code>X</code> and <code>Y</code> using <code>Metric</code></p>
+<p>Initializes the [lang]BrainScore object using two encoded representations and a mapping
+class, and a metric for evaluation</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>dim</code></strong> :&ensp;<code>_type_</code></dt>
+<dt><strong><code>X</code></strong> :&ensp;<code>typing.Union[xr.DataArray, EncoderRepresentations]</code></dt>
+<dd>Either an xarray DataArray
+instance, or a wrapper object with a <code>.representations</code> attribute that stores the xarray
+DataArray</dd>
+<dt><strong><code>Y</code></strong> :&ensp;<code>typing.Union[xr.DataArray, EncoderRepresentations]</code></dt>
+<dd>see <code>X</code></dd>
+<dt><strong><code>mapping</code></strong> :&ensp;<code>_Mapping</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>metric</code></strong> :&ensp;<code>_Metric</code></dt>
+<dd><em>description</em></dd>
+<dt><strong><code>run</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd><em>description</em>. Defaults to False.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="langbrainscore.brainscore.brainscore.BrainScore" href="#langbrainscore.brainscore.brainscore.BrainScore">BrainScore</a></code></dt>
 <dd><em>description</em></dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def aggregate_scores(self):
-    &#34;&#34;&#34;aggregates scores obtianed over 
+<pre><code class="python">class BrainScore(_BrainScore):
+    scores = None
+    ceilings = None
+    nulls = []
 
-    Args:
-        dim (_type_): _description_
+    def __init__(
+        self,
+        X: typing.Union[xr.DataArray, EncoderRepresentations],
+        Y: typing.Union[xr.DataArray, EncoderRepresentations],
+        mapping: _Mapping,
+        metric: _Metric,
+        sample_split_coord: str = None,
+        neuroid_split_coord: str = None,
+        run=False,
+    ) -&gt; &#34;BrainScore&#34;:
+        &#34;&#34;&#34;Initializes the [lang]BrainScore object using two encoded representations and a mapping
+           class, and a metric for evaluation
+
+        Args:
+            X (typing.Union[xr.DataArray, EncoderRepresentations]): Either an xarray DataArray
+                instance, or a wrapper object with a `.representations` attribute that stores the xarray
+                DataArray
+            Y (typing.Union[xr.DataArray, EncoderRepresentations]): see `X`
+            mapping (_Mapping): _description_
+            metric (_Metric): _description_
+            run (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            BrainScore: _description_
+        &#34;&#34;&#34;
+        self.X = X.representations if hasattr(X, &#34;representations&#34;) else X
+        self.Y = Y.representations if hasattr(Y, &#34;representations&#34;) else Y
+        assert self.X.sampleid.size == self.Y.sampleid.size
+        self.mapping = mapping
+        self.metric = metric
+        self._sample_split_coord = sample_split_coord
+        self._neuroid_split_coord = neuroid_split_coord
+
+        if run:
+            self.run()
+
+    def __str__(self) -&gt; str:
+        try:
+            return f&#34;{self.scores.mean()}&#34;
+        except AttributeError as e:
+            raise ValueError(
+                &#34;missing scores. did you make a call to `score()` or `run()` yet?&#34;
+            )
+
+    def to_netcdf(self, filename):
+        &#34;&#34;&#34;
+        outputs the xarray.DataArray object for &#39;scores&#39; to a netCDF file
+        identified by `filename`. if it already exists, overwrites it.
+        &#34;&#34;&#34;
+        if Path(filename).expanduser().resolve().exists():
+            logging.log(f&#34;{filename} already exists. overwriting.&#34;, type=&#34;WARN&#34;)
+        self.scores.to_netcdf(filename)
+
+    def load_netcdf(self, filename):
+        &#34;&#34;&#34;
+        loads a netCDF object that contains an xarray instance for &#39;scores&#39; from
+        a file at `filename`.
+        &#34;&#34;&#34;
+        self.scores = xr.load_dataarray(filename)
+
+    @staticmethod
+    def _score(A, B, metric: _Metric) -&gt; np.ndarray:
+        return metric(A, B)
+
+    # @lru_cache(maxsize=None)
+    def score(
+        self,
+        ceiling=False,
+        null=False,
+        seed=0,
+    ):
+        &#34;&#34;&#34;
+        Computes The BrainScore™ (/s) using predictions/outputs returned by a
+        Mapping instance which is a member attribute of a BrainScore instance
+        &#34;&#34;&#34;
+        assert not (ceiling and null)
+        sample_split_coord = self._sample_split_coord
+        neuroid_split_coord = self._neuroid_split_coord
+
+        if sample_split_coord:
+            assert sample_split_coord in self.Y.coords
+
+        if neuroid_split_coord:
+            assert neuroid_split_coord in self.Y.coords
+
+        X = self.X
+        if null:
+            y_shuffle = self.Y.copy()
+            y_shuffle.data = np.random.default_rng(seed=seed).permutation(
+                y_shuffle.data, axis=0
+            )
+            Y = y_shuffle
+        else:
+            Y = self.Y
+        y_pred, y_true = self.mapping.fit_transform(X, Y, ceiling=ceiling)
+
+        if not (ceiling or null):
+            self.Y_pred = y_pred
+            if y_pred.shape == y_true.shape:  # not IdentityMap
+                self.Y_pred = copy_metadata(self.Y_pred, self.Y, &#34;sampleid&#34;)
+                self.Y_pred = copy_metadata(self.Y_pred, self.Y, &#34;neuroid&#34;)
+                self.Y_pred = copy_metadata(self.Y_pred, self.Y, &#34;timeid&#34;)
+
+        scores_over_time = []
+        for timeid in y_true.timeid.values:
+
+            y_pred_time = y_pred.sel(timeid=timeid).transpose(&#34;sampleid&#34;, &#34;neuroid&#34;)
+            y_true_time = y_true.sel(timeid=timeid).transpose(&#34;sampleid&#34;, &#34;neuroid&#34;)
+
+            if sample_split_coord:
+                if sample_split_coord not in y_true_time.sampleid.coords:
+                    y_pred_time = collapse_multidim_coord(
+                        y_pred_time, sample_split_coord, &#34;sampleid&#34;
+                    )
+                    y_true_time = collapse_multidim_coord(
+                        y_true_time, sample_split_coord, &#34;sampleid&#34;
+                    )
+                score_splits = y_pred_time.sampleid.groupby(sample_split_coord).groups
+            else:
+                score_splits = [0]
+
+            scores_over_time_group = []
+            for scoreid in score_splits:
+
+                if sample_split_coord:
+                    y_pred_time_group = y_pred_time.isel(
+                        sampleid=y_pred_time[sample_split_coord] == scoreid
+                    )
+                    y_true_time_group = y_true_time.isel(
+                        sampleid=y_true_time[sample_split_coord] == scoreid
+                    )
+                else:
+                    y_pred_time_group = y_pred_time
+                    y_true_time_group = y_true_time
+
+                neuroids = []
+                if y_pred.shape != y_true.shape and neuroid_split_coord:  # IdentityMap
+                    if neuroid_split_coord:
+                        if neuroid_split_coord not in y_true_time_group.neuroid.coords:
+                            y_true_time_group = collapse_multidim_coord(
+                                y_true_time_group, neuroid_split_coord, &#34;neuroid&#34;
+                            )
+                        neuroid_splits = y_true_time_group.neuroid.groupby(
+                            neuroid_split_coord
+                        ).groups
+                        score_per_time_group = []
+                        for neuroid in neuroid_splits:
+                            score_per_time_group.append(
+                                self._score(
+                                    y_pred_time_group,
+                                    y_true_time_group.isel(
+                                        neuroid=(
+                                            y_true_time_group[neuroid_split_coord]
+                                            == neuroid
+                                        )
+                                    ),
+                                    self.metric,
+                                )
+                            )
+                            neuroids.append(neuroid)
+                        score_per_time_group = np.array(score_per_time_group)
+                else:
+                    score_per_time_group = self._score(
+                        y_pred_time_group, y_true_time_group, self.metric
+                    )
+
+                if neuroids:
+                    pass
+                elif len(score_per_time_group) == 1:  # e.g., RSA, CKA, w/o split
+                    neuroids = [np.nan]
+                else:
+                    neuroids = y_true_time_group.neuroid.data
+
+                scores_over_time_group.append(
+                    xr.DataArray(
+                        score_per_time_group.reshape(1, -1, 1),
+                        dims=(&#34;scoreid&#34;, &#34;neuroid&#34;, &#34;timeid&#34;),
+                        coords={
+                            &#34;scoreid&#34;: (&#34;scoreid&#34;, [scoreid]),
+                            &#34;neuroid&#34;: (&#34;neuroid&#34;, neuroids),
+                            &#34;timeid&#34;: (&#34;timeid&#34;, [timeid]),
+                        },
+                    )
+                )
+
+            scores_over_time.append(xr.concat(scores_over_time_group, dim=&#34;scoreid&#34;))
+
+        scores = xr.concat(scores_over_time, dim=&#34;timeid&#34;)
+
+        if scores.neuroid.size == self.Y.neuroid.size:  # not RSA, CKA, etc.
+            scores = copy_metadata(scores, self.Y, &#34;neuroid&#34;)
+        scores = copy_metadata(scores, self.Y, &#34;timeid&#34;)
+
+        if not (ceiling or null):
+            self.scores = scores
+        elif ceiling:
+            self.ceilings = scores
+        else:
+            self.nulls.append(
+                scores.expand_dims(dim={&#34;iter&#34;: [seed]}, axis=-1).assign_coords(
+                    iter=[seed]
+                )
+            )
+
+    def ceiling(self):  # , sample_split_coord=None, neuroid_split_coord=None):
+        logging.log(&#34;Calculating ceiling.&#34;, type=&#34;INFO&#34;)
+        self.score(
+            ceiling=True,
+            # sample_split_coord=self._sample_split_coord,
+            # neuroid_split_coord=neuroid_split_coord,
+        )
+
+    def null(
+        self,
+        # sample_split_coord=None, neuroid_split_coord=None,
+        iters=100,
+    ):
+        for i in tqdm([*range(iters)], desc=&#34;Running null permutations&#34;):
+            self.score(
+                null=True,
+                # sample_split_coord=sample_split_coord,
+                # neuroid_split_coord=neuroid_split_coord,
+                seed=i,
+            )
+        self.nulls = xr.concat(self.nulls, dim=&#34;iter&#34;)
+
+    def run(
+        self,
+        sample_split_coord=None,
+        neuroid_split_coord=None,
+        calc_nulls=False,
+        iters=100,
+    ):
+        self.score(
+            sample_split_coord=sample_split_coord,
+            neuroid_split_coord=neuroid_split_coord,
+        )
+        self.ceiling(
+            sample_split_coord=sample_split_coord,
+            neuroid_split_coord=neuroid_split_coord,
+        )
+        if calc_nulls:
+            self.null(
+                sample_split_coord=sample_split_coord,
+                neuroid_split_coord=neuroid_split_coord,
+                iters=iters,
+            )
+            return {
+                &#34;scores&#34;: self.scores,
+                &#34;ceilings&#34;: self.ceilings,
+                &#34;nulls&#34;: self.nulls,
+            }
+        return {&#34;scores&#34;: self.scores, &#34;ceilings&#34;: self.ceilings}</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>langbrainscore.interface.brainscore._BrainScore</li>
+<li>langbrainscore.interface.cacheable._Cacheable</li>
+<li>typing.Protocol</li>
+<li>typing.Generic</li>
+<li>abc.ABC</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="langbrainscore.brainscore.brainscore.BrainScore.ceilings"><code class="name">var <span class="ident">ceilings</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="langbrainscore.brainscore.brainscore.BrainScore.nulls"><code class="name">var <span class="ident">nulls</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="langbrainscore.brainscore.brainscore.BrainScore.scores"><code class="name">var <span class="ident">scores</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="langbrainscore.brainscore.brainscore.BrainScore.ceiling"><code class="name flex">
+<span>def <span class="ident">ceiling</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ceiling(self):  # , sample_split_coord=None, neuroid_split_coord=None):
+    logging.log(&#34;Calculating ceiling.&#34;, type=&#34;INFO&#34;)
+    self.score(
+        ceiling=True,
+        # sample_split_coord=self._sample_split_coord,
+        # neuroid_split_coord=neuroid_split_coord,
+    )</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.brainscore.brainscore.BrainScore.load_netcdf"><code class="name flex">
+<span>def <span class="ident">load_netcdf</span></span>(<span>self, filename)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>loads a netCDF object that contains an xarray instance for 'scores' from
+a file at <code>filename</code>.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_netcdf(self, filename):
     &#34;&#34;&#34;
-    fn = self.aggregate_methods_map[self.fold_aggregation]
-    self.scores = fn()</code></pre>
+    loads a netCDF object that contains an xarray instance for &#39;scores&#39; from
+    a file at `filename`.
+    &#34;&#34;&#34;
+    self.scores = xr.load_dataarray(filename)</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.brainscore.brainscore.BrainScore.null"><code class="name flex">
+<span>def <span class="ident">null</span></span>(<span>self, iters=100)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def null(
+    self,
+    # sample_split_coord=None, neuroid_split_coord=None,
+    iters=100,
+):
+    for i in tqdm([*range(iters)], desc=&#34;Running null permutations&#34;):
+        self.score(
+            null=True,
+            # sample_split_coord=sample_split_coord,
+            # neuroid_split_coord=neuroid_split_coord,
+            seed=i,
+        )
+    self.nulls = xr.concat(self.nulls, dim=&#34;iter&#34;)</code></pre>
+</details>
+</dd>
+<dt id="langbrainscore.brainscore.brainscore.BrainScore.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>self, sample_split_coord=None, neuroid_split_coord=None, calc_nulls=False, iters=100)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run(
+    self,
+    sample_split_coord=None,
+    neuroid_split_coord=None,
+    calc_nulls=False,
+    iters=100,
+):
+    self.score(
+        sample_split_coord=sample_split_coord,
+        neuroid_split_coord=neuroid_split_coord,
+    )
+    self.ceiling(
+        sample_split_coord=sample_split_coord,
+        neuroid_split_coord=neuroid_split_coord,
+    )
+    if calc_nulls:
+        self.null(
+            sample_split_coord=sample_split_coord,
+            neuroid_split_coord=neuroid_split_coord,
+            iters=iters,
+        )
+        return {
+            &#34;scores&#34;: self.scores,
+            &#34;ceilings&#34;: self.ceilings,
+            &#34;nulls&#34;: self.nulls,
+        }
+    return {&#34;scores&#34;: self.scores, &#34;ceilings&#34;: self.ceilings}</code></pre>
 </details>
 </dd>
 <dt id="langbrainscore.brainscore.brainscore.BrainScore.score"><code class="name flex">
-<span>def <span class="ident">score</span></span>(<span>self)</span>
+<span>def <span class="ident">score</span></span>(<span>self, ceiling=False, null=False, seed=0)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Computes The BrainScore™ (/s) using predictions/outputs returned by a
+Mapping instance which is a member attribute of a BrainScore instance</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@lru_cache(maxsize=None)
-def score(self):
+<pre><code class="python">def score(
+    self,
+    ceiling=False,
+    null=False,
+    seed=0,
+):
+    &#34;&#34;&#34;
+    Computes The BrainScore™ (/s) using predictions/outputs returned by a
+    Mapping instance which is a member attribute of a BrainScore instance
+    &#34;&#34;&#34;
+    assert not (ceiling and null)
+    sample_split_coord = self._sample_split_coord
+    neuroid_split_coord = self._neuroid_split_coord
 
-    scores_per_neuroid = []
-    # returns generator over neuroid
-    for result in self.mapping.fit(): # TODO: wrong, change to for loop
+    if sample_split_coord:
+        assert sample_split_coord in self.Y.coords
 
-        tests, preds = result[&#39;test&#39;], result[&#39;pred&#39;]
-        scores_per_fold = []
-        # A, B are lists of xr DataArrays over timeids
-        for cvid,(A, B) in enumerate(zip(tests, preds)):
-            scores_per_timeid = [] # this is a list of n_folds xarrays
-            for timeid in A.timeid.values:
-                # A_time, B_time are xr DataArrays at a specific timeid
-                A_time = A.sel(timeid=0) # TODO RNNs ;_;
-                B_time = B.sel(timeid=timeid) # B[timeid_ix]
-                timeid_score_scalar = self._score(A_time, B_time, self.metric)
-                timeid_score = xr.DataArray(timeid_score_scalar,
-                                            dims=(&#39;neuroid&#39;,&#39;timeid&#39;), 
-                                            coords={&#39;neuroid&#39;:(&#39;neuroid&#39;, B_time.neuroid.values.reshape(-1)),
-                                                                          # ^ we want to extract [int] from 0-d array (scalar array)
-                                                    &#39;timeid&#39;: (&#39;timeid&#39;, [timeid]),
-                                                    })
-                scores_per_timeid.append(timeid_score)
-        
-            fold_score =  xr.concat(scores_per_timeid, dim=&#39;timeid&#39;).expand_dims(&#39;cvfoldid&#39;,0).assign_coords(cvfoldid=(&#39;cvfoldid&#39;, [cvid]))
-            scores_per_fold.append(fold_score)
+    if neuroid_split_coord:
+        assert neuroid_split_coord in self.Y.coords
 
-        neuroid_score = xr.concat(scores_per_fold,dim=&#34;cvfoldid&#34;)
+    X = self.X
+    if null:
+        y_shuffle = self.Y.copy()
+        y_shuffle.data = np.random.default_rng(seed=seed).permutation(
+            y_shuffle.data, axis=0
+        )
+        Y = y_shuffle
+    else:
+        Y = self.Y
+    y_pred, y_true = self.mapping.fit_transform(X, Y, ceiling=ceiling)
 
-        scores_per_neuroid.append(neuroid_score)
+    if not (ceiling or null):
+        self.Y_pred = y_pred
+        if y_pred.shape == y_true.shape:  # not IdentityMap
+            self.Y_pred = copy_metadata(self.Y_pred, self.Y, &#34;sampleid&#34;)
+            self.Y_pred = copy_metadata(self.Y_pred, self.Y, &#34;neuroid&#34;)
+            self.Y_pred = copy_metadata(self.Y_pred, self.Y, &#34;timeid&#34;)
 
-    self.scores_unfolded = xr.concat(scores_per_neuroid, dim=&#39;neuroid&#39;)
+    scores_over_time = []
+    for timeid in y_true.timeid.values:
 
-    return self.scores_unfolded</code></pre>
+        y_pred_time = y_pred.sel(timeid=timeid).transpose(&#34;sampleid&#34;, &#34;neuroid&#34;)
+        y_true_time = y_true.sel(timeid=timeid).transpose(&#34;sampleid&#34;, &#34;neuroid&#34;)
+
+        if sample_split_coord:
+            if sample_split_coord not in y_true_time.sampleid.coords:
+                y_pred_time = collapse_multidim_coord(
+                    y_pred_time, sample_split_coord, &#34;sampleid&#34;
+                )
+                y_true_time = collapse_multidim_coord(
+                    y_true_time, sample_split_coord, &#34;sampleid&#34;
+                )
+            score_splits = y_pred_time.sampleid.groupby(sample_split_coord).groups
+        else:
+            score_splits = [0]
+
+        scores_over_time_group = []
+        for scoreid in score_splits:
+
+            if sample_split_coord:
+                y_pred_time_group = y_pred_time.isel(
+                    sampleid=y_pred_time[sample_split_coord] == scoreid
+                )
+                y_true_time_group = y_true_time.isel(
+                    sampleid=y_true_time[sample_split_coord] == scoreid
+                )
+            else:
+                y_pred_time_group = y_pred_time
+                y_true_time_group = y_true_time
+
+            neuroids = []
+            if y_pred.shape != y_true.shape and neuroid_split_coord:  # IdentityMap
+                if neuroid_split_coord:
+                    if neuroid_split_coord not in y_true_time_group.neuroid.coords:
+                        y_true_time_group = collapse_multidim_coord(
+                            y_true_time_group, neuroid_split_coord, &#34;neuroid&#34;
+                        )
+                    neuroid_splits = y_true_time_group.neuroid.groupby(
+                        neuroid_split_coord
+                    ).groups
+                    score_per_time_group = []
+                    for neuroid in neuroid_splits:
+                        score_per_time_group.append(
+                            self._score(
+                                y_pred_time_group,
+                                y_true_time_group.isel(
+                                    neuroid=(
+                                        y_true_time_group[neuroid_split_coord]
+                                        == neuroid
+                                    )
+                                ),
+                                self.metric,
+                            )
+                        )
+                        neuroids.append(neuroid)
+                    score_per_time_group = np.array(score_per_time_group)
+            else:
+                score_per_time_group = self._score(
+                    y_pred_time_group, y_true_time_group, self.metric
+                )
+
+            if neuroids:
+                pass
+            elif len(score_per_time_group) == 1:  # e.g., RSA, CKA, w/o split
+                neuroids = [np.nan]
+            else:
+                neuroids = y_true_time_group.neuroid.data
+
+            scores_over_time_group.append(
+                xr.DataArray(
+                    score_per_time_group.reshape(1, -1, 1),
+                    dims=(&#34;scoreid&#34;, &#34;neuroid&#34;, &#34;timeid&#34;),
+                    coords={
+                        &#34;scoreid&#34;: (&#34;scoreid&#34;, [scoreid]),
+                        &#34;neuroid&#34;: (&#34;neuroid&#34;, neuroids),
+                        &#34;timeid&#34;: (&#34;timeid&#34;, [timeid]),
+                    },
+                )
+            )
+
+        scores_over_time.append(xr.concat(scores_over_time_group, dim=&#34;scoreid&#34;))
+
+    scores = xr.concat(scores_over_time, dim=&#34;timeid&#34;)
+
+    if scores.neuroid.size == self.Y.neuroid.size:  # not RSA, CKA, etc.
+        scores = copy_metadata(scores, self.Y, &#34;neuroid&#34;)
+    scores = copy_metadata(scores, self.Y, &#34;timeid&#34;)
+
+    if not (ceiling or null):
+        self.scores = scores
+    elif ceiling:
+        self.ceilings = scores
+    else:
+        self.nulls.append(
+            scores.expand_dims(dim={&#34;iter&#34;: [seed]}, axis=-1).assign_coords(
+                iter=[seed]
+            )
+        )</code></pre>
 </details>
 </dd>
-<dt id="langbrainscore.brainscore.brainscore.BrainScore.to_dataarray"><code class="name flex">
-<span>def <span class="ident">to_dataarray</span></span>(<span>self, aggregated=True)</span>
+<dt id="langbrainscore.brainscore.brainscore.BrainScore.to_netcdf"><code class="name flex">
+<span>def <span class="ident">to_netcdf</span></span>(<span>self, filename)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>outputs the xarray.DataArray object for 'scores' to a netCDF file
+identified by <code>filename</code>. if it already exists, overwrites it.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def to_dataarray(self, aggregated=True):
-    # returns the aggregated scores as an xarray
-    return self.scores if aggregated else self.scores_across_folds</code></pre>
-</details>
-</dd>
-<dt id="langbrainscore.brainscore.brainscore.BrainScore.to_disk"><code class="name flex">
-<span>def <span class="ident">to_disk</span></span>(<span>self, aggregated=True)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def to_disk(self, aggregated=True):
-    # outputs the aggregated (or not) object to disk
-    # as a dataarray
-    pass</code></pre>
+<pre><code class="python">def to_netcdf(self, filename):
+    &#34;&#34;&#34;
+    outputs the xarray.DataArray object for &#39;scores&#39; to a netCDF file
+    identified by `filename`. if it already exists, overwrites it.
+    &#34;&#34;&#34;
+    if Path(filename).expanduser().resolve().exists():
+        logging.log(f&#34;{filename} already exists. overwriting.&#34;, type=&#34;WARN&#34;)
+    self.scores.to_netcdf(filename)</code></pre>
 </details>
 </dd>
 </dl>
@@ -358,12 +920,16 @@ def score(self):
 <ul>
 <li>
 <h4><code><a title="langbrainscore.brainscore.brainscore.BrainScore" href="#langbrainscore.brainscore.brainscore.BrainScore">BrainScore</a></code></h4>
-<ul class="">
-<li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.aggregate_scores" href="#langbrainscore.brainscore.brainscore.BrainScore.aggregate_scores">aggregate_scores</a></code></li>
-<li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.mapping" href="#langbrainscore.brainscore.brainscore.BrainScore.mapping">mapping</a></code></li>
+<ul class="two-column">
+<li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.ceiling" href="#langbrainscore.brainscore.brainscore.BrainScore.ceiling">ceiling</a></code></li>
+<li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.ceilings" href="#langbrainscore.brainscore.brainscore.BrainScore.ceilings">ceilings</a></code></li>
+<li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.load_netcdf" href="#langbrainscore.brainscore.brainscore.BrainScore.load_netcdf">load_netcdf</a></code></li>
+<li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.null" href="#langbrainscore.brainscore.brainscore.BrainScore.null">null</a></code></li>
+<li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.nulls" href="#langbrainscore.brainscore.brainscore.BrainScore.nulls">nulls</a></code></li>
+<li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.run" href="#langbrainscore.brainscore.brainscore.BrainScore.run">run</a></code></li>
 <li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.score" href="#langbrainscore.brainscore.brainscore.BrainScore.score">score</a></code></li>
-<li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.to_dataarray" href="#langbrainscore.brainscore.brainscore.BrainScore.to_dataarray">to_dataarray</a></code></li>
-<li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.to_disk" href="#langbrainscore.brainscore.brainscore.BrainScore.to_disk">to_disk</a></code></li>
+<li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.scores" href="#langbrainscore.brainscore.brainscore.BrainScore.scores">scores</a></code></li>
+<li><code><a title="langbrainscore.brainscore.brainscore.BrainScore.to_netcdf" href="#langbrainscore.brainscore.brainscore.BrainScore.to_netcdf">to_netcdf</a></code></li>
 </ul>
 </li>
 </ul>
