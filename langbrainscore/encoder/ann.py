@@ -1,6 +1,7 @@
 import typing
 from enum import unique
 
+import os
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -21,8 +22,11 @@ from langbrainscore.utils.encoder import (
     encode_stimuli_in_context,
 )
 
-from langbrainscore.utils.logging import log, get_verbosity
+from langbrainscore.utils.logging import log
 from langbrainscore.utils.xarray import copy_metadata, fix_xr_dtypes
+from langbrainscore.utils.resources import model_classes, config_name_mappings
+
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 
 class HuggingFaceEncoder(_ModelEncoder):
@@ -64,10 +68,15 @@ class HuggingFaceEncoder(_ModelEncoder):
         )
 
         from transformers import AutoConfig, AutoModel, AutoTokenizer
+        from transformers import logging as transformers_logging
+
+        transformers_logging.set_verbosity_error()
 
         self.device = device or get_torch_device()
         self.config = AutoConfig.from_pretrained(self._model_id)
-        self.tokenizer = AutoTokenizer.from_pretrained(self._model_id)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            self._model_id, multiprocessing=True
+        )
         self.model = AutoModel.from_pretrained(self._model_id, config=self.config)
         try:
             self.model = self.model.to(self.device)
@@ -130,7 +139,7 @@ class HuggingFaceEncoder(_ModelEncoder):
                 return to_check_in_cache
             except FileNotFoundError:
                 log(
-                    f"couldn't load cached reprs for [{to_check_in_cache.identifier_string}]",
+                    f"couldn't load cached reprs for {to_check_in_cache.identifier_string}; recomputing.",
                     cmap="WARN",
                     type="WARN",
                 )
@@ -151,7 +160,7 @@ class HuggingFaceEncoder(_ModelEncoder):
         ###############################################################################
         _, unique_ixs = np.unique(context_groups, return_index=True)
         # Make sure context group order is preserved
-        for group in tqdm(context_groups[np.sort(unique_ixs)]):
+        for group in tqdm(context_groups[np.sort(unique_ixs)], desc="Encoding stimuli"):
             # Mask based on the context group
             mask_context = context_groups == group
             stimuli_in_context = stimuli[mask_context]
@@ -193,7 +202,7 @@ class HuggingFaceEncoder(_ModelEncoder):
         activations_2d = np.vstack(flattened_activations)
         layer_ids_1d = np.squeeze(np.unique(np.vstack(layer_ids), axis=0))
 
-        # Post-process activations
+        # Post-process activations after obtaining them (or "pre-process" them before computing brainscore)
         if len(self._emb_preproc) > 0:
             for mode in self._emb_preproc:
                 activations_2d, layer_ids_1d = postprocess_activations(
@@ -228,23 +237,36 @@ class HuggingFaceEncoder(_ModelEncoder):
 
     def get_modelcard(self):
         """
-        Returns the model card of the model
-        NOT DONE!!!
+        Returns the model card of the model (model-wise, and not layer-wise)
         """
 
-        # Obtain number of layers
-        d_config = self.config.to_dict()
+        model_classes = [
+            "gpt",
+            "bert",
+        ]  # continuously update based on new model classes supported
 
-        config_specs_of_interest = [
-            "n_layer",
-            "n_ctx",
-            "n_embd",
-            "n_head",
-            "vocab_size",
-        ]
+        # based on the model_id, figure out which model class it is
+        model_class = [x for x in model_classes if x in self._model_id][0]
+        assert model_class is not None, f"model_id {self._model_id} not supported"
 
-        config_specs = {k: d_config.get(k, None) for k in config_specs_of_interest}
-        # Evaluate each layer
+        config_specs_of_interest = config_name_mappings[model_class]
+
+        model_specs = {}
+        for (
+            k_spec,
+            v_spec,
+        ) in (
+            config_specs_of_interest.items()
+        ):  # key is the name we want to use in the model card,
+            # value is the name in the config
+            if v_spec is not None:
+                model_specs[k_spec] = getattr(self.config, v_spec)
+            else:
+                model_specs[k_spec] = None
+
+        self.model_specs = model_specs
+
+        return model_specs
 
 
 class PTEncoder(_ModelEncoder):

@@ -2,11 +2,19 @@ import typing
 
 import numpy as np
 import xarray as xr
+from tqdm.auto import tqdm
+
 # from methodtools import lru_cache
 from pathlib import Path
 
-from langbrainscore.interface import _BrainScore, _Mapping, _Metric
-from langbrainscore.metrics import Metric
+from langbrainscore.interface import (
+    _BrainScore,
+    _Mapping,
+    _Metric,
+    EncoderRepresentations,
+)
+
+# from langbrainscore.metrics import Metric
 from langbrainscore.utils import logging
 from langbrainscore.utils.xarray import collapse_multidim_coord, copy_metadata
 
@@ -14,26 +22,51 @@ from langbrainscore.utils.xarray import collapse_multidim_coord, copy_metadata
 class BrainScore(_BrainScore):
     scores = None
     ceilings = None
+    nulls = []
 
     def __init__(
         self,
-        X: xr.DataArray,
-        Y: xr.DataArray,
+        X: typing.Union[xr.DataArray, EncoderRepresentations],
+        Y: typing.Union[xr.DataArray, EncoderRepresentations],
         mapping: _Mapping,
         metric: _Metric,
+        sample_split_coord: str = None,
+        neuroid_split_coord: str = None,
         run=False,
     ) -> "BrainScore":
-        assert X.sampleid.size == Y.sampleid.size
-        self.X = X
-        self.Y = Y
+        """Initializes the [lang]BrainScore object using two encoded representations and a mapping
+           class, and a metric for evaluation
+
+        Args:
+            X (typing.Union[xr.DataArray, EncoderRepresentations]): Either an xarray DataArray
+                instance, or a wrapper object with a `.representations` attribute that stores the xarray
+                DataArray
+            Y (typing.Union[xr.DataArray, EncoderRepresentations]): see `X`
+            mapping (_Mapping): _description_
+            metric (_Metric): _description_
+            run (bool, optional): _description_. Defaults to False.
+
+        Returns:
+            BrainScore: _description_
+        """
+        self.X = X.representations if hasattr(X, "representations") else X
+        self.Y = Y.representations if hasattr(Y, "representations") else Y
+        assert self.X.sampleid.size == self.Y.sampleid.size
         self.mapping = mapping
         self.metric = metric
+        self._sample_split_coord = sample_split_coord
+        self._neuroid_split_coord = neuroid_split_coord
+
         if run:
             self.run()
 
-
     def __str__(self) -> str:
-        return f"{self.scores.mean()}"
+        try:
+            return f"{self.scores.mean()}"
+        except AttributeError as e:
+            raise ValueError(
+                "missing scores. did you make a call to `score()` or `run()` yet?"
+            )
 
     def to_netcdf(self, filename):
         """
@@ -51,23 +84,24 @@ class BrainScore(_BrainScore):
         """
         self.scores = xr.load_dataarray(filename)
 
-
     @staticmethod
-    def _score(A, B, metric: Metric) -> np.ndarray:
+    def _score(A, B, metric: _Metric) -> np.ndarray:
         return metric(A, B)
 
     # @lru_cache(maxsize=None)
-    def score(self, ceiling=False, sample_split_coord=None, neuroid_split_coord=None):
+    def score(
+        self,
+        ceiling=False,
+        null=False,
+        seed=0,
+    ):
         """
         Computes The BrainScore™ (/s) using predictions/outputs returned by a
         Mapping instance which is a member attribute of a BrainScore instance
         """
-        if not ceiling:
-            if self.scores is not None:
-                return self.scores
-        else:
-            if self.ceilings is not None:
-                return self.ceilings
+        assert not (ceiling and null)
+        sample_split_coord = self._sample_split_coord
+        neuroid_split_coord = self._neuroid_split_coord
 
         if sample_split_coord:
             assert sample_split_coord in self.Y.coords
@@ -75,9 +109,18 @@ class BrainScore(_BrainScore):
         if neuroid_split_coord:
             assert neuroid_split_coord in self.Y.coords
 
-        y_pred, y_true = self.mapping.fit_transform(self.X, self.Y, ceiling=ceiling)
+        X = self.X
+        if null:
+            y_shuffle = self.Y.copy()
+            y_shuffle.data = np.random.default_rng(seed=seed).permutation(
+                y_shuffle.data, axis=0
+            )
+            Y = y_shuffle
+        else:
+            Y = self.Y
+        y_pred, y_true = self.mapping.fit_transform(X, Y, ceiling=ceiling)
 
-        if not ceiling:
+        if not (ceiling or null):
             self.Y_pred = y_pred
             if y_pred.shape == y_true.shape:  # not IdentityMap
                 self.Y_pred = copy_metadata(self.Y_pred, self.Y, "sampleid")
@@ -132,8 +175,10 @@ class BrainScore(_BrainScore):
                                 self._score(
                                     y_pred_time_group,
                                     y_true_time_group.isel(
-                                        neuroid=y_true_time_group[neuroid_split_coord]
-                                        == neuroid
+                                        neuroid=(
+                                            y_true_time_group[neuroid_split_coord]
+                                            == neuroid
+                                        )
                                     ),
                                     self.metric,
                                 )
@@ -172,26 +217,63 @@ class BrainScore(_BrainScore):
             scores = copy_metadata(scores, self.Y, "neuroid")
         scores = copy_metadata(scores, self.Y, "timeid")
 
-        if not ceiling:
+        if not (ceiling or null):
             self.scores = scores
-        else:
+        elif ceiling:
             self.ceilings = scores
+        else:
+            self.nulls.append(
+                scores.expand_dims(dim={"iter": [seed]}, axis=-1).assign_coords(
+                    iter=[seed]
+                )
+            )
 
-
-    def ceiling(self, sample_split_coord=None, neuroid_split_coord=None):
-        return self.score(
+    def ceiling(self):  # , sample_split_coord=None, neuroid_split_coord=None):
+        logging.log("Calculating ceiling.", type="INFO")
+        self.score(
             ceiling=True,
-            sample_split_coord=sample_split_coord,
-            neuroid_split_coord=neuroid_split_coord,
+            # sample_split_coord=self._sample_split_coord,
+            # neuroid_split_coord=neuroid_split_coord,
         )
 
-    def run(self, sample_split_coord=None, neuroid_split_coord=None):
-        scores = self.score(
+    def null(
+        self,
+        # sample_split_coord=None, neuroid_split_coord=None,
+        iters=100,
+    ):
+        for i in tqdm([*range(iters)], desc="Running null permutations"):
+            self.score(
+                null=True,
+                # sample_split_coord=sample_split_coord,
+                # neuroid_split_coord=neuroid_split_coord,
+                seed=i,
+            )
+        self.nulls = xr.concat(self.nulls, dim="iter")
+
+    def run(
+        self,
+        sample_split_coord=None,
+        neuroid_split_coord=None,
+        calc_nulls=False,
+        iters=100,
+    ):
+        self.score(
             sample_split_coord=sample_split_coord,
             neuroid_split_coord=neuroid_split_coord,
         )
-        ceilings = self.ceiling(
+        self.ceiling(
             sample_split_coord=sample_split_coord,
             neuroid_split_coord=neuroid_split_coord,
         )
-        return {"scores": scores, "ceilings": ceilings}
+        if calc_nulls:
+            self.null(
+                sample_split_coord=sample_split_coord,
+                neuroid_split_coord=neuroid_split_coord,
+                iters=iters,
+            )
+            return {
+                "scores": self.scores,
+                "ceilings": self.ceilings,
+                "nulls": self.nulls,
+            }
+        return {"scores": self.scores, "ceilings": self.ceilings}

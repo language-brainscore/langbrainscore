@@ -10,6 +10,8 @@ import yaml
 from langbrainscore.utils.cache import get_cache_directory, pathify
 from langbrainscore.utils.logging import log
 
+# from langbrainscore.interface.dryrunnable import _DryRunnable
+
 T = typing.TypeVar("T")
 
 
@@ -65,6 +67,24 @@ class _Cacheable(typing.Protocol):
                 keys += [key]
         return keys
 
+    @property
+    def params(self) -> dict:
+        """ """
+        params = {}
+        for key in sorted(vars(self)):
+            ob = getattr(self, key)
+            if isinstance(ob, (str, Number, bool, _Cacheable, tuple, dict, type(None))):
+                # if isinstance(ob, (str, Number, bool, _Cacheable, tuple)):
+                if isinstance(ob, _Cacheable):
+                    params[key] = ob.identifier_string
+                elif isinstance(ob, dict):
+                    for k in ob:
+                        params[f"{key}_{k}"] = ob[k]
+                    pass  # TODO!!
+                else:
+                    params[key] = ob
+        return params
+
     def __repr__(self) -> str:
         """
         default, broad implementation to support our use case.
@@ -72,18 +92,15 @@ class _Cacheable(typing.Protocol):
         attributes of self, as well as all the representations of Cacheable
         instances that are attributes of self.
         """
-
-        sep = "#"
-        rep = f"<{self.__class__.__name__}"
-        for key in sorted(vars(self)):
-            ob = getattr(self, key)
-            if isinstance(ob, (str, Number, bool, _Cacheable, tuple, type(None))):
-                # if isinstance(ob, (str, Number, bool, _Cacheable, tuple)):
-                if isinstance(ob, _Cacheable):
-                    rep += f"{sep}{key}={ob.identifier_string}"
-                else:
-                    rep += f"{sep}{key}={ob}"
-        return rep + ">"
+        left = "("
+        right = ")"
+        sep = "?"
+        rep = f"{left}{self.__class__.__name__}"
+        params = self.params
+        for key in sorted([*params.keys()]):
+            val = params[key]
+            rep += f"{sep}{key}={val}"
+        return rep + f"{right}"
 
     @property
     def identifier_string(self):
@@ -182,7 +199,7 @@ class _Cacheable(typing.Protocol):
         root, subdir = cache.root, cache.subdir
         # now we use "subdir" as our working directory to dump this cache object
         subdir /= identifier_string or self.identifier_string
-        log(f"loading attributes of {self} from {subdir}")
+        log(f"attempt loading attributes of {self} from {subdir.parent}")
 
         with (subdir / "xarray_object_names.yml").open("r") as f:
             self_xarray_objects = yaml.load(f, yaml.SafeLoader)

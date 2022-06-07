@@ -1,24 +1,22 @@
 import typing
 from functools import partial
-from random import sample
-from typing import Tuple
 
+from tqdm.auto import tqdm
 import numpy as np
+from joblib import Parallel, delayed
 import xarray as xr
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression, RidgeCV
-from sklearn.model_selection import (
-    GroupKFold,
-    KFold,
-    StratifiedGroupKFold,
-    StratifiedKFold,
-)
-from sklearn.random_projection import GaussianRandomProjection
 
 from langbrainscore.interface import _Mapping
 from langbrainscore.utils import logging
 from langbrainscore.utils.xarray import collapse_multidim_coord
+
+mapping_classes_params = {
+    "linreg": (LinearRegression, {}),
+    "linridge_cv": (RidgeCV, {"alphas": np.logspace(-3, 3, 13)}),
+    "linpls": (PLSRegression, {"n_components": 20}),
+}
 
 
 class IdentityMap(_Mapping):
@@ -55,7 +53,9 @@ class IdentityMap(_Mapping):
 class LearnedMap(_Mapping):
     def __init__(
         self,
-        mapping_class: typing.Union[str, typing.Any],
+        mapping_class: typing.Union[
+            str, typing.Tuple[typing.Callable, typing.Mapping[str, typing.Any]]
+        ],
         random_seed: int = 42,
         k_fold: int = 5,
         strat_coord: str = None,
@@ -86,24 +86,24 @@ class LearnedMap(_Mapping):
         self.strat_coord = strat_coord
         self.num_split_groups_out = num_split_groups_out
         self.split_coord = split_coord
-        self.mapping_class = mapping_class
-        mapping_classes = {
-            "linreg": (LinearRegression, {}),
-            "linridge_cv": (RidgeCV, {"alphas": np.logspace(-3, 3, 13)}),
-            "linpls": (PLSRegression, {"n_components": 20}),
-        }
+        self.mapping_class_name = mapping_class
+        self.mapping_params = kwargs
 
         if type(mapping_class) == str:
-            mapping_class, _kwargs = mapping_classes[mapping_class]
-            kwargs.update(_kwargs)
-        else:
-            assert callable(mapping_class)
-            assert hasattr(mapping_class(), "fit")
-            assert hasattr(mapping_class(), "predict")
+            _mapping_class, _kwargs = mapping_classes_params[self.mapping_class_name]
+            self.mapping_params.update(_kwargs)
+        # in the spirit of duck-typing, we don't need any of these checks. we will automatically
+        # fail if we're missing any of these attributes
+        # else:
+        #     assert callable(mapping_class)
+        #     assert hasattr(mapping_class(), "fit")
+        #     assert hasattr(mapping_class(), "predict")
 
-        self.full_model = mapping_class(**kwargs)
-        self.model = mapping_class(**kwargs)
-        logging.log(f"initialized Mapping with {mapping_class}, {type(self.model)}!")
+        # TODO: what is the difference between these two (model; full_model)? let's make this less
+        # confusing
+        self.full_model = _mapping_class(**self.mapping_params)
+        self.model = _mapping_class(**self.mapping_params)
+        logging.log(f"initialized Mapping with {type(self.model)}!")
 
     @staticmethod
     def _construct_splits(
@@ -114,6 +114,12 @@ class LearnedMap(_Mapping):
         num_split_groups_out: int,
         random_seed: int,
     ):
+        from sklearn.model_selection import (
+            GroupKFold,
+            KFold,
+            StratifiedGroupKFold,
+            StratifiedKFold,
+        )
 
         sampleid = xr_dataset.sampleid.values
 
@@ -139,7 +145,7 @@ class LearnedMap(_Mapping):
             kf = KFold(n_splits=k_folds, shuffle=True, random_state=random_seed)
             split = partial(kf.split, sampleid)
 
-        logging.log(f"running {type(kf)}!")
+        logging.log(f"running {type(kf)}!", verbosity_check=True)
         return split()
 
     def construct_splits(self, A):
@@ -171,7 +177,10 @@ class LearnedMap(_Mapping):
         if not np.all(X.sampleid.values == Y.sampleid.values):
             raise ValueError("X and Y sampleids do not match!")
 
-        logging.log(f"Passed sampleid check for neuroid {Y.neuroid.values}")
+        logging.log(
+            f"Passed sampleid check for neuroid {Y.neuroid.values}",
+            verbosity_check=True,
+        )
 
     def _drop_na(
         self, X: xr.DataArray, Y: xr.DataArray, dim: str = "sampleid", **kwargs
@@ -187,7 +196,9 @@ class LearnedMap(_Mapping):
         assert set(Y_filtered_ids).issubset(set(X[dim].values))
 
         logging.log(
-            f"for neuroid {Y_slice.neuroid.values}, we used {(num_retained := len(Y_filtered_ids))} samples; dropped {len(Y[dim]) - num_retained}"
+            f"for neuroid {Y_slice.neuroid.values}, we used {(num_retained := len(Y_filtered_ids))}"
+            f" samples; dropped {len(Y[dim]) - num_retained}",
+            verbosity_check=True,
         )
 
         # use only the samples that are in Y
@@ -195,62 +206,63 @@ class LearnedMap(_Mapping):
 
         return X_slice, Y_slice
 
-    def _permute_X(
-        self,
-        X: xr.DataArray,
-        method: str = "shuffle_X_rows",
-        random_state: int = 42,
-    ):
-        """Permute the features of X.
-
-        Parameters
-        ----------
-        X : xr.DataArray
-                The embeddings to be permuted
-        method : str
-                The method to use for permutation.
-                'shuffle_X_rows' : Shuffle the rows of X (=shuffle the sentences and create a mismatch between the sentence embeddings and target)
-                'shuffle_each_X_col': For each column (=feature/unit) of X, permute that feature's values across all sentences.
-                                                          Retains the statistics of the original features (e.g., mean per feature) but the values of the features are shuffled for each sentence.
-        random_state : int
-                The seed for the random number generator.
-
-        Returns
-        -------
-        xr.DataArray
-                The permuted dataarray
-        """
-
-        X_orig = X.copy(deep=True)
-
-        logging.log(f"OBS: permuting X with method {method}")
-
-        if method == "shuffle_X_rows":
-            X = X.sample(
-                n=X.shape[1], random_state=random_state
-            )  # check whether X_shape is correct
-
-        elif method == "shuffle_each_X_col":
-            np.random.seed(random_state)
-            for feat in X.data.shape[0]:  # per neuroid
-                np.random.shuffle(X.data[feat, :])
-
-        else:
-            raise ValueError(f"Invalid method: {method}")
-
-        assert X.shape == X_orig.shape
-        assert np.all(X.data != X_orig.data)
-
-        return X
+    # def _permute_X(
+    #     self,
+    #     X: xr.DataArray,
+    #     method: str = "shuffle_X_rows",
+    #     random_state: int = 42,
+    # ):
+    #     """Permute the features of X.
+    #
+    #     Parameters
+    #     ----------
+    #     X : xr.DataArray
+    #             The embeddings to be permuted
+    #     method : str
+    #             The method to use for permutation.
+    #             'shuffle_X_rows' : Shuffle the rows of X (=shuffle the sentences and create a mismatch between the sentence embeddings and target)
+    #             'shuffle_each_X_col': For each column (=feature/unit) of X, permute that feature's values across all sentences.
+    #                                                       Retains the statistics of the original features (e.g., mean per feature) but the values of the features are shuffled for each sentence.
+    #     random_state : int
+    #             The seed for the random number generator.
+    #
+    #     Returns
+    #     -------
+    #     xr.DataArray
+    #             The permuted dataarray
+    #     """
+    #
+    #     X_orig = X.copy(deep=True)
+    #
+    #     if logging.get_verbosity():
+    #         logging.log(f"OBS: permuting X with method {method}")
+    #
+    #     if method == "shuffle_X_rows":
+    #         X = X.sample(
+    #             n=X.shape[1], random_state=random_state
+    #         )  # check whether X_shape is correct
+    #
+    #     elif method == "shuffle_each_X_col":
+    #         np.random.seed(random_state)
+    #         for feat in X.data.shape[0]:  # per neuroid
+    #             np.random.shuffle(X.data[feat, :])
+    #
+    #     else:
+    #         raise ValueError(f"Invalid method: {method}")
+    #
+    #     assert X.shape == X_orig.shape
+    #     assert np.all(X.data != X_orig.data)
+    #
+    #     return X
 
     def fit_transform(
         self,
         X: xr.DataArray,
         Y: xr.DataArray,
-        permute_X: typing.Union[bool, str] = False,
+        # permute_X: typing.Union[bool, str] = False,
         ceiling: bool = False,
         ceiling_coord: str = "subject",
-    ) -> Tuple[xr.DataArray, xr.DataArray]:
+    ) -> typing.Tuple[xr.DataArray, xr.DataArray]:
         """creates a mapping model using k-fold cross-validation
             -> uses params from the class initialization, uses strat_coord
                and split_coord to stratify and split across group boundaries
@@ -258,11 +270,15 @@ class LearnedMap(_Mapping):
         Returns:
             [type]: [description]
         """
+        from sklearn.random_projection import GaussianRandomProjection
+
         if ceiling:
             n_neuroids = X.neuroid.values.size
             X = Y.copy()
-        logging.log(f"X shape: {X.data.shape}")
-        logging.log(f"Y shape: {Y.data.shape}")
+
+        logging.log(f"X shape: {X.data.shape}", verbosity_check=True)
+        logging.log(f"Y shape: {Y.data.shape}", verbosity_check=True)
+
         if self.strat_coord:
             try:
                 assert (X[self.strat_coord].values == Y[self.strat_coord].values).all()
@@ -277,11 +293,8 @@ class LearnedMap(_Mapping):
                 raise ValueError(
                     f"{self.split_coord} coordinate does not align across X and Y"
                 )
-        # Loop across each Y neuroid (target)
-        test = []
-        pred = []
-        for neuroid in Y.neuroid.values:
 
+        def fit_per_neuroid(neuroid):
             Y_neuroid = Y.sel(neuroid=neuroid)
 
             # limit data to current neuroid, and then drop the samples that are missing data for this neuroid
@@ -296,10 +309,16 @@ class LearnedMap(_Mapping):
                     neuroid=X_slice[ceiling_coord] != Y_slice[ceiling_coord]
                 ).dropna(dim="neuroid")
 
-            # We can perform various checks by 'permuting' the source, X
-            # TODO this is a test! do not use under normal workflow!
-            if permute_X:
-                X_slice = self._permute_X(X_slice, method=permute_X)
+            # We can perform various sanity checks by 'permuting' the source, X
+            # NOTE this is a test! do not use under normal workflow!
+            # if permute_X:
+            #     logging.log(
+            #         f"`permute_X` flag is enabled. only do this in an adversarial setting.",
+            #         cmap="WARN",
+            #         type="WARN",
+            #         verbosity_check=True,
+            #     )
+            #     X_slice = self._permute_X(X_slice, method=permute_X)
 
             # these collections store each split for our records later
             # TODO we aren't saving this to the object instance yet
@@ -376,8 +395,21 @@ class LearnedMap(_Mapping):
             Y_test = xr.concat(Y_test_collection, dim="sampleid").sortby("sampleid")
             Y_pred = xr.concat(Y_pred_collection, dim="sampleid").sortby("sampleid")
 
-            test.append(Y_test)
-            pred.append(Y_pred)
+            # test.append(Y_test)
+            # pred.append(Y_pred)
+            return Y_test, Y_pred
+
+        # Loop across each Y neuroid (target)
+        test = []
+        pred = []
+        # TODO: parallelize using order-preserving joblib-mapping
+        # for neuroid in tqdm(Y.neuroid.values, desc="fitting a model per neuroid"):
+        for t, p in Parallel(n_jobs=-2)(
+            delayed(fit_per_neuroid)(neuroid)
+            for neuroid in tqdm(Y.neuroid.values, desc="fitting a model per neuroid")
+        ):
+            test += [t]
+            pred += [p]
 
         test_xr = xr.concat(test, dim="neuroid").transpose(
             "sampleid", "neuroid", "timeid"

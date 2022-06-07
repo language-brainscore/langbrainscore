@@ -5,12 +5,12 @@ from mimetypes import init
 import numpy as np
 import xarray as xr
 from langbrainscore.interface.mapping import _Mapping
-from langbrainscore.interface.metrics import _Metric
+from langbrainscore.interface.metric import _Metric
 from langbrainscore.interface.cacheable import _Cacheable
 
 
-# TODO: class _BrainScore(_Cacheable, ABC):
-class _BrainScore(ABC):
+class _BrainScore(_Cacheable, ABC):
+    # class _BrainScore(ABC):
     """
     evaluates a `Mapping` of `X` and `Y` using `Metric`
     """
