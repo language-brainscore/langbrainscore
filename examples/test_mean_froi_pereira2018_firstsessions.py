@@ -105,7 +105,7 @@ def main():
     ann_enc = lbs.encoder.HuggingFaceEncoder(
         model_id="bert-base-uncased",
         emb_preproc=tuple(),
-        context_dimension="passage",
+        # context_dimension="passage",
         bidirectional=True,
         emb_aggregation="first",
         # model_id="distilgpt2", emb_preproc=tuple(), context_dimension="passage"
@@ -138,20 +138,31 @@ def main():
     )  # Select a layer # TODO: loop over layers unless it is a brain model with commitment
 
     rdg_cv_kfold = lbs.mapping.LearnedMap("linridge_cv", k_fold=5)
-    fisher = lbs.metrics.FisherCorr
-    brsc_rdg_corr = lbs.BrainScore(ann_enc_mpf, brain_enc_mpf, rdg_cv_kfold, fisher, 
-                                   sample_split_coord="experiment", calc_nulls=True, iters=5)
-    brsc_rdg_corr.run()
+    fisher = lbs.metrics.FisherCorr()
+    brsc_rdg_corr = lbs.BrainScore(
+        ann_enc_mpf,
+        brain_enc_mpf,
+        rdg_cv_kfold,
+        fisher,
+        sample_split_coord="experiment",
+    )
+    brsc_rdg_corr.run(calc_nulls=True, iters=5)
     log(f"brainscore (rdg, fisher) = {brsc_rdg_corr.scores.mean()}")
     log(f"ceiling (rdg, fisher) = {brsc_rdg_corr.ceilings.mean()}")
     log(f"null (rdg, fisher) = {brsc_rdg_corr.nulls.mean()}")
 
-    i_map = lbs.mapping.IdentityMap(nan_strategy="drop")
-    cka = lbs.metrics.CKA
-    brsc_cka = lbs.BrainScore(ann_enc_mpf, brain_enc_mpf, i_map, cka,
-                             sample_split_coord="experiment", neuroid_split_coord="subject")
-    brsc_cka.score()
-    log(f"brainscore (cka) = {brsc_cka}")
+    # i_map = lbs.mapping.IdentityMap(nan_strategy="drop")
+    # cka = lbs.metrics.CKA()
+    # brsc_cka = lbs.BrainScore(
+    #     ann_enc_mpf,
+    #     brain_enc_mpf,
+    #     i_map,
+    #     cka,
+    #     sample_split_coord="experiment",
+    #     neuroid_split_coord="subject",
+    # )
+    # brsc_cka.score()
+    # log(f"brainscore (cka) = {brsc_cka}")
     IPython.embed()
 
 

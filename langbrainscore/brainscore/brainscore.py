@@ -252,23 +252,23 @@ class BrainScore(_BrainScore):
 
     def run(
         self,
-        sample_split_coord=None,
-        neuroid_split_coord=None,
+        # sample_split_coord=None,
+        # neuroid_split_coord=None,
         calc_nulls=False,
         iters=100,
     ):
         self.score(
-            sample_split_coord=sample_split_coord,
-            neuroid_split_coord=neuroid_split_coord,
+            # sample_split_coord=sample_split_coord,
+            # neuroid_split_coord=neuroid_split_coord,
         )
         self.ceiling(
-            sample_split_coord=sample_split_coord,
-            neuroid_split_coord=neuroid_split_coord,
+            # sample_split_coord=sample_split_coord,
+            # neuroid_split_coord=neuroid_split_coord,
         )
         if calc_nulls:
             self.null(
-                sample_split_coord=sample_split_coord,
-                neuroid_split_coord=neuroid_split_coord,
+                # sample_split_coord=sample_split_coord,
+                # neuroid_split_coord=neuroid_split_coord,
                 iters=iters,
             )
             return {
