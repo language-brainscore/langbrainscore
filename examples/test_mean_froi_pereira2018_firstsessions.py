@@ -117,13 +117,13 @@ def main():
     log(f"created brain-encoded data of shape: {brain_enc_mpf.shape}")
     log(f"created ann-encoded data of shape: {ann_enc_mpf.shape}")
 
-    # ANN encoder checks
+    # ANN encoder checks (obs: not necessarily for brain-score, only for testing purposes)
     ann_enc_check = lbs.encoder.EncoderCheck()
     ann_enc_check.similiarity_metric_across_layers(
         sim_metric="tol", enc1=ann_enc_mpf, enc2=ann_enc_mpf
     )
 
-    # Model card
+    # Model card (obs: not necessarily for brain-score, only for testing purposes)
     ann_modelcard = ann_enc.get_modelcard()
     modelcard_layers_variance = lbs.utils.encoder.get_layer_sparsity(
         ann_encoded_dataset=ann_enc_mpf
@@ -138,7 +138,7 @@ def main():
     )  # Select a layer # TODO: loop over layers unless it is a brain model with commitment
 
     rdg_cv_kfold = lbs.mapping.LearnedMap("linridge_cv", k_fold=5)
-    fisher = lbs.metrics.Metric(lbs.metrics.FisherCorr)
+    fisher = lbs.metrics.FisherCorr
     brsc_rdg_corr = lbs.BrainScore(ann_enc_mpf, brain_enc_mpf, rdg_cv_kfold, fisher)
     brsc_rdg_corr.run(sample_split_coord="experiment", calc_nulls=True, iters=5)
     log(f"brainscore (rdg, fisher) = {brsc_rdg_corr.scores.mean()}")
@@ -146,7 +146,7 @@ def main():
     log(f"null (rdg, fisher) = {brsc_rdg_corr.nulls.mean()}")
 
     i_map = lbs.mapping.IdentityMap(nan_strategy="drop")
-    cka = lbs.metrics.Metric(lbs.metrics.CKA)
+    cka = lbs.metrics.CKA
     brsc_cka = lbs.BrainScore(ann_enc_mpf, brain_enc_mpf, i_map, cka)
     brsc_cka.score(sample_split_coord="experiment", neuroid_split_coord="subject")
     log(f"brainscore (cka) = {brsc_cka}")
