@@ -139,16 +139,18 @@ def main():
 
     rdg_cv_kfold = lbs.mapping.LearnedMap("linridge_cv", k_fold=5)
     fisher = lbs.metrics.FisherCorr
-    brsc_rdg_corr = lbs.BrainScore(ann_enc_mpf, brain_enc_mpf, rdg_cv_kfold, fisher)
-    brsc_rdg_corr.run(sample_split_coord="experiment", calc_nulls=True, iters=5)
+    brsc_rdg_corr = lbs.BrainScore(ann_enc_mpf, brain_enc_mpf, rdg_cv_kfold, fisher, 
+                                   sample_split_coord="experiment", calc_nulls=True, iters=5)
+    brsc_rdg_corr.run()
     log(f"brainscore (rdg, fisher) = {brsc_rdg_corr.scores.mean()}")
     log(f"ceiling (rdg, fisher) = {brsc_rdg_corr.ceilings.mean()}")
     log(f"null (rdg, fisher) = {brsc_rdg_corr.nulls.mean()}")
 
     i_map = lbs.mapping.IdentityMap(nan_strategy="drop")
     cka = lbs.metrics.CKA
-    brsc_cka = lbs.BrainScore(ann_enc_mpf, brain_enc_mpf, i_map, cka)
-    brsc_cka.score(sample_split_coord="experiment", neuroid_split_coord="subject")
+    brsc_cka = lbs.BrainScore(ann_enc_mpf, brain_enc_mpf, i_map, cka,
+                             sample_split_coord="experiment", neuroid_split_coord="subject")
+    brsc_cka.score()
     log(f"brainscore (cka) = {brsc_cka}")
     IPython.embed()
 
