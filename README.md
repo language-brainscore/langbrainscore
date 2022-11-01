@@ -1,6 +1,7 @@
 # langbrainscore
 _release stage: "fuzzy-potato" (alpha)_
 
+### ⚠ Marked for Deprecation. please visit https://github.com/brain-score/language for the migrated project ⚠
 
 ### [**Documentation** ![CircleCI](https://circleci.com/gh/language-brainscore/langbrainscore/tree/main.svg?style=svg)](https://language-brainscore.github.io/langbrainscore/)
 ### development status indicators
